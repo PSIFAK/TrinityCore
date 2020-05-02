@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -634,6 +634,16 @@ bool SmartAIMgr::IsAnimKitValid(SmartScriptHolder const& e, uint32 entry)
     return true;
 }
 
+bool SmartAIMgr::IsSpellVisualKitValid(SmartScriptHolder const& e, uint32 entry)
+{
+    if (!sSpellVisualKitStore.LookupEntry(entry))
+    {
+        TC_LOG_ERROR("sql.sql", "SmartAIMgr: Entry " SI64FMTD " SourceType %u Event %u Action %u uses non-existent SpellVisualKit entry %u, skipped.", e.entryOrGuid, e.GetScriptType(), e.event_id, e.GetActionType(), entry);
+        return false;
+    }
+    return true;
+}
+
 bool SmartAIMgr::IsEventValid(SmartScriptHolder& e)
 {
     if (e.event.type >= SMART_EVENT_END)
@@ -847,15 +857,6 @@ bool SmartAIMgr::IsEventValid(SmartScriptHolder& e)
                 if (!IsTextValid(e, e.event.textOver.textGroupID))
                     return false;
                 break;
-            case SMART_EVENT_DUMMY_EFFECT:
-            {
-                if (!IsSpellValid(e, e.event.dummy.spell))
-                    return false;
-
-                if (e.event.dummy.effIndex > EFFECT_2)
-                    return false;
-                break;
-            }
             case SMART_EVENT_IS_BEHIND_TARGET:
             {
                 if (!IsMinMaxValid(e, e.event.behindTarget.cooldownMin, e.event.behindTarget.cooldownMax))
@@ -1072,6 +1073,10 @@ bool SmartAIMgr::IsEventValid(SmartScriptHolder& e)
                 TC_LOG_ERROR("sql.sql", "SmartAIMgr: Entry " SI64FMTD " SourceType %u Event %u Action %u uses invalid AnimKit type %u, skipped.", e.entryOrGuid, e.GetScriptType(), e.event_id, e.GetActionType(), e.action.animKit.type);
                 return false;
             }
+            break;
+        case SMART_ACTION_PLAY_SPELL_VISUAL_KIT:
+            if (e.action.spellVisualKit.spellVisualKitId && !IsSpellVisualKitValid(e, e.action.spellVisualKit.spellVisualKitId))
+                return false;
             break;
         case SMART_ACTION_FAIL_QUEST:
         case SMART_ACTION_OFFER_QUEST:
@@ -1490,6 +1495,22 @@ bool SmartAIMgr::IsEventValid(SmartScriptHolder& e)
                 TC_LOG_ERROR("sql.sql", "Entry " SI64FMTD " SourceType %u Event %u Action %u uses invalid data type %u (value range 0-TOTAL_AURAS), skipped.", e.entryOrGuid, e.GetScriptType(), e.event_id, e.GetActionType(), e.action.auraType.type);
                 return false;
             }
+            break;
+        }
+        case SMART_ACTION_SET_MOVEMENT_SPEED:
+        {
+            if (e.action.movementSpeed.movementType >= MAX_MOVE_TYPE)
+            {
+                TC_LOG_ERROR("sql.sql", "SmartAIMgr: Entry " SI64FMTD " SourceType %u Event %u Action %u uses invalid movementType %u, skipped.", e.entryOrGuid, e.GetScriptType(), e.event_id, e.GetActionType(), e.action.movementSpeed.movementType);
+                return false;
+            }
+
+            if (!e.action.movementSpeed.speedInteger && !e.action.movementSpeed.speedFraction)
+            {
+                TC_LOG_ERROR("sql.sql", "SmartAIMgr: Entry " SI64FMTD " SourceType %u Event %u Action %u uses speed 0, skipped.", e.entryOrGuid, e.GetScriptType(), e.event_id, e.GetActionType());
+                return false;
+            }
+
             break;
         }
         case SMART_ACTION_START_CLOSEST_WAYPOINT:

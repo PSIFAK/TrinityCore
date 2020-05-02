@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -981,7 +980,7 @@ public:
                     Merithra->SetNpcFlags(UNIT_NPC_FLAG_NONE);
                     Merithra->SetStandState(UNIT_STAND_STATE_STAND);
                     Merithra->SetDisplayId(MERITHRA_NIGHT_ELF_FORM);
-                    Merithra->setFaction(35);
+                    Merithra->SetFaction(35);
                 }
 
                 if (Caelestrasz)
@@ -989,7 +988,7 @@ public:
                     Caelestrasz->SetNpcFlags(UNIT_NPC_FLAG_NONE);
                     Caelestrasz->SetStandState(UNIT_STAND_STATE_STAND);
                     Caelestrasz->SetDisplayId(CAELESTRASZ_NIGHT_ELF_FORM);
-                    Caelestrasz->setFaction(35);
+                    Caelestrasz->SetFaction(35);
                 }
 
                 if (Arygos)
@@ -997,7 +996,7 @@ public:
                     Arygos->SetNpcFlags(UNIT_NPC_FLAG_NONE);
                     Arygos->SetStandState(UNIT_STAND_STATE_STAND);
                     Arygos->SetDisplayId(ARYGOS_GNOME_FORM);
-                    Arygos->setFaction(35);
+                    Arygos->SetFaction(35);
                 }
 
                 if (Anachronos)

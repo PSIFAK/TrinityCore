@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2017 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -328,7 +328,7 @@ public:
                     DoResetThreat();
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
                     {
-                        me->SetFacingToObject(target, true);
+                        me->SetFacingToObject(target);
                         DoCast(target, SPELL_RAIN_OF_BONES);
                     }
                     break;

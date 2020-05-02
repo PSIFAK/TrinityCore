@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -160,7 +159,7 @@ void WorldSession::HandleGossipHelloOpcode(WorldPackets::NPC::Hello& packet)
     }
 
     // set faction visible if needed
-    if (FactionTemplateEntry const* factionTemplateEntry = sFactionTemplateStore.LookupEntry(unit->getFaction()))
+    if (FactionTemplateEntry const* factionTemplateEntry = sFactionTemplateStore.LookupEntry(unit->GetFaction()))
         _player->GetReputationMgr().SetVisible(factionTemplateEntry);
 
     GetPlayer()->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TALK);
@@ -315,7 +314,7 @@ void WorldSession::SendSpiritResurrect()
         WorldSafeLocsEntry const* ghostGrave = sObjectMgr->GetClosestGraveYard(*_player, _player->GetTeam(), _player);
 
         if (corpseGrave != ghostGrave)
-            _player->TeleportTo(corpseGrave->MapID, corpseGrave->Loc.X, corpseGrave->Loc.Y, corpseGrave->Loc.Z, (corpseGrave->Facing * M_PI) / 180); // Orientation is initially in degrees
+            _player->TeleportTo(corpseGrave->Loc);
     }
 }
 
@@ -376,7 +375,7 @@ void WorldSession::SendStablePet(ObjectGuid guid)
     stmt->setUInt8(1, PET_SAVE_FIRST_STABLE_SLOT);
     stmt->setUInt8(2, PET_SAVE_LAST_STABLE_SLOT);
 
-    _queryProcessor.AddQuery(CharacterDatabase.AsyncQuery(stmt).WithPreparedCallback(std::bind(&WorldSession::SendStablePetCallback, this, guid, std::placeholders::_1)));
+    _queryProcessor.AddCallback(CharacterDatabase.AsyncQuery(stmt).WithPreparedCallback(std::bind(&WorldSession::SendStablePetCallback, this, guid, std::placeholders::_1)));
 }
 
 void WorldSession::SendStablePetCallback(ObjectGuid guid, PreparedQueryResult result)
@@ -475,7 +474,7 @@ void WorldSession::HandleStablePet(WorldPacket& recvData)
     stmt->setUInt8(1, PET_SAVE_FIRST_STABLE_SLOT);
     stmt->setUInt8(2, PET_SAVE_LAST_STABLE_SLOT);
 
-    _queryProcessor.AddQuery(CharacterDatabase.AsyncQuery(stmt).WithPreparedCallback(std::bind(&WorldSession::HandleStablePetCallback, this, std::placeholders::_1)));
+    _queryProcessor.AddCallback(CharacterDatabase.AsyncQuery(stmt).WithPreparedCallback(std::bind(&WorldSession::HandleStablePetCallback, this, std::placeholders::_1)));
 }
 
 void WorldSession::HandleStablePetCallback(PreparedQueryResult result)
@@ -535,7 +534,7 @@ void WorldSession::HandleUnstablePet(WorldPacket& recvData)
     stmt->setUInt8(2, PET_SAVE_FIRST_STABLE_SLOT);
     stmt->setUInt8(3, PET_SAVE_LAST_STABLE_SLOT);
 
-    _queryProcessor.AddQuery(CharacterDatabase.AsyncQuery(stmt).WithPreparedCallback(std::bind(&WorldSession::HandleUnstablePetCallback, this, petnumber, std::placeholders::_1)));
+    _queryProcessor.AddCallback(CharacterDatabase.AsyncQuery(stmt).WithPreparedCallback(std::bind(&WorldSession::HandleUnstablePetCallback, this, petnumber, std::placeholders::_1)));
 }
 
 void WorldSession::HandleUnstablePetCallback(uint32 petId, PreparedQueryResult result)
@@ -659,7 +658,7 @@ void WorldSession::HandleStableSwapPet(WorldPacket& recvData)
     stmt->setUInt64(0, _player->GetGUID().GetCounter());
     stmt->setUInt32(1, petId);
 
-    _queryProcessor.AddQuery(CharacterDatabase.AsyncQuery(stmt).WithPreparedCallback(std::bind(&WorldSession::HandleStableSwapPetCallback, this, petId, std::placeholders::_1)));
+    _queryProcessor.AddCallback(CharacterDatabase.AsyncQuery(stmt).WithPreparedCallback(std::bind(&WorldSession::HandleStableSwapPetCallback, this, petId, std::placeholders::_1)));
 }
 
 void WorldSession::HandleStableSwapPetCallback(uint32 petId, PreparedQueryResult result)

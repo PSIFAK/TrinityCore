@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -380,7 +379,7 @@ public:
         void Reset() override
         {
             if (!Tapped)
-                me->setFaction(FACTION_DEFAULT);
+                me->SetFaction(FACTION_DEFAULT);
 
             FlyTimer = 10000;
             me->SetDisableGravity(false);
@@ -396,7 +395,7 @@ public:
                 Tapped = true;
                 PlayerGUID = caster->GetGUID();
 
-                me->setFaction(FACTION_FRIENDLY);
+                me->SetFaction(FACTION_FRIENDLY);
                 DoCast(caster, SPELL_FORCE_OF_NELTHARAKU, true);
 
                 Unit* Dragonmaw = me->FindNearestCreature(NPC_DRAGONMAW_SUBJUGATOR, 50);
@@ -526,7 +525,7 @@ public:
 
                 Tapped = true;
                 float x, y, z;
-                caster->GetClosePoint(x, y, z, me->GetObjectSize());
+                caster->GetClosePoint(x, y, z, me->GetCombatReach());
 
                 me->SetWalk(false);
                 me->GetMotionMaster()->MovePoint(1, x, y, z);
@@ -603,7 +602,7 @@ public:
         if (quest->GetQuestId() == QUEST_ESCAPE_COILSCAR)
         {
             creature->AI()->Talk(SAY_WIL_START, player);
-            creature->setFaction(FACTION_EARTHEN);
+            creature->SetFaction(FACTION_EARTHEN);
 
             if (npc_earthmender_wildaAI* pEscortAI = CAST_AI(npc_earthmender_wilda::npc_earthmender_wildaAI, creature->AI()))
                 pEscortAI->Start(false, false, player->GetGUID(), quest);
@@ -1480,7 +1479,7 @@ public:
                  totemOspirits = me->FindNearestCreature(ENTRY_TOTEM_OF_SPIRITS, RADIUS_TOTEM_OF_SPIRITS);
                  if (totemOspirits)
                  {
-                     Summoned->setFaction(FACTION_ENRAGED_SOUL_FRIENDLY);
+                     Summoned->SetFaction(FACTION_ENRAGED_SOUL_FRIENDLY);
                      Summoned->GetMotionMaster()->MovePoint(0, totemOspirits->GetPositionX(), totemOspirits->GetPositionY(), Summoned->GetPositionZ());
 
                      if (Unit* owner = totemOspirits->GetOwner())

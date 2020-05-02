@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -169,7 +168,7 @@ public:
     {
         npc_cooshcooshAI(Creature* creature) : ScriptedAI(creature)
         {
-            m_uiNormFaction = creature->getFaction();
+            m_uiNormFaction = creature->GetFaction();
             Initialize();
         }
 
@@ -184,8 +183,8 @@ public:
         void Reset() override
         {
             Initialize();
-            if (me->getFaction() != m_uiNormFaction)
-                me->setFaction(m_uiNormFaction);
+            if (me->GetFaction() != m_uiNormFaction)
+                me->SetFaction(m_uiNormFaction);
         }
 
         void EnterCombat(Unit* /*who*/) override { }
@@ -225,7 +224,7 @@ public:
         if (action == GOSSIP_ACTION_INFO_DEF)
         {
             CloseGossipMenuFor(player);
-            creature->setFaction(FACTION_HOSTILE_CO);
+            creature->SetFaction(FACTION_HOSTILE_CO);
             creature->AI()->AttackStart(player);
         }
         return true;

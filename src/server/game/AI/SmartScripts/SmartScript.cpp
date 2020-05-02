@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -365,7 +365,7 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
                     {
                         if (e.action.faction.factionID)
                         {
-                            (*itr)->ToCreature()->setFaction(e.action.faction.factionID);
+                            (*itr)->ToCreature()->SetFaction(e.action.faction.factionID);
                             TC_LOG_DEBUG("scripts.ai", "SmartScript::ProcessAction:: SMART_ACTION_SET_FACTION: Creature entry %u, %s set faction to %u",
                                 (*itr)->GetEntry(), (*itr)->GetGUID().ToString().c_str(), e.action.faction.factionID);
                         }
@@ -373,9 +373,9 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
                         {
                             if (CreatureTemplate const* ci = sObjectMgr->GetCreatureTemplate((*itr)->ToCreature()->GetEntry()))
                             {
-                                if ((*itr)->ToCreature()->getFaction() != ci->faction)
+                                if ((*itr)->ToCreature()->GetFaction() != ci->faction)
                                 {
-                                    (*itr)->ToCreature()->setFaction(ci->faction);
+                                    (*itr)->ToCreature()->SetFaction(ci->faction);
                                     TC_LOG_DEBUG("scripts.ai", "SmartScript::ProcessAction:: SMART_ACTION_SET_FACTION: Creature entry %u, %s set faction to %u",
                                         (*itr)->GetEntry(), (*itr)->GetGUID().ToString().c_str(), ci->faction);
                                 }
@@ -2341,12 +2341,8 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
             for (ObjectList::const_iterator itr = targets->begin(); itr != targets->end(); ++itr)
             {
                 if (Creature* creature = (*itr)->ToCreature())
-                {
-                    creature->GetMotionMaster()->Clear();
                     creature->GetMotionMaster()->MoveJump(e.target.x, e.target.y, e.target.z, 0.0f, (float)e.action.jump.speedxy, (float)e.action.jump.speedz); // @todo add optional jump orientation support?
-                }
             }
-            /// @todo Resume path when reached jump location
 
             delete targets;
             break;
@@ -2869,6 +2865,44 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
             for (WorldObject* target : *targets)
                 if (Player* playerTarget = target->ToPlayer())
                     playerTarget->GetSceneMgr().CancelSceneBySceneId(e.action.scene.sceneId);
+
+            delete targets;
+            break;
+        }
+        case SMART_ACTION_SET_MOVEMENT_SPEED:
+        {
+            ObjectList* targets = GetTargets(e, unit);
+            if (!targets)
+                break;
+
+            uint32 speedInteger = e.action.movementSpeed.speedInteger;
+            uint32 speedFraction = e.action.movementSpeed.speedFraction;
+            float speed = float(speedInteger) + float(speedFraction) / std::pow(10, std::floor(std::log10(float(speedFraction ? speedFraction : 1)) + 1));
+
+            for (WorldObject* target : *targets)
+                if (IsCreature(target))
+                    me->SetSpeed(UnitMoveType(e.action.movementSpeed.movementType), speed);
+
+            delete targets;
+            break;
+        }
+        case SMART_ACTION_PLAY_SPELL_VISUAL_KIT:
+        {
+            ObjectList* targets = GetTargets(e, unit);
+            if (!targets)
+                break;
+
+            for (ObjectList::const_iterator itr = targets->begin(); itr != targets->end(); ++itr)
+            {
+                if (IsUnit(*itr))
+                {
+                    (*itr)->ToUnit()->SendPlaySpellVisualKit(e.action.spellVisualKit.spellVisualKitId, e.action.spellVisualKit.kitType,
+                        e.action.spellVisualKit.duration);
+
+                    TC_LOG_DEBUG("scripts.ai", "SmartScript::ProcessAction:: SMART_ACTION_PLAY_SPELL_VISUAL_KIT: target: %s (%s), SpellVisualKit: %u",
+                        (*itr)->GetName().c_str(), (*itr)->GetGUID().ToString().c_str(), e.action.spellVisualKit.spellVisualKitId);
+                }
+            }
 
             delete targets;
             break;
@@ -3797,13 +3831,6 @@ void SmartScript::ProcessEvent(SmartScriptHolder& e, Unit* unit, uint32 var0, ui
             ProcessAction(e, unit, var0, var1);
             break;
         }
-        case SMART_EVENT_DUMMY_EFFECT:
-        {
-            if (e.event.dummy.spell != var0 || e.event.dummy.effIndex != var1)
-                return;
-            ProcessAction(e, unit, var0, var1);
-            break;
-        }
         case SMART_EVENT_GAME_EVENT_START:
         case SMART_EVENT_GAME_EVENT_END:
         {
@@ -4446,4 +4473,10 @@ Unit* SmartScript::GetLastInvoker(Unit* invoker)
         return ObjectAccessor::GetUnit(*invoker, mLastInvoker);
 
     return nullptr;
+}
+
+void SmartScript::IncPhase(uint32 p)
+{
+    // protect phase from overflowing
+    mEventPhase = std::min<uint32>(SMART_EVENT_PHASE_12, mEventPhase + p);
 }

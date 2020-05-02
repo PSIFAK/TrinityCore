@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -410,7 +410,7 @@ class boss_algalon_the_observer : public CreatureScript
                 {
                     _firstPull = false;
                     Talk(SAY_ALGALON_START_TIMER);
-                    if (Creature* brann = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_BRANN_BRONZEBEARD_ALG)))
+                    if (Creature* brann = instance->GetCreature(DATA_BRANN_BRONZEBEARD_ALG))
                         brann->AI()->DoAction(ACTION_FINISH_INTRO);
 
                     me->setActive(true);
@@ -444,7 +444,7 @@ class boss_algalon_the_observer : public CreatureScript
                     me->SetDisableGravity(false);
                 else if (pointId == POINT_ALGALON_OUTRO)
                 {
-                    me->SetFacingTo(1.605703f, true);
+                    me->SetFacingTo(1.605703f);
                     events.ScheduleEvent(EVENT_OUTRO_3, 1200);
                     events.ScheduleEvent(EVENT_OUTRO_4, 2400);
                     events.ScheduleEvent(EVENT_OUTRO_5, 8500);
@@ -538,7 +538,7 @@ class boss_algalon_the_observer : public CreatureScript
                     damage = 0;
                     me->SetReactState(REACT_PASSIVE);
                     me->AttackStop();
-                    me->setFaction(35);
+                    me->SetFaction(35);
                     me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
                     DoCast(me, SPELL_SELF_STUN);
                     events.Reset();
@@ -1358,7 +1358,7 @@ class spell_algalon_supermassive_fail : public SpellScriptLoader
                 if (!GetHitPlayer())
                     return;
 
-                GetHitPlayer()->ResetCriteria(CRITERIA_TYPE_BE_SPELL_TARGET, CRITERIA_CONDITION_NO_SPELL_HIT, GetSpellInfo()->Id, true);
+                GetHitPlayer()->ResetCriteria(CRITERIA_CONDITION_NO_SPELL_HIT, GetSpellInfo()->Id, true);
             }
 
             void Register() override

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -539,7 +539,7 @@ public:
             /// TODO: Remove this once we find a general rule for WorldObject::MovePosition (this spell shouldn't take the Z change into consideration)
             Unit* caster = GetCaster();
             float angle = float(rand_norm()) * static_cast<float>(2 * M_PI);
-            uint32 dist = caster->GetObjectSize() + GetSpellInfo()->GetEffect(EFFECT_0)->CalcRadius(caster) * (float)rand_norm();
+            uint32 dist = caster->GetCombatReach() + GetSpellInfo()->GetEffect(EFFECT_0)->CalcRadius(caster) * (float)rand_norm();
 
             float x = caster->GetPositionX() + dist * std::cos(angle);
             float y = caster->GetPositionY() + dist * std::sin(angle);

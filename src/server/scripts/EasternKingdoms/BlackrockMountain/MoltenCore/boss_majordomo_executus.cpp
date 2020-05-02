@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -111,7 +110,7 @@ class boss_majordomo : public CreatureScript
                     if (!me->FindNearestCreature(NPC_FLAMEWAKER_HEALER, 100.0f) && !me->FindNearestCreature(NPC_FLAMEWAKER_ELITE, 100.0f))
                     {
                         instance->UpdateEncounterStateForKilledCreature(me->GetEntry(), me);
-                        me->setFaction(FACTION_FRIENDLY);
+                        me->SetFaction(FACTION_FRIENDLY);
                         EnterEvadeMode();
                         Talk(SAY_DEFEAT);
                         _JustDied();
@@ -192,7 +191,7 @@ class boss_majordomo : public CreatureScript
                 }
                 else if (action == ACTION_START_RAGNAROS_ALT)
                 {
-                    me->setFaction(FACTION_FRIENDLY);
+                    me->SetFaction(FACTION_FRIENDLY);
                     me->AddNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 }
             }

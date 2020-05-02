@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -65,7 +64,7 @@ class WorldObject;
 class WorldSession;
 
 struct AreaTriggerEntry;
-struct AuctionEntry;
+struct AuctionPosting;
 struct ConditionSourceInfo;
 struct Condition;
 struct CreatureTemplate;
@@ -375,9 +374,6 @@ class TC_GAME_API ItemScript : public ScriptObject
 
     public:
 
-        // Called when a dummy spell effect is triggered on the item.
-        virtual bool OnDummyEffect(Unit* /*caster*/, uint32 /*spellId*/, SpellEffIndex /*effIndex*/, Item* /*target*/) { return false; }
-
         // Called when a player accepts a quest from the item.
         virtual bool OnQuestAccept(Player* /*player*/, Item* /*item*/, Quest const* /*quest*/) { return false; }
 
@@ -425,9 +421,6 @@ class TC_GAME_API CreatureScript : public UnitScript, public UpdatableScript<Cre
 
     public:
 
-        // Called when a dummy spell effect is triggered on the creature.
-        virtual bool OnDummyEffect(Unit* /*caster*/, uint32 /*spellId*/, SpellEffIndex /*effIndex*/, Creature* /*target*/) { return false; }
-
         // Called when a player opens a gossip dialog with the creature.
         virtual bool OnGossipHello(Player* /*player*/, Creature* /*creature*/) { return false; }
 
@@ -463,9 +456,6 @@ class TC_GAME_API GameObjectScript : public ScriptObject, public UpdatableScript
         GameObjectScript(const char* name);
 
     public:
-
-        // Called when a dummy spell effect is triggered on the gameobject.
-        virtual bool OnDummyEffect(Unit* /*caster*/, uint32 /*spellId*/, SpellEffIndex /*effIndex*/, GameObject* /*target*/) { return false; }
 
         // Called when a player opens a gossip dialog with the gameobject.
         virtual bool OnGossipHello(Player* /*player*/, GameObject* /*go*/) { return false; }
@@ -570,16 +560,16 @@ class TC_GAME_API AuctionHouseScript : public ScriptObject
     public:
 
         // Called when an auction is added to an auction house.
-        virtual void OnAuctionAdd(AuctionHouseObject* /*ah*/, AuctionEntry* /*entry*/) { }
+        virtual void OnAuctionAdd(AuctionHouseObject* /*ah*/, AuctionPosting* /*auction*/) { }
 
         // Called when an auction is removed from an auction house.
-        virtual void OnAuctionRemove(AuctionHouseObject* /*ah*/, AuctionEntry* /*entry*/) { }
+        virtual void OnAuctionRemove(AuctionHouseObject* /*ah*/, AuctionPosting* /*auction*/) { }
 
         // Called when an auction was succesfully completed.
-        virtual void OnAuctionSuccessful(AuctionHouseObject* /*ah*/, AuctionEntry* /*entry*/) { }
+        virtual void OnAuctionSuccessful(AuctionHouseObject* /*ah*/, AuctionPosting* /*auction*/) { }
 
         // Called when an auction expires.
-        virtual void OnAuctionExpire(AuctionHouseObject* /*ah*/, AuctionEntry* /*entry*/) { }
+        virtual void OnAuctionExpire(AuctionHouseObject* /*ah*/, AuctionPosting* /*auction*/) { }
 };
 
 class TC_GAME_API ConditionScript : public ScriptObject
@@ -1027,7 +1017,6 @@ class TC_GAME_API ScriptMgr
 
     public: /* ItemScript */
 
-        bool OnDummyEffect(Unit* caster, uint32 spellId, SpellEffIndex effIndex, Item* target);
         bool OnQuestAccept(Player* player, Item* item, Quest const* quest);
         bool OnItemUse(Player* player, Item* item, SpellCastTargets const& targets, ObjectGuid castId);
         bool OnItemExpire(Player* player, ItemTemplate const* proto);
@@ -1036,7 +1025,6 @@ class TC_GAME_API ScriptMgr
 
     public: /* CreatureScript */
 
-        bool OnDummyEffect(Unit* caster, uint32 spellId, SpellEffIndex effIndex, Creature* target);
         bool OnGossipHello(Player* player, Creature* creature);
         bool OnGossipSelect(Player* player, Creature* creature, uint32 sender, uint32 action);
         bool OnGossipSelectCode(Player* player, Creature* creature, uint32 sender, uint32 action, const char* code);
@@ -1050,7 +1038,6 @@ class TC_GAME_API ScriptMgr
 
     public: /* GameObjectScript */
 
-        bool OnDummyEffect(Unit* caster, uint32 spellId, SpellEffIndex effIndex, GameObject* target);
         bool OnGossipHello(Player* player, GameObject* go);
         bool OnGossipSelect(Player* player, GameObject* go, uint32 sender, uint32 action);
         bool OnGossipSelectCode(Player* player, GameObject* go, uint32 sender, uint32 action, const char* code);
@@ -1087,10 +1074,10 @@ class TC_GAME_API ScriptMgr
 
     public: /* AuctionHouseScript */
 
-        void OnAuctionAdd(AuctionHouseObject* ah, AuctionEntry* entry);
-        void OnAuctionRemove(AuctionHouseObject* ah, AuctionEntry* entry);
-        void OnAuctionSuccessful(AuctionHouseObject* ah, AuctionEntry* entry);
-        void OnAuctionExpire(AuctionHouseObject* ah, AuctionEntry* entry);
+        void OnAuctionAdd(AuctionHouseObject* ah, AuctionPosting* auction);
+        void OnAuctionRemove(AuctionHouseObject* ah, AuctionPosting* auction);
+        void OnAuctionSuccessful(AuctionHouseObject* ah, AuctionPosting* auction);
+        void OnAuctionExpire(AuctionHouseObject* ah, AuctionPosting* auction);
 
     public: /* ConditionScript */
 

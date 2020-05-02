@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -266,6 +265,8 @@ class TC_GAME_API UnitAI
         void DoCastVictim(uint32 spellId, bool triggered = false);
         void DoCastAOE(uint32 spellId, bool triggered = false);
 
+        virtual bool ShouldSparWith(Unit const* /*target*/) const { return false; }
+
         void DoMeleeAttackIfReady();
         bool DoSpellAttackIfReady(uint32 spellId);
 
@@ -278,7 +279,6 @@ class TC_GAME_API UnitAI
         virtual void sQuestAccept(Player* /*player*/, Quest const* /*quest*/) { }
         virtual void sQuestSelect(Player* /*player*/, Quest const* /*quest*/) { }
         virtual void sQuestReward(Player* /*player*/, Quest const* /*quest*/, uint32 /*opt*/) { }
-        virtual bool sOnDummyEffect(Unit* /*caster*/, uint32 /*spellId*/, SpellEffIndex /*effIndex*/) { return false; }
         virtual void sOnGameEvent(bool /*start*/, uint16 /*eventId*/) { }
 
     private:

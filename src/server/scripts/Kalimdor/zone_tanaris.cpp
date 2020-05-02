@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -91,7 +90,7 @@ public:
         void Reset() override
         {
             Initialize();
-            me->setFaction(35);
+            me->SetFaction(35);
         }
 
         void SendItem(Unit* receiver)
@@ -121,7 +120,7 @@ public:
             {
                 if (SwitchFactionTimer <= diff)
                 {
-                    me->setFaction(91);
+                    me->SetFaction(91);
                     isFriendly = false;
                 } else SwitchFactionTimer -= diff;
             }
@@ -319,7 +318,7 @@ public:
     {
         if (quest->GetQuestId() == Q_OOX17)
         {
-            creature->setFaction(113);
+            creature->SetFaction(113);
             creature->SetFullHealth();
             creature->SetStandState(UNIT_STAND_STATE_STAND);
             creature->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);

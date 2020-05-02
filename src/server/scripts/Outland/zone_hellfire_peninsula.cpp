@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -77,7 +76,7 @@ public:
             Initialize();
 
             me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
-            me->setFaction(FACTION_FRIENDLY);
+            me->SetFaction(FACTION_FRIENDLY);
 
             Talk(SAY_SUMMON);
         }
@@ -88,7 +87,7 @@ public:
             {
                 if (faction_Timer <= diff)
                 {
-                    me->setFaction(FACTION_HOSTILE);
+                    me->SetFaction(FACTION_HOSTILE);
                     faction_Timer = 0;
                 } else faction_Timer -= diff;
             }
@@ -98,7 +97,7 @@ public:
 
             if (HealthBelowPct(30))
             {
-                me->setFaction(FACTION_FRIENDLY);
+                me->SetFaction(FACTION_FRIENDLY);
                 me->AddNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
                 me->RemoveAllAuras();
                 me->DeleteThreatList();
@@ -282,7 +281,7 @@ public:
         {
             if (quest->GetQuestId() == QUEST_ROAD_TO_FALCON_WATCH)
             {
-                me->setFaction(FACTION_FALCON_WATCH_QUEST);
+                me->SetFaction(FACTION_FALCON_WATCH_QUEST);
                 npc_escortAI::Start(true, false, player->GetGUID());
             }
         }
@@ -958,7 +957,7 @@ public:
         void StartFight(Player* player)
         {
             me->Dismount();
-            me->SetFacingToObject(player, true);
+            me->SetFacingToObject(player);
             me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             _playerGUID = player->GetGUID();
             _events.ScheduleEvent(EVENT_TALK, Seconds(2));
@@ -1005,7 +1004,7 @@ public:
                     break;
                 case EVENT_ATTACK:
                     me->RemoveUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
-                    me->setFaction(FACTION_HOSTILE);
+                    me->SetFaction(FACTION_HOSTILE);
                     if (Player* player = ObjectAccessor::GetPlayer(*me, _playerGUID))
                         me->CombatStart(player);
                     _events.ScheduleEvent(EVENT_FIREBALL, 1);

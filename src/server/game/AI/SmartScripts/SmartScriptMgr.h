@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -88,8 +88,8 @@ enum SMART_EVENT_PHASE_BITS
     SMART_EVENT_PHASE_10_BIT       = 512,
     SMART_EVENT_PHASE_11_BIT       = 1024,
     SMART_EVENT_PHASE_12_BIT       = 2048,
-    SMART_EVENT_PHASE_ALL          = SMART_EVENT_PHASE_1_BIT + SMART_EVENT_PHASE_2_BIT + SMART_EVENT_PHASE_3_BIT + SMART_EVENT_PHASE_4_BIT + SMART_EVENT_PHASE_5_BIT + 
-                                     SMART_EVENT_PHASE_6_BIT + SMART_EVENT_PHASE_7_BIT + SMART_EVENT_PHASE_8_BIT + SMART_EVENT_PHASE_9_BIT + SMART_EVENT_PHASE_10_BIT + 
+    SMART_EVENT_PHASE_ALL          = SMART_EVENT_PHASE_1_BIT + SMART_EVENT_PHASE_2_BIT + SMART_EVENT_PHASE_3_BIT + SMART_EVENT_PHASE_4_BIT + SMART_EVENT_PHASE_5_BIT +
+                                     SMART_EVENT_PHASE_6_BIT + SMART_EVENT_PHASE_7_BIT + SMART_EVENT_PHASE_8_BIT + SMART_EVENT_PHASE_9_BIT + SMART_EVENT_PHASE_10_BIT +
                                      SMART_EVENT_PHASE_11_BIT + SMART_EVENT_PHASE_12_BIT
 };
 
@@ -177,7 +177,7 @@ enum SMART_EVENT
     SMART_EVENT_JUST_CREATED             = 63,      // none
     SMART_EVENT_GOSSIP_HELLO             = 64,      // noReportUse (for GOs)
     SMART_EVENT_FOLLOW_COMPLETED         = 65,      // none
-    SMART_EVENT_DUMMY_EFFECT             = 66,      // spellId, effectIndex
+    // 66 unused
     SMART_EVENT_IS_BEHIND_TARGET         = 67,      // cooldownMin, CooldownMax
     SMART_EVENT_GAME_EVENT_START         = 68,      // game_event.Entry
     SMART_EVENT_GAME_EVENT_END           = 69,      // game_event.Entry
@@ -594,13 +594,15 @@ enum SMART_ACTION
     SMART_ACTION_LOAD_EQUIPMENT                     = 124,    // id
     SMART_ACTION_TRIGGER_RANDOM_TIMED_EVENT         = 125,    // id min range, id max range
     SMART_ACTION_REMOVE_ALL_GAMEOBJECTS             = 126,
-    SMART_ACTION_STOP_MOTION                        = 127,	  // stopMoving, movementExpired
+    SMART_ACTION_STOP_MOTION                        = 127,    // stopMoving, movementExpired
     SMART_ACTION_PLAY_ANIMKIT                       = 128,    // id, type (0 = oneShot, 1 = aiAnim, 2 = meleeAnim, 3 = movementAnim)
     SMART_ACTION_SCENE_PLAY                         = 129,    // sceneId
     SMART_ACTION_SCENE_CANCEL                       = 130,    // sceneId
-    // 131 - 135 : 3.3.5 reserved
+    // 131 - 134 : 3.3.5 reserved
     SMART_ACTION_PLAY_CINEMATIC                     = 135,    // reserved for future uses
-    SMART_ACTION_END                                = 136
+    SMART_ACTION_SET_MOVEMENT_SPEED                 = 136,    // movementType, speedInteger, speedFraction
+    SMART_ACTION_PLAY_SPELL_VISUAL_KIT              = 137,    // spellVisualKitId, kitType (unknown values, copypaste from packet dumps), duration
+    SMART_ACTION_END                                = 138
 };
 
 struct SmartAction
@@ -1172,6 +1174,20 @@ struct SmartAction
             uint32 sceneId;
         } scene;
 
+        struct
+        {
+            uint32 movementType;
+            uint32 speedInteger;
+            uint32 speedFraction;
+        } movementSpeed;
+
+        struct
+        {
+            uint32 spellVisualKitId;
+            uint32 kitType;
+            uint32 duration;
+        } spellVisualKit;
+
         //! Note for any new future actions
         //! All parameters must have type uint32
 
@@ -1476,7 +1492,7 @@ const uint32 SmartAIEventMask[SMART_EVENT_END][2] =
     {SMART_EVENT_JUST_CREATED,              SMART_SCRIPT_TYPE_MASK_CREATURE + SMART_SCRIPT_TYPE_MASK_GAMEOBJECT },
     {SMART_EVENT_GOSSIP_HELLO,              SMART_SCRIPT_TYPE_MASK_CREATURE + SMART_SCRIPT_TYPE_MASK_GAMEOBJECT },
     {SMART_EVENT_FOLLOW_COMPLETED,          SMART_SCRIPT_TYPE_MASK_CREATURE },
-    {SMART_EVENT_DUMMY_EFFECT,              SMART_SCRIPT_TYPE_MASK_SPELL    },
+    {66,                                    0                               }, // unused
     {SMART_EVENT_IS_BEHIND_TARGET,          SMART_SCRIPT_TYPE_MASK_CREATURE },
     {SMART_EVENT_GAME_EVENT_START,          SMART_SCRIPT_TYPE_MASK_CREATURE + SMART_SCRIPT_TYPE_MASK_GAMEOBJECT },
     {SMART_EVENT_GAME_EVENT_END,            SMART_SCRIPT_TYPE_MASK_CREATURE + SMART_SCRIPT_TYPE_MASK_GAMEOBJECT },
@@ -1658,6 +1674,7 @@ class TC_GAME_API SmartAIMgr
         bool IsAreaTriggerValid(SmartScriptHolder const& e, uint32 entry);
         bool IsSoundValid(SmartScriptHolder const& e, uint32 entry);
         bool IsAnimKitValid(SmartScriptHolder const& e, uint32 entry);
+        bool IsSpellVisualKitValid(SmartScriptHolder const& e, uint32 entry);
         bool IsTextValid(SmartScriptHolder const& e, uint32 id);
 
         // Helpers

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -607,7 +607,7 @@ class boss_flame_leviathan_seat : public CreatureScript
                     if (Unit* turretPassenger = me->GetVehicleKit()->GetPassenger(SEAT_TURRET))
                         if (Creature* turret = turretPassenger->ToCreature())
                         {
-                            turret->setFaction(me->GetVehicleBase()->getFaction());
+                            turret->SetFaction(me->GetVehicleBase()->GetFaction());
                             turret->SetUnitFlags(UnitFlags(0)); // unselectable
                             turret->AI()->AttackStart(who);
                         }
@@ -974,11 +974,6 @@ class npc_mimirons_inferno : public CreatureScript
 public:
     npc_mimirons_inferno() : CreatureScript("npc_mimirons_inferno") { }
 
-    CreatureAI* GetAI(Creature* creature) const override
-    {
-        return GetUlduarAI<npc_mimirons_infernoAI>(creature);
-    }
-
     struct npc_mimirons_infernoAI : public npc_escortAI
     {
         npc_mimirons_infernoAI(Creature* creature) : npc_escortAI(creature)
@@ -1031,6 +1026,10 @@ public:
         }
     };
 
+    CreatureAI* GetAI(Creature* creature) const override
+    {
+        return GetUlduarAI<npc_mimirons_infernoAI>(creature);
+    }
 };
 
 class npc_hodirs_fury : public CreatureScript
@@ -1247,7 +1246,7 @@ class npc_lorekeeper : public CreatureScript
                     CloseGossipMenuFor(player);
                     me->GetMap()->LoadGrid(364, -16); // make sure leviathan is loaded
 
-                    if (Creature* leviathan = ObjectAccessor::GetCreature(*me, _instance->GetGuidData(BOSS_LEVIATHAN)))
+                    if (Creature* leviathan = _instance->GetCreature(BOSS_LEVIATHAN))
                     {
                         leviathan->AI()->DoAction(ACTION_START_HARD_MODE);
                         me->SetVisible(false);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -164,7 +164,7 @@ public:
                         break;
                     case EVENT_START_ESCORT:
                         events.Reset();
-                        me->setFaction(FACTION_ESCORTEE_H);
+                        me->SetFaction(FACTION_ESCORTEE_H);
                         me->SetReactState(REACT_AGGRESSIVE);
                         ENSURE_AI(npc_escortAI, (me->AI()))->Start(true, true, _player);
                         break;

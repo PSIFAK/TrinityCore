@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -104,7 +103,7 @@ public:
                     Talk(SAY_WORGRAGGRO3);
                     if (Creature* RWORG = me->SummonCreature(NPC_RAVENOUS_WORG, me->GetPositionX()+10, me->GetPositionY()+8, me->GetPositionZ()+2, 3.229f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 120000))
                     {
-                        RWORG->setFaction(35);
+                        RWORG->SetFaction(35);
                         _RavenousworgGUID = RWORG->GetGUID();
                     }
                     break;
@@ -137,7 +136,7 @@ public:
                         {
                             RWORG->Kill(Mrfloppy);
                             Mrfloppy->ExitVehicle();
-                            RWORG->setFaction(14);
+                            RWORG->SetFaction(14);
                             RWORG->GetMotionMaster()->MovePoint(0, RWORG->GetPositionX()+10, RWORG->GetPositionY()+80, RWORG->GetPositionZ());
                             Talk(SAY_VICTORY2);
                         }

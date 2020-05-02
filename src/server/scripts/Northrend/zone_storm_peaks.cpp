@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -93,7 +93,7 @@ public:
             if (menuId == GOSSIP_ID && gossipListId == GOSSIP_OPTION_ID)
             {
                 CloseGossipMenuFor(player);
-                me->setFaction(113);
+                me->SetFaction(113);
                 Start(true, true, player->GetGUID());
             }
         }

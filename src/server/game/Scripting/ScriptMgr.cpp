@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2019 TrinityCore <https://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -1638,15 +1637,6 @@ InstanceScript* ScriptMgr::CreateInstanceData(InstanceMap* map)
     return tmpscript->GetInstanceScript(map);
 }
 
-bool ScriptMgr::OnDummyEffect(Unit* caster, uint32 spellId, SpellEffIndex effIndex, Item* target)
-{
-    ASSERT(caster);
-    ASSERT(target);
-
-    GET_SCRIPT_RET(ItemScript, target->GetScriptId(), tmpscript, false);
-    return tmpscript->OnDummyEffect(caster, spellId, effIndex, target);
-}
-
 bool ScriptMgr::OnQuestAccept(Player* player, Item* item, Quest const* quest)
 {
     ASSERT(player);
@@ -1694,15 +1684,6 @@ bool ScriptMgr::OnCastItemCombatSpell(Player* player, Unit* victim, SpellInfo co
 
     GET_SCRIPT_RET(ItemScript, item->GetScriptId(), tmpscript, true);
     return tmpscript->OnCastItemCombatSpell(player, victim, spellInfo, item);
-}
-
-bool ScriptMgr::OnDummyEffect(Unit* caster, uint32 spellId, SpellEffIndex effIndex, Creature* target)
-{
-    ASSERT(caster);
-    ASSERT(target);
-
-    GET_SCRIPT_RET(CreatureScript, target->GetScriptId(), tmpscript, false);
-    return tmpscript->OnDummyEffect(caster, spellId, effIndex, target);
 }
 
 bool ScriptMgr::OnGossipHello(Player* player, Creature* creature)
@@ -1921,15 +1902,6 @@ void ScriptMgr::OnGameObjectUpdate(GameObject* go, uint32 diff)
     tmpscript->OnUpdate(go, diff);
 }
 
-bool ScriptMgr::OnDummyEffect(Unit* caster, uint32 spellId, SpellEffIndex effIndex, GameObject* target)
-{
-    ASSERT(caster);
-    ASSERT(target);
-
-    GET_SCRIPT_RET(GameObjectScript, target->GetScriptId(), tmpscript, false);
-    return tmpscript->OnDummyEffect(caster, spellId, effIndex, target);
-}
-
 bool ScriptMgr::OnAreaTrigger(Player* player, AreaTriggerEntry const* trigger, bool entered)
 {
     ASSERT(player);
@@ -1989,36 +1961,36 @@ void ScriptMgr::OnWeatherUpdate(Weather* weather, uint32 diff)
     tmpscript->OnUpdate(weather, diff);
 }
 
-void ScriptMgr::OnAuctionAdd(AuctionHouseObject* ah, AuctionEntry* entry)
+void ScriptMgr::OnAuctionAdd(AuctionHouseObject* ah, AuctionPosting* auction)
 {
     ASSERT(ah);
-    ASSERT(entry);
+    ASSERT(auction);
 
-    FOREACH_SCRIPT(AuctionHouseScript)->OnAuctionAdd(ah, entry);
+    FOREACH_SCRIPT(AuctionHouseScript)->OnAuctionAdd(ah, auction);
 }
 
-void ScriptMgr::OnAuctionRemove(AuctionHouseObject* ah, AuctionEntry* entry)
+void ScriptMgr::OnAuctionRemove(AuctionHouseObject* ah, AuctionPosting* auction)
 {
     ASSERT(ah);
-    ASSERT(entry);
+    ASSERT(auction);
 
-    FOREACH_SCRIPT(AuctionHouseScript)->OnAuctionRemove(ah, entry);
+    FOREACH_SCRIPT(AuctionHouseScript)->OnAuctionRemove(ah, auction);
 }
 
-void ScriptMgr::OnAuctionSuccessful(AuctionHouseObject* ah, AuctionEntry* entry)
+void ScriptMgr::OnAuctionSuccessful(AuctionHouseObject* ah, AuctionPosting* auction)
 {
     ASSERT(ah);
-    ASSERT(entry);
+    ASSERT(auction);
 
-    FOREACH_SCRIPT(AuctionHouseScript)->OnAuctionSuccessful(ah, entry);
+    FOREACH_SCRIPT(AuctionHouseScript)->OnAuctionSuccessful(ah, auction);
 }
 
-void ScriptMgr::OnAuctionExpire(AuctionHouseObject* ah, AuctionEntry* entry)
+void ScriptMgr::OnAuctionExpire(AuctionHouseObject* ah, AuctionPosting* auction)
 {
     ASSERT(ah);
-    ASSERT(entry);
+    ASSERT(auction);
 
-    FOREACH_SCRIPT(AuctionHouseScript)->OnAuctionExpire(ah, entry);
+    FOREACH_SCRIPT(AuctionHouseScript)->OnAuctionExpire(ah, auction);
 }
 
 bool ScriptMgr::OnConditionCheck(Condition const* condition, ConditionSourceInfo& sourceInfo)
