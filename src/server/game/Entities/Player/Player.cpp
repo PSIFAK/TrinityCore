@@ -4791,7 +4791,7 @@ void Player::RepopAtGraveyard()
     AreaTableEntry const* zone = sAreaTableStore.LookupEntry(GetAreaId());
 
     // Such zones are considered unreachable as a ghost and the player must be automatically revived
-    if ((!IsAlive() && zone && zone->Flags[0] & AREA_FLAG_NEED_FLY) || GetTransport() || GetPositionZ() < GetMap()->GetMinHeight(GetPositionX(), GetPositionY()))
+    if ((!IsAlive() && zone && zone->Flags[0] & AREA_FLAG_NEED_FLY) || GetTransport() || GetPositionZ() < GetMap()->GetMinHeight(GetPhaseShift(), GetPositionX(), GetPositionY()))
     {
         ResurrectPlayer(0.5f);
         SpawnCorpseBones();
@@ -4826,7 +4826,7 @@ void Player::RepopAtGraveyard()
             GetSession()->SendPacket(packet.Write());
         }
     }
-    else if (GetPositionZ() < GetMap()->GetMinHeight(GetPositionX(), GetPositionY()))
+    else if (GetPositionZ() < GetMap()->GetMinHeight(GetPhaseShift(), GetPositionX(), GetPositionY()))
         TeleportTo(m_homebindMapId, m_homebindX, m_homebindY, m_homebindZ, GetOrientation());
 
     RemovePlayerFlag(PLAYER_FLAGS_IS_OUT_OF_BOUNDS);
@@ -5691,7 +5691,7 @@ void Player::InitializeSkillFields()
     uint32 i = 0;
     for (SkillLineEntry const* skillLine : sSkillLineStore)
     {
-        if (SkillRaceClassInfoEntry const* rcEntry = sDB2Manager.GetSkillRaceClassInfo(skillLine->ID, getRace(), getClass()))
+        if (sDB2Manager.GetSkillRaceClassInfo(skillLine->ID, getRace(), getClass()))
         {
             SetSkillLineId(i, skillLine->ID);
             SetSkillStartingRank(i, 1);
@@ -9737,7 +9737,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
         case 4197:
             if (bf && bf->GetTypeId() == BATTLEFIELD_WG)
                 bf->FillInitialWorldStates(packet);
-            // No break here, intended.
+            /* fallthrough */
         default:
             packet.Worldstates.emplace_back(0x914, 0x0);           // 7
             packet.Worldstates.emplace_back(0x913, 0x0);           // 8
@@ -18164,7 +18164,7 @@ bool Player::LoadFromDB(ObjectGuid guid, CharacterDatabaseQueryHolder* holder)
         {
             map = currentBg->GetBgMap();
 
-            BattlegroundQueueTypeId bgQueueTypeId = sBattlegroundMgr->BGQueueTypeId(currentBg->GetTypeID(), currentBg->GetArenaType());
+            BattlegroundQueueTypeId bgQueueTypeId = currentBg->GetQueueId();
             AddBattlegroundQueueId(bgQueueTypeId);
 
             m_bgData.bgTypeID = currentBg->GetTypeID();
@@ -19013,7 +19013,13 @@ void Player::_LoadInventory(PreparedQueryResult result, PreparedQueryResult arti
                         item->CopyArtifactDataFromParent(parent);
                     }
                     else
-                        err = EQUIP_ERR_WRONG_BAG_TYPE_3; // send by mail
+                    {
+                        TC_LOG_ERROR("entities.player", "Player::_LoadInventory: Player '%s' (%s) has child item (%s, entry: %u) which can't be loaded into inventory because parent item was not found (Bag %s, slot: %u). Item will be sent by mail.",
+                            GetName().c_str(), GetGUID().ToString().c_str(), item->GetGUID().ToString().c_str(), item->GetEntry(), bagGuid.ToString().c_str(), slot);
+                        item->DeleteFromInventoryDB(trans);
+                        problematicItems.push_back(item);
+                        continue;
+                    }
                 }
 
                 // Item is not in bag
@@ -24493,12 +24499,18 @@ void Player::LearnQuestRewardedSpells(Quest const* quest)
     uint32 learned_0 = effect->TriggerSpell;
     if (!HasSpell(learned_0))
     {
-        SpellInfo const* learnedInfo = sSpellMgr->GetSpellInfo(learned_0);
-        if (!learnedInfo)
-            return;
+        found = false;
+        SkillLineAbilityMapBounds skills = sSpellMgr->GetSkillLineAbilityMapBounds(learned_0);
+        for (auto skillItr = skills.first; skillItr != skills.second; ++skillItr)
+        {
+            if (skillItr->second->AcquireMethod == SKILL_LINE_ABILITY_REWARDED_FROM_QUEST)
+            {
+                found = true;
+                break;
+            }
+        }
 
-        // profession specialization can be re-learned from npc
-        if (learnedInfo->GetEffect(EFFECT_0)->Effect == SPELL_EFFECT_TRADE_SKILL && learnedInfo->GetEffect(EFFECT_1)->Effect == 0 && !learnedInfo->SpellLevel)
+        if (!found)
             return;
     }
 
@@ -24779,7 +24791,7 @@ uint32 Player::AddBattlegroundQueueId(BattlegroundQueueTypeId val)
         {
             m_bgBattlegroundQueueID[i].bgQueueTypeId = val;
             m_bgBattlegroundQueueID[i].invitedToInstance = 0;
-            m_bgBattlegroundQueueID[i].joinTime = getMSTime();
+            m_bgBattlegroundQueueID[i].joinTime = GameTime::GetGameTime();
             return i;
         }
     }
