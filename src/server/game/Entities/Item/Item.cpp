@@ -119,7 +119,7 @@ void AddItemsSetItem(Player* player, Item* item)
             if (eff->SetBonuses.count(itemSetSpell))
                 continue;
 
-            SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(itemSetSpell->SpellID);
+            SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(itemSetSpell->SpellID, DIFFICULTY_NONE);
             if (!spellInfo)
             {
                 TC_LOG_ERROR("entities.player.items", "WORLD: unknown spell id %u in items set %u effects", itemSetSpell->SpellID, setid);
@@ -174,7 +174,7 @@ void RemoveItemsSetItem(Player* player, ItemTemplate const* proto)
             if (!eff->SetBonuses.count(itemSetSpell))
                 continue;
 
-            player->ApplyEquipSpell(sSpellMgr->AssertSpellInfo(itemSetSpell->SpellID), nullptr, false);
+            player->ApplyEquipSpell(sSpellMgr->AssertSpellInfo(itemSetSpell->SpellID, DIFFICULTY_NONE), nullptr, false);
             eff->SetBonuses.erase(itemSetSpell);
         }
     }
@@ -2205,6 +2205,15 @@ uint32 Item::GetItemLevel(ItemTemplate const* itemTemplate, BonusData const& bon
 int32 Item::GetItemStatValue(uint32 index, Player const* owner) const
 {
     ASSERT(index < MAX_ITEM_PROTO_STATS);
+    switch (GetItemStatType(index))
+    {
+        case ITEM_MOD_CORRUPTION:
+        case ITEM_MOD_CORRUPTION_RESISTANCE:
+            return _bonusData.ItemStatAllocation[index];
+        default:
+            break;
+    }
+
     uint32 itemLevel = GetItemLevel(owner);
     if (uint32 randomPropPoints = GetRandomPropertyPoints(itemLevel, GetQuality(), GetTemplate()->GetInventoryType(), GetTemplate()->GetSubClass()))
     {

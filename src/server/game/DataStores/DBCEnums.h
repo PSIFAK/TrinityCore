@@ -19,6 +19,7 @@
 #define DBCENUMS_H
 
 #include "Define.h"
+#include "EnumFlag.h"
 #include <array>
 
 #pragma pack(push, 1)
@@ -205,6 +206,14 @@ enum ChrSpecializationFlag
     CHR_SPECIALIZATION_FLAG_PET_OVERRIDE_SPEC       = 0x20,
     CHR_SPECIALIZATION_FLAG_RECOMMENDED             = 0x40,
 };
+
+enum class CorruptionEffectsFlag
+{
+    None        = 0,
+    Disabled    = 0x1
+};
+
+DEFINE_ENUM_FLAG(CorruptionEffectsFlag);
 
 enum CriteriaCondition
 {
@@ -1262,6 +1271,8 @@ enum SpellProcsPerMinuteModType
     SPELL_PPM_MOD_ITEM_LEVEL    = 6,
     SPELL_PPM_MOD_BATTLEGROUND  = 7
 };
+
+constexpr std::size_t MAX_POWERS_PER_SPELL = 4;
 
 enum SpellShapeshiftFormFlags
 {
