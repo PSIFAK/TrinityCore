@@ -133,7 +133,7 @@ enum RBACPermissions
     RBAC_PERM_COMMAND_ACCOUNT_PASSWORD                       = 225,
     RBAC_PERM_COMMAND_ACCOUNT_SET                            = 226,
     RBAC_PERM_COMMAND_ACCOUNT_SET_ADDON                      = 227,
-    RBAC_PERM_COMMAND_ACCOUNT_SET_GMLEVEL                    = 228,
+    RBAC_PERM_COMMAND_ACCOUNT_SET_SECLEVEL                   = 228,
     RBAC_PERM_COMMAND_ACCOUNT_SET_PASSWORD                   = 229,
     RBAC_PERM_COMMAND_ACHIEVEMENT                            = 230,
     RBAC_PERM_COMMAND_ACHIEVEMENT_ADD                        = 231,
@@ -418,7 +418,7 @@ enum RBACPermissions
     RBAC_PERM_COMMAND_KICK                                   = 510,
     RBAC_PERM_COMMAND_LINKGRAVE                              = 511,
     RBAC_PERM_COMMAND_LISTFREEZE                             = 512,
-    RBAC_PERM_COMMAND_MAXSKILL                               = 513,
+    RBAC_PERM_COMMAND_MAXSKILL                               = 513, // DEPRECATED: DON'T REUSE
     RBAC_PERM_COMMAND_MOVEGENS                               = 514,
     RBAC_PERM_COMMAND_MUTE                                   = 515,
     RBAC_PERM_COMMAND_NEARGRAVE                              = 516,
