@@ -30,10 +30,10 @@ EndContentData */
 
 #include "ScriptMgr.h"
 #include "GameObject.h"
+#include "GameObjectAI.h"
 #include "InstanceScript.h"
 #include "Player.h"
 #include "ScriptedCreature.h"
-#include "GameObjectAI.h"
 #include "uldaman.h"
 
 /*######
@@ -92,13 +92,7 @@ class npc_jadespine_basilisk : public CreatureScript
                     //Stop attacking target thast asleep and pick new target
                     uiCslumberTimer = 28000;
 
-                    Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO, 0);
-
-                    if (!target || target == me->GetVictim())
-                        target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true);
-
-                    if (target)
-                        me->TauntApply(target);
+                    me->GetThreatManager().ResetThreat(me->GetVictim());
 
                 } else uiCslumberTimer -= uiDiff;
 
@@ -108,7 +102,7 @@ class npc_jadespine_basilisk : public CreatureScript
 
         CreatureAI* GetAI(Creature* creature) const override
         {
-            return new npc_jadespine_basiliskAI(creature);
+            return GetUldamanAI<npc_jadespine_basiliskAI>(creature);
         }
 };
 
@@ -127,7 +121,7 @@ class go_keystone_chamber : public GameObjectScript
 
             InstanceScript* instance;
 
-            bool GossipHello(Player* /*player*/, bool /*reportUse*/) override
+            bool GossipHello(Player* /*player*/) override
             {
                 instance->SetData(DATA_IRONAYA_SEAL, IN_PROGRESS); //door animation and save state.
                 return false;

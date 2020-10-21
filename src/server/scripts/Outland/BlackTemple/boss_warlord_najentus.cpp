@@ -16,8 +16,9 @@
  */
 
 #include "ScriptMgr.h"
-#include "GameObjectAI.h"
 #include "black_temple.h"
+#include "GameObjectAI.h"
+#include "GridNotifiers.h"
 #include "GameObject.h"
 #include "InstanceScript.h"
 #include "ObjectAccessor.h"
@@ -25,7 +26,6 @@
 #include "ScriptedCreature.h"
 #include "SpellInfo.h"
 #include "SpellScript.h"
-#include "GridNotifiers.h"
 
 enum Texts
 {
@@ -91,7 +91,7 @@ public:
             Talk(SAY_DEATH);
         }
 
-        void SpellHit(Unit* /*caster*/, const SpellInfo* spell) override
+        void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
             if (spell->Id == SPELL_HURL_SPINE && me->HasAura(SPELL_TIDAL_SHIELD))
             {
@@ -182,7 +182,7 @@ public:
 
         InstanceScript* instance;
 
-        bool GossipHello(Player* player, bool /*reportUse*/) override
+        bool GossipHello(Player* player) override
         {
             if (Creature* najentus = instance->GetCreature(DATA_HIGH_WARLORD_NAJENTUS))
             {

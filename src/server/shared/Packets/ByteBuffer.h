@@ -20,6 +20,7 @@
 
 #include "Define.h"
 #include "ByteConverter.h"
+#include <array>
 #include <string>
 #include <vector>
 #include <cstring>
@@ -472,6 +473,12 @@ class TC_SHARED_API ByteBuffer
             _rpos += len;
         }
 
+        template <size_t Size>
+        void read(std::array<uint8, Size>& arr)
+        {
+            read(arr.data(), Size);
+        }
+
         void ReadPackedUInt64(uint64& guid)
         {
             guid = 0;
@@ -556,12 +563,18 @@ class TC_SHARED_API ByteBuffer
             return append((const uint8 *)src, cnt * sizeof(T));
         }
 
-        void append(const uint8 *src, size_t cnt);
+        void append(uint8 const* src, size_t cnt);
 
-        void append(const ByteBuffer& buffer)
+        void append(ByteBuffer const& buffer)
         {
             if (!buffer.empty())
                 append(buffer.contents(), buffer.size());
+        }
+
+        template <size_t Size>
+        void append(std::array<uint8, Size> const& arr)
+        {
+            append(arr.data(), Size);
         }
 
         // can be used in SMSG_MONSTER_MOVE opcode
@@ -609,7 +622,7 @@ class TC_SHARED_API ByteBuffer
 
         void AppendPackedTime(time_t time);
 
-        void put(size_t pos, const uint8 *src, size_t cnt);
+        void put(size_t pos, uint8 const* src, size_t cnt);
 
         void print_storage() const;
 

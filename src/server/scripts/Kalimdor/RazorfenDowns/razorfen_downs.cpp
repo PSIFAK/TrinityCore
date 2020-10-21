@@ -28,13 +28,13 @@ EndContentData */
 
 #include "ScriptMgr.h"
 #include "CellImpl.h"
+#include "GameObjectAI.h"
 #include "GridNotifiersImpl.h"
 #include "InstanceScript.h"
 #include "MotionMaster.h"
 #include "Player.h"
 #include "razorfen_downs.h"
 #include "ScriptedCreature.h"
-#include "GameObjectAI.h"
 #include "ScriptedGossip.h"
 #include "TemporarySummon.h"
 
@@ -381,7 +381,7 @@ public:
 
         InstanceScript* instance;
 
-        bool GossipHello(Player* /*player*/, bool /*reportUse*/) override
+        bool GossipHello(Player* /*player*/) override
         {
             me->SendCustomAnim(0);
             instance->SetData(DATA_WAVE, IN_PROGRESS);

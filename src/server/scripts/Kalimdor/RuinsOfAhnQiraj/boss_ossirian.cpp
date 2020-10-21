@@ -16,8 +16,8 @@
  */
 
 #include "ScriptMgr.h"
-#include "GameObjectAI.h"
 #include "GameObject.h"
+#include "GameObjectAI.h"
 #include "InstanceScript.h"
 #include "Map.h"
 #include "MiscPackets.h"
@@ -290,7 +290,7 @@ class go_ossirian_crystal : public GameObjectScript
 
             InstanceScript* instance;
 
-            bool GossipHello(Player* player, bool /*reportUse*/) override
+            bool GossipHello(Player* player) override
             {
                 Creature* ossirian = player->FindNearestCreature(NPC_OSSIRIAN, 30.0f);
                 if (!ossirian || instance->GetBossState(DATA_OSSIRIAN) != IN_PROGRESS)

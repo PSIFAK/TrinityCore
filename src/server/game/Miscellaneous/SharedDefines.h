@@ -5101,7 +5101,7 @@ enum BattlegroundTeamId : uint8
 
 #define BG_TEAMS_COUNT  2
 
-// indexes of BattlemasterList.dbc (7.1.5.23360)
+// indexes of BattlemasterList.dbc
 enum BattlegroundTypeId : uint32
 {
     BATTLEGROUND_TYPE_NONE      = 0,   // None
@@ -5484,6 +5484,14 @@ enum CharterTypes
     ARENA_TEAM_CHARTER_2v2_TYPE = 2,
     ARENA_TEAM_CHARTER_3v3_TYPE = 3,
     ARENA_TEAM_CHARTER_5v5_TYPE = 5
+};
+
+enum LineOfSightChecks : uint8
+{
+    LINEOFSIGHT_CHECK_VMAP      = 0x1, // check static floor layout data
+    LINEOFSIGHT_CHECK_GOBJECT   = 0x2, // check dynamic game object data
+
+    LINEOFSIGHT_ALL_CHECKS      = (LINEOFSIGHT_CHECK_VMAP | LINEOFSIGHT_CHECK_GOBJECT)
 };
 
 enum TokenResult

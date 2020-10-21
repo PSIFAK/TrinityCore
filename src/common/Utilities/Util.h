@@ -20,8 +20,10 @@
 
 #include "Define.h"
 #include "Errors.h"
+#include <array>
 #include <string>
 #include <vector>
+#include "advstd.h"
 
 enum LocaleConstant : uint8;
 
@@ -55,12 +57,12 @@ private:
 
 TC_COMMON_API void stripLineInvisibleChars(std::string &src);
 
-TC_COMMON_API int64 MoneyStringToMoney(const std::string& moneyString);
+TC_COMMON_API int64 MoneyStringToMoney(std::string const& moneyString);
 
-TC_COMMON_API struct tm* localtime_r(const time_t* time, struct tm *result);
+TC_COMMON_API struct tm* localtime_r(time_t const* time, struct tm *result);
 
 TC_COMMON_API std::string secsToTimeString(uint64 timeInSecs, bool shortText = false, bool hoursOnly = false);
-TC_COMMON_API uint32 TimeStringToSecs(const std::string& timestring);
+TC_COMMON_API uint32 TimeStringToSecs(std::string const& timestring);
 TC_COMMON_API std::string TimeToTimestampStr(time_t t);
 
 // Percentage calculation
@@ -301,8 +303,23 @@ TC_COMMON_API bool IsIPAddress(char const* ipaddress);
 TC_COMMON_API uint32 CreatePIDFile(std::string const& filename);
 TC_COMMON_API uint32 GetPID();
 
-TC_COMMON_API std::string ByteArrayToHexStr(uint8 const* bytes, uint32 length, bool reverse = false);
+TC_COMMON_API std::string ByteArrayToHexStr(uint8 const* bytes, size_t length, bool reverse = false);
+template <typename Container>
+std::string ByteArrayToHexStr(Container const& c, bool reverse = false) { return ByteArrayToHexStr(advstd::data(c), advstd::size(c), reverse); }
 TC_COMMON_API void HexStrToByteArray(std::string const& str, uint8* out, bool reverse = false);
+template <size_t Size>
+void HexStrToByteArray(std::string const& str, std::array<uint8, Size>& buf, bool reverse = false)
+{
+    ASSERT(str.size() == (2 * Size));
+    HexStrToByteArray(str, buf.data(), reverse);
+}
+template <size_t Size>
+std::array<uint8, Size> HexStrToByteArray(std::string const& str, bool reverse = false)
+{
+    std::array<uint8, Size> arr;
+    HexStrToByteArray(str, arr, reverse);
+    return arr;
+}
 
 TC_COMMON_API bool StringToBool(std::string const& str);
 TC_COMMON_API float DegToRad(float degrees);
@@ -384,7 +401,7 @@ public:
         part[3] = p4;
     }
 
-    inline bool operator <(const flag128 &right) const
+    inline bool operator<(flag128 const& right) const
     {
         for (uint8 i = 4; i > 0; --i)
         {
@@ -396,7 +413,7 @@ public:
         return false;
     }
 
-    inline bool operator ==(const flag128 &right) const
+    inline bool operator==(flag128 const& right) const
     {
         return
             (
@@ -407,18 +424,17 @@ public:
             );
     }
 
-    inline bool operator !=(const flag128 &right) const
+    inline bool operator!=(flag128 const& right) const
     {
-        return !this->operator ==(right);
+        return !(*this == right);
     }
 
-    inline flag128 operator &(const flag128 &right) const
+    inline flag128 operator&(flag128 const& right) const
     {
-        return flag128(part[0] & right.part[0], part[1] & right.part[1],
-            part[2] & right.part[2], part[3] & right.part[3]);
+        return flag128(part[0] & right.part[0], part[1] & right.part[1], part[2] & right.part[2], part[3] & right.part[3]);
     }
 
-    inline flag128 & operator &=(const flag128 &right)
+    inline flag128& operator&=(flag128 const& right)
     {
         part[0] &= right.part[0];
         part[1] &= right.part[1];
@@ -427,13 +443,12 @@ public:
         return *this;
     }
 
-    inline flag128 operator |(const flag128 &right) const
+    inline flag128 operator|(flag128 const& right) const
     {
-        return flag128(part[0] | right.part[0], part[1] | right.part[1],
-            part[2] | right.part[2], part[3] | right.part[3]);
+        return flag128(part[0] | right.part[0], part[1] | right.part[1], part[2] | right.part[2], part[3] | right.part[3]);
     }
 
-    inline flag128 & operator |=(const flag128 &right)
+    inline flag128& operator |=(flag128 const& right)
     {
         part[0] |= right.part[0];
         part[1] |= right.part[1];
@@ -442,18 +457,17 @@ public:
         return *this;
     }
 
-    inline flag128 operator ~() const
+    inline flag128 operator~() const
     {
         return flag128(~part[0], ~part[1], ~part[2], ~part[3]);
     }
 
-    inline flag128 operator ^(const flag128 &right) const
+    inline flag128 operator^(flag128 const& right) const
     {
-        return flag128(part[0] ^ right.part[0], part[1] ^ right.part[1],
-            part[2] ^ right.part[2], part[3] ^ right.part[3]);
+        return flag128(part[0] ^ right.part[0], part[1] ^ right.part[1], part[2] ^ right.part[2], part[3] ^ right.part[3]);
     }
 
-    inline flag128 & operator ^=(const flag128 &right)
+    inline flag128& operator^=(flag128 const& right)
     {
         part[0] ^= right.part[0];
         part[1] ^= right.part[1];
@@ -469,15 +483,15 @@ public:
 
     inline bool operator !() const
     {
-        return !this->operator bool();
+        return !(bool(*this));
     }
 
-    inline uint32 & operator [](uint8 el)
+    inline uint32& operator[](uint8 el)
     {
         return part[el];
     }
 
-    inline const uint32 & operator [](uint8 el) const
+    inline uint32 const& operator [](uint8 el) const
     {
         return part[el];
     }
