@@ -4437,6 +4437,7 @@ Corpse* Player::CreateCorpse()
 
     corpse->SetRace(getRace());
     corpse->SetSex(GetNativeSex());
+    corpse->SetClass(getClass());
     corpse->SetCustomizations(Trinity::Containers::MakeIteratorPair(m_playerData->Customizations.begin(), m_playerData->Customizations.end()));
     corpse->SetFlags(flags);
     corpse->SetDisplayId(GetNativeDisplayId());
@@ -16575,8 +16576,8 @@ QuestGiverStatus Player::GetQuestDialogStatus(Object* questgiver)
     {
     case TYPEID_GAMEOBJECT:
     {
-        QuestGiverStatus questStatus = QuestGiverStatus(questgiver->ToGameObject()->AI()->GetDialogStatus(this));
-        if (questStatus != DIALOG_STATUS_SCRIPTED_NO_STATUS)
+        QuestGiverStatus questStatus = questgiver->ToGameObject()->AI()->GetDialogStatus(this);
+        if (questStatus != QuestGiverStatus::ScriptedDefault)
             return questStatus;
         qr = sObjectMgr->GetGOQuestRelationBounds(questgiver->GetEntry());
         qir = sObjectMgr->GetGOQuestInvolvedRelationBounds(questgiver->GetEntry());
@@ -16584,8 +16585,8 @@ QuestGiverStatus Player::GetQuestDialogStatus(Object* questgiver)
     }
     case TYPEID_UNIT:
     {
-        QuestGiverStatus questStatus = QuestGiverStatus(questgiver->ToCreature()->AI()->GetDialogStatus(this));
-        if (questStatus != DIALOG_STATUS_SCRIPTED_NO_STATUS)
+        QuestGiverStatus questStatus = questgiver->ToCreature()->AI()->GetDialogStatus(this);
+        if (questStatus != QuestGiverStatus::ScriptedDefault)
             return questStatus;
         qr = sObjectMgr->GetCreatureQuestRelationBounds(questgiver->GetEntry());
         qir = sObjectMgr->GetCreatureQuestInvolvedRelationBounds(questgiver->GetEntry());
@@ -16595,35 +16596,49 @@ QuestGiverStatus Player::GetQuestDialogStatus(Object* questgiver)
         // it's impossible, but check
         TC_LOG_ERROR("entities.player.quest", "Player::GetQuestDialogStatus: Called with unexpected type (Entry: %u, Type: %u) by player '%s' (%s)",
             questgiver->GetEntry(), questgiver->GetTypeId(), GetName().c_str(), GetGUID().ToString().c_str());
-        return DIALOG_STATUS_NONE;
+        return QuestGiverStatus::None;
     }
 
-    QuestGiverStatus result = DIALOG_STATUS_NONE;
+    QuestGiverStatus result = QuestGiverStatus::None;
 
     for (QuestRelations::const_iterator i = qir.first; i != qir.second; ++i)
     {
-        QuestGiverStatus result2 = DIALOG_STATUS_NONE;
         uint32 questId = i->second;
         Quest const* quest = sObjectMgr->GetQuestTemplate(questId);
         if (!quest)
             continue;
 
-        QuestStatus status = GetQuestStatus(questId);
-        if (status == QUEST_STATUS_COMPLETE && !GetQuestRewardStatus(questId))
-            result2 = DIALOG_STATUS_REWARD;
-        else if (status == QUEST_STATUS_INCOMPLETE)
-            result2 = DIALOG_STATUS_INCOMPLETE;
+        switch (GetQuestStatus(questId))
+        {
+            case QUEST_STATUS_COMPLETE:
+                if (quest->GetQuestTag() == QuestTagType::CovenantCalling)
+                    result |= quest->HasFlag(QUEST_FLAGS_HIDE_REWARD_POI) ? QuestGiverStatus::CovenantCallingRewardCompleteNoPOI : QuestGiverStatus::CovenantCallingRewardCompletePOI;
+                else if (quest->HasFlagEx(QUEST_FLAGS_EX_LEGENDARY_QUEST))
+                    result |= quest->HasFlag(QUEST_FLAGS_HIDE_REWARD_POI) ? QuestGiverStatus::LegendaryRewardCompleteNoPOI : QuestGiverStatus::LegendaryRewardCompletePOI;
+                else
+                    result |= quest->HasFlag(QUEST_FLAGS_HIDE_REWARD_POI) ? QuestGiverStatus::RewardCompleteNoPOI : QuestGiverStatus::RewardCompletePOI;
+                break;
+            case QUEST_STATUS_INCOMPLETE:
+                if (quest->GetQuestTag() == QuestTagType::CovenantCalling)
+                    result |= QuestGiverStatus::CovenantCallingReward;
+                else
+                    result |= QuestGiverStatus::Reward;
+                break;
+            default:
+                break;
+        }
 
         if (quest->IsAutoComplete() && CanTakeQuest(quest, false) && quest->IsRepeatable() && !quest->IsDailyOrWeekly())
-            result2 = DIALOG_STATUS_REWARD_REP;
-
-        if (result2 > result)
-            result = result2;
+        {
+            if (getLevel() <= (GetQuestLevel(quest) + sWorld->getIntConfig(CONFIG_QUEST_LOW_LEVEL_HIDE_DIFF)))
+                result |= QuestGiverStatus::RepeatableTurnin;
+            else
+                result |= QuestGiverStatus::TrivialRepeatableTurnin;
+        }
     }
 
     for (QuestRelations::const_iterator i = qr.first; i != qr.second; ++i)
     {
-        QuestGiverStatus result2 = DIALOG_STATUS_NONE;
         uint32 questId = i->second;
         Quest const* quest = sObjectMgr->GetQuestTemplate(questId);
         if (!quest)
@@ -16632,8 +16647,7 @@ QuestGiverStatus Player::GetQuestDialogStatus(Object* questgiver)
         if (!sConditionMgr->IsObjectMeetingNotGroupedConditions(CONDITION_SOURCE_TYPE_QUEST_AVAILABLE, quest->GetQuestId(), this))
             continue;
 
-        QuestStatus status = GetQuestStatus(questId);
-        if (status == QUEST_STATUS_NONE)
+        if (GetQuestStatus(questId) == QUEST_STATUS_NONE)
         {
             if (CanSeeStartQuest(quest))
             {
@@ -16641,21 +16655,24 @@ QuestGiverStatus Player::GetQuestDialogStatus(Object* questgiver)
                 {
                     if (getLevel() <= (GetQuestLevel(quest) + sWorld->getIntConfig(CONFIG_QUEST_LOW_LEVEL_HIDE_DIFF)))
                     {
-                        if (quest->IsDaily())
-                            result2 = DIALOG_STATUS_AVAILABLE_REP;
+                        if (quest->GetQuestTag() == QuestTagType::CovenantCalling)
+                            result |= QuestGiverStatus::CovenantCallingQuest;
+                        else if (quest->HasFlagEx(QUEST_FLAGS_EX_LEGENDARY_QUEST))
+                            result |= QuestGiverStatus::LegendaryQuest;
+                        else if (quest->IsDaily())
+                            result |= QuestGiverStatus::DailyQuest;
                         else
-                            result2 = DIALOG_STATUS_AVAILABLE;
+                            result |= QuestGiverStatus::Quest;
                     }
+                    else if (quest->IsDaily())
+                        result |= QuestGiverStatus::TrivialDailyQuest;
                     else
-                        result2 = DIALOG_STATUS_LOW_LEVEL_AVAILABLE;
+                        result |= QuestGiverStatus::Trivial;
                 }
                 else
-                    result2 = DIALOG_STATUS_UNAVAILABLE;
+                    result |= QuestGiverStatus::Future;
             }
         }
-
-        if (result2 > result)
-            result = result2;
     }
 
     return result;
@@ -26964,7 +26981,6 @@ void Player::SendTalentsInfoData()
 {
     WorldPackets::Talent::UpdateTalentData packet;
     packet.Info.PrimarySpecialization = GetPrimarySpecialization();
-    packet.Info.ActiveGroup = GetActiveTalentGroup();
 
     for (uint8 i = 0; i < MAX_SPECIALIZATIONS; ++i)
     {
@@ -27030,7 +27046,11 @@ void Player::SendTalentsInfoData()
             pvpTalent.Slot = slot;
         }
 
-        packet.Info.TalentGroups.push_back(groupInfoPkt);
+        if (i == GetActiveTalentGroup())
+            packet.Info.ActiveGroup = packet.Info.TalentGroups.size();
+
+        if (!groupInfoPkt.TalentIDs.empty() || !groupInfoPkt.PvPTalents.empty() || i == GetActiveTalentGroup())
+            packet.Info.TalentGroups.push_back(groupInfoPkt);
     }
 
     SendDirectMessage(packet.Write());
