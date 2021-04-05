@@ -922,7 +922,7 @@ void Player::Update(uint32 p_time)
 
     // Update cinematic location, if 500ms have passed and we're doing a cinematic now.
     _cinematicMgr->m_cinematicDiff += p_time;
-    if (_cinematicMgr->m_activeCinematicCameraIndex != 0 && GetMSTimeDiffToNow(_cinematicMgr->m_lastCinematicCheck) > CINEMATIC_UPDATEDIFF)
+    if (_cinematicMgr->m_cinematicCamera && _cinematicMgr->m_activeCinematic && GetMSTimeDiffToNow(_cinematicMgr->m_lastCinematicCheck) > CINEMATIC_UPDATEDIFF)
     {
         _cinematicMgr->m_lastCinematicCheck = GameTime::GetGameTimeMS();
         _cinematicMgr->UpdateCinematicLocation(p_time);
@@ -1070,7 +1070,7 @@ void Player::Update(uint32 p_time)
             if (u->IsPvP() && (!duel || duel->opponent != u))
             {
                 UpdatePvP(true);
-                RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_ENTER_PVP_COMBAT);
+                RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags::PvPActive);
             }*/
         }
     }
@@ -1494,7 +1494,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
                     InterruptNonMeleeSpells(true);
 
             //remove auras before removing from map...
-            RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags(AURA_INTERRUPT_FLAG_CHANGE_MAP | AURA_INTERRUPT_FLAG_MOVE | AURA_INTERRUPT_FLAG_TURNING));
+            RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags::Moving | SpellAuraInterruptFlags::Turning);
 
             if (!GetSession()->PlayerLogout() && !(options & TELE_TO_SEAMLESS))
             {
@@ -1657,7 +1657,7 @@ void Player::SetObjectScale(float scale)
     SetBoundingRadius(scale * DEFAULT_PLAYER_BOUNDING_RADIUS);
     SetCombatReach(scale * DEFAULT_PLAYER_COMBAT_REACH);
     if (IsInWorld())
-        SendMovementSetCollisionHeight(scale * GetCollisionHeight(IsMounted()), WorldPackets::Movement::UpdateCollisionHeightReason::Scale);
+        SendMovementSetCollisionHeight(scale * GetCollisionHeight(), WorldPackets::Movement::UpdateCollisionHeightReason::Scale);
 }
 
 bool Player::IsImmunedToSpellEffect(SpellInfo const* spellInfo, uint32 index, Unit* caster) const
@@ -1782,22 +1782,6 @@ void Player::Regenerate(Powers power)
     int32 minPower = powerType->MinPower;
     int32 maxPower = GetMaxPower(power);
 
-    if (addvalue < 0.0f)
-    {
-        if (curValue <= minPower)
-            return;
-    }
-    else if (addvalue > 0.0f)
-    {
-        if (curValue >= maxPower)
-            return;
-    }
-    else
-        return;
-
-    addvalue += m_powerFraction[powerIndex];
-    int32 integerValue = int32(std::fabs(addvalue));
-
     if (powerType->CenterPower)
     {
         if (curValue > powerType->CenterPower)
@@ -1813,6 +1797,22 @@ void Player::Regenerate(Powers power)
         else
             return;
     }
+
+    addvalue += m_powerFraction[powerIndex];
+    int32 integerValue = int32(std::fabs(addvalue));
+
+    if (addvalue < 0.0f)
+    {
+        if (curValue <= minPower)
+            return;
+    }
+    else if (addvalue > 0.0f)
+    {
+        if (curValue >= maxPower)
+            return;
+    }
+    else
+        return;
 
     if (addvalue < 0.0f)
     {
@@ -2733,6 +2733,27 @@ void Player::RemoveTalent(TalentEntry const* talent)
     PlayerTalentMap::iterator plrTalent = GetTalentMap(GetActiveTalentGroup())->find(talent->ID);
     if (plrTalent != GetTalentMap(GetActiveTalentGroup())->end())
         plrTalent->second = PLAYERSPELL_REMOVED;
+}
+
+void Player::AddStoredAuraTeleportLocation(uint32 spellId)
+{
+    StoredAuraTeleportLocation& storedLocation = m_storedAuraTeleportLocations[spellId];
+    storedLocation.Loc.WorldRelocate(this);
+    storedLocation.State = StoredAuraTeleportLocation::CHANGED;
+}
+
+void Player::RemoveStoredAuraTeleportLocation(uint32 spellId)
+{
+    if (StoredAuraTeleportLocation* storedLocation = Trinity::Containers::MapGetValuePtr(m_storedAuraTeleportLocations, spellId))
+        storedLocation->State = StoredAuraTeleportLocation::DELETED;
+}
+
+WorldLocation const* Player::GetStoredAuraTeleportLocation(uint32 spellId) const
+{
+    if (StoredAuraTeleportLocation const* auraLocation = Trinity::Containers::MapGetValuePtr(m_storedAuraTeleportLocations, spellId))
+        return &auraLocation->Loc;
+
+    return nullptr;
 }
 
 bool Player::AddSpell(uint32 spellId, bool active, bool learning, bool dependent, bool disabled, bool loading /*= false*/, int32 fromSkill /*= 0*/)
@@ -4128,6 +4149,10 @@ void Player::DeleteFromDB(ObjectGuid playerguid, uint32 accountId, bool updateRe
             stmt->setUInt64(0, guid);
             trans->Append(stmt);
 
+            stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_CHARACTER_AURA_STORED_LOCATIONS_BY_GUID);
+            stmt->setUInt64(0, guid);
+            trans->Append(stmt);
+
             Corpse::DeleteFromDB(playerguid, trans);
 
             Garrison::DeleteFromDB(guid, trans);
@@ -4214,6 +4239,8 @@ void Player::BuildPlayerRepop()
     if (HasSpell(20585))
         CastSpell(this, 20584, true);
     CastSpell(this, 8326, true);
+
+    RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags::Release);
 
     // there must be SMSG.FORCE_RUN_SPEED_CHANGE, SMSG.FORCE_SWIM_SPEED_CHANGE, SMSG.MOVE_SET_WATER_WALK
     // there must be SMSG.STOP_MIRROR_TIMER
@@ -6046,9 +6073,9 @@ bool Player::UpdatePosition(float x, float y, float z, float orientation, bool t
         return false;
 
     //if (movementInfo.flags & MOVEMENTFLAG_MOVING)
-    //    mover->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_MOVE);
+    //    mover->RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags::Moving);
     //if (movementInfo.flags & MOVEMENTFLAG_TURNING)
-    //    mover->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TURNING);
+    //    mover->RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags::Turning);
 
     // group update
     if (GetGroup())
@@ -7738,7 +7765,7 @@ void Player::_ApplyItemBonuses(Item* item, uint8 slot, bool apply)
 
     if (uint32 armor = proto->GetArmor(itemLevel))
     {
-        HandleStatFlatModifier(UNIT_MOD_ARMOR, BASE_VALUE, float(armor), apply);
+        HandleStatFlatModifier(UNIT_MOD_ARMOR, TOTAL_VALUE, float(armor), apply);
         if (proto->GetClass() == ITEM_CLASS_ARMOR && proto->GetSubClass() == ITEM_SUBCLASS_ARMOR_SHIELD)
             SetUpdateFieldValue(m_values.ModifyValue(&Player::m_activePlayerData).ModifyValue(&UF::ActivePlayerData::ShieldBlock), apply ? int32(armor * 2.5f) : 0);
     }
@@ -8345,7 +8372,7 @@ void Player::CastItemCombatSpell(DamageInfo const& damageInfo, Item* item, ItemT
             }
 
             // Apply spell mods
-            ApplySpellMod(spellInfo, SPELLMOD_CHANCE_OF_SUCCESS, chance);
+            ApplySpellMod(spellInfo, SpellModOp::ProcChance, chance);
 
             // Shiv has 100% chance to apply the poison
             if (FindCurrentSpellBySpellId(5938) && e_slot == TEMP_ENCHANTMENT_SLOT)
@@ -8618,9 +8645,14 @@ ObjectGuid Player::GetLootWorldObjectGUID(ObjectGuid const& lootObjectGuid) cons
     return ObjectGuid::Empty;
 }
 
-void Player::RemoveAELootedObject(ObjectGuid const& lootObjectGuid)
+void Player::RemoveAELootedWorldObject(ObjectGuid const& lootWorldObjectGuid)
 {
-    m_AELootView.erase(lootObjectGuid);
+    auto itr = std::find_if(m_AELootView.begin(), m_AELootView.end(), [&lootWorldObjectGuid](std::pair<ObjectGuid const, ObjectGuid> const& lootView)
+    {
+        return lootView.second == lootWorldObjectGuid;
+    });
+    if (itr != m_AELootView.end())
+        m_AELootView.erase(itr);
 }
 
 bool Player::HasLootWorldObjectGUID(ObjectGuid const& lootWorldObjectGuid) const
@@ -8680,9 +8712,8 @@ void Player::SendLootReleaseAll() const
 
 void Player::SendLoot(ObjectGuid guid, LootType loot_type, bool aeLooting/* = false*/)
 {
-    ObjectGuid currentLootGuid = GetLootGUID();
-    if (!currentLootGuid.IsEmpty() && !aeLooting)
-        m_session->DoLootRelease(currentLootGuid);
+    if (!GetLootGUID().IsEmpty() && !aeLooting)
+        m_session->DoLootReleaseAll();
 
     Loot* loot;
     PermissionTypes permission = ALL_PERMISSION;
@@ -17434,13 +17465,8 @@ int32 Player::GetQuestObjectiveData(Quest const* quest, int8 storageIndex) const
             quest->GetQuestId(), storageIndex);
 
     auto itr = m_QuestStatus.find(quest->GetQuestId());
-
     if (itr == m_QuestStatus.end())
-    {
-        TC_LOG_ERROR("entities.player.quest", "Player::GetQuestObjectiveData: Player '%s' (%s) doesn't have quest status data (QuestID: %u)",
-            GetName().c_str(), GetGUID().ToString().c_str(), quest->GetQuestId());
         return 0;
-    }
 
     QuestStatusData const& status = itr->second;
 
@@ -18656,6 +18682,9 @@ bool Player::LoadFromDB(ObjectGuid guid, CharacterDatabaseQueryHolder* holder)
     // add ghost flag (must be after aura load: PLAYER_FLAGS_GHOST set in aura)
     if (HasPlayerFlag(PLAYER_FLAGS_GHOST))
         m_deathState = DEAD;
+
+    // Load spell locations - must be after loading auras
+    _LoadStoredAuraTeleportLocations(holder->GetPreparedResult(PLAYER_LOGIN_QUERY_LOAD_AURA_STORED_LOCATIONS));
 
     // after spell load, learn rewarded spell if need also
     _LoadQuestStatus(holder->GetPreparedResult(PLAYER_LOGIN_QUERY_LOAD_QUEST_STATUS));
@@ -19967,6 +19996,42 @@ void Player::_LoadSpells(PreparedQueryResult result)
     }
 }
 
+void Player::_LoadStoredAuraTeleportLocations(PreparedQueryResult result)
+{
+    //                                                       0      1      2          3          4          5
+    //QueryResult* result = CharacterDatabase.PQuery("SELECT Spell, MapId, PositionX, PositionY, PositionZ, Orientation FROM character_spell_location WHERE Guid = ?", GetGUIDLow());
+
+    m_storedAuraTeleportLocations.clear();
+    if (result)
+    {
+        do
+        {
+            Field* fields = result->Fetch();
+            uint32 spellId = fields[0].GetUInt32();
+
+            if (!sSpellMgr->GetSpellInfo(spellId, DIFFICULTY_NONE))
+            {
+                TC_LOG_ERROR("spells", "Player::_LoadStoredAuraTeleportLocations: Player %s (%s) spell (ID: %u) does not exist",
+                    GetName().c_str(), GetGUID().ToString().c_str(), spellId);
+                continue;
+            }
+
+            WorldLocation location(fields[1].GetUInt32(), fields[2].GetFloat(), fields[3].GetFloat(), fields[4].GetFloat(), fields[5].GetFloat());
+            if (!MapManager::IsValidMapCoord(location))
+            {
+                TC_LOG_ERROR("spells", "Player::_LoadStoredAuraTeleportLocations: Player %s (%s) spell (ID: %u) has invalid position on map %u, {%s}.",
+                    GetName().c_str(), GetGUID().ToString().c_str(), spellId, location.GetMapId(), location.ToString().c_str());
+                continue;
+            }
+
+            StoredAuraTeleportLocation& storedLocation = m_storedAuraTeleportLocations[spellId];
+            storedLocation.Loc = location;
+            storedLocation.State = StoredAuraTeleportLocation::UNCHANGED;
+        }
+        while (result->NextRow());
+    }
+}
+
 void Player::_LoadGroup(PreparedQueryResult result)
 {
     //QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM group_member WHERE memberGuid=%u", GetGUIDLow());
@@ -20867,6 +20932,7 @@ void Player::SaveToDB(LoginDatabaseTransaction loginTransaction, CharacterDataba
     _SaveActions(trans);
     _SaveAuras(trans);
     _SaveSkills(trans);
+    _SaveStoredAuraTeleportLocations(trans);
     m_achievementMgr->SaveToDB(trans);
     m_reputationMgr->SaveToDB(trans);
     m_questObjectiveCriteriaMgr->SaveToDB(trans);
@@ -21627,6 +21693,41 @@ void Player::_SaveSpells(CharacterDatabaseTransaction& trans)
     }
 }
 
+void Player::_SaveStoredAuraTeleportLocations(CharacterDatabaseTransaction& trans)
+{
+    for (auto itr = m_storedAuraTeleportLocations.begin(); itr != m_storedAuraTeleportLocations.end(); )
+    {
+        StoredAuraTeleportLocation& storedLocation = itr->second;
+        if (storedLocation.State == StoredAuraTeleportLocation::DELETED)
+        {
+            CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_CHARACTER_AURA_STORED_LOCATION);
+            stmt->setUInt64(0, GetGUID().GetCounter());
+            trans->Append(stmt);
+            itr = m_storedAuraTeleportLocations.erase(itr);
+            continue;
+        }
+
+        if (storedLocation.State == StoredAuraTeleportLocation::CHANGED)
+        {
+            CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_CHARACTER_AURA_STORED_LOCATION);
+            stmt->setUInt64(0, GetGUID().GetCounter());
+            trans->Append(stmt);
+
+            stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_CHARACTER_AURA_STORED_LOCATION);
+            stmt->setUInt64(0, GetGUID().GetCounter());
+            stmt->setUInt32(1, itr->first);
+            stmt->setUInt32(2, storedLocation.Loc.GetMapId());
+            stmt->setFloat(3, storedLocation.Loc.GetPositionX());
+            stmt->setFloat(4, storedLocation.Loc.GetPositionY());
+            stmt->setFloat(5, storedLocation.Loc.GetPositionZ());
+            stmt->setFloat(6, storedLocation.Loc.GetOrientation());
+            trans->Append(stmt);
+        }
+
+        ++itr;
+    }
+}
+
 // save player stats -- only for external usage
 // real stats will be recalculated on player login
 void Player::_SaveStats(CharacterDatabaseTransaction& trans) const
@@ -21654,7 +21755,7 @@ void Player::_SaveStats(CharacterDatabaseTransaction& trans) const
         stmt->setUInt32(index++, GetStat(Stats(i)));
 
     for (int i = 0; i < MAX_SPELL_SCHOOL; ++i)
-        stmt->setUInt32(index++, GetResistance(SpellSchools(i)) + GetBonusResistanceMod(SpellSchools(i)));
+        stmt->setUInt32(index++, GetResistance(SpellSchools(i)));
 
     stmt->setFloat(index++, m_activePlayerData->BlockPercentage);
     stmt->setFloat(index++, m_activePlayerData->DodgePercentage);
@@ -22421,7 +22522,7 @@ bool Player::IsAffectedBySpellmod(SpellInfo const* spellInfo, SpellModifier* mod
         return false;
 
     // +duration to infinite duration spells making them limited
-    if (mod->op == SPELLMOD_DURATION && spellInfo->GetDuration() == -1)
+    if (mod->op == SpellModOp::Duration && spellInfo->GetDuration() == -1)
         return false;
 
     return spellInfo->IsAffectedBySpellMod(mod);
@@ -22442,10 +22543,10 @@ void Player::GetSpellModValues(SpellInfo const* spellInfo, SpellModOp op, Spell*
     switch (op)
     {
         // special case, if a mod makes spell instant, only consume that mod
-        case SPELLMOD_CASTING_TIME:
+        case SpellModOp::ChangeCastTime:
         {
             SpellModifier* modInstantSpell = nullptr;
-            for (SpellModifier* mod : m_spellMods[op][SPELLMOD_PCT])
+            for (SpellModifier* mod : m_spellMods[AsUnderlyingType(op)][SPELLMOD_PCT])
             {
                 if (!IsAffectedBySpellmod(spellInfo, mod, spell))
                     continue;
@@ -22466,10 +22567,10 @@ void Player::GetSpellModValues(SpellInfo const* spellInfo, SpellModOp op, Spell*
             break;
         }
         // special case if two mods apply 100% critical chance, only consume one
-        case SPELLMOD_CRITICAL_CHANCE:
+        case SpellModOp::CritChance:
         {
             SpellModifier* modCritical = nullptr;
-            for (SpellModifier* mod : m_spellMods[op][SPELLMOD_FLAT])
+            for (SpellModifier* mod : m_spellMods[AsUnderlyingType(op)][SPELLMOD_FLAT])
             {
                 if (!IsAffectedBySpellmod(spellInfo, mod, spell))
                     continue;
@@ -22493,7 +22594,7 @@ void Player::GetSpellModValues(SpellInfo const* spellInfo, SpellModOp op, Spell*
             break;
     }
 
-    for (SpellModifier* mod : m_spellMods[op][SPELLMOD_FLAT])
+    for (SpellModifier* mod : m_spellMods[AsUnderlyingType(op)][SPELLMOD_FLAT])
     {
         if (!IsAffectedBySpellmod(spellInfo, mod, spell))
             continue;
@@ -22502,7 +22603,7 @@ void Player::GetSpellModValues(SpellInfo const* spellInfo, SpellModOp op, Spell*
         Player::ApplyModToSpell(mod, spell);
     }
 
-    for (SpellModifier* mod : m_spellMods[op][SPELLMOD_PCT])
+    for (SpellModifier* mod : m_spellMods[AsUnderlyingType(op)][SPELLMOD_PCT])
     {
         if (!IsAffectedBySpellmod(spellInfo, mod, spell))
             continue;
@@ -22512,7 +22613,7 @@ void Player::GetSpellModValues(SpellInfo const* spellInfo, SpellModOp op, Spell*
             continue;
 
         // special case (skip > 10sec spell casts for instant cast setting)
-        if (op == SPELLMOD_CASTING_TIME)
+        if (op == SpellModOp::ChangeCastTime)
         {
             if (base >= T(10000) && mod->value <= -100)
                 continue;
@@ -22548,9 +22649,9 @@ void Player::AddSpellMod(SpellModifier* mod, bool apply)
 
     /// First, manipulate our spellmodifier container
     if (apply)
-        m_spellMods[mod->op][mod->type].insert(mod);
+        m_spellMods[AsUnderlyingType(mod->op)][mod->type].insert(mod);
     else
-        m_spellMods[mod->op][mod->type].erase(mod);
+        m_spellMods[AsUnderlyingType(mod->op)][mod->type].erase(mod);
 
     /// Now, send spellmodifier packet
     if (!IsLoading())
@@ -22563,7 +22664,7 @@ void Player::AddSpellMod(SpellModifier* mod, bool apply)
         packet.Modifiers.resize(1);
         WorldPackets::Spells::SpellModifier& spellMod = packet.Modifiers[0];
 
-        spellMod.ModIndex = mod->op;
+        spellMod.ModIndex = AsUnderlyingType(mod->op);
 
         for (int eff = 0; eff < 128; ++eff)
         {
@@ -22576,14 +22677,14 @@ void Player::AddSpellMod(SpellModifier* mod, bool apply)
                 if (mod->type == SPELLMOD_FLAT)
                 {
                     modData.ModifierValue = 0.0f;
-                    for (SpellModifier* spellMod : m_spellMods[mod->op][SPELLMOD_FLAT])
+                    for (SpellModifier* spellMod : m_spellMods[AsUnderlyingType(mod->op)][SPELLMOD_FLAT])
                         if (spellMod->mask & mask)
                             modData.ModifierValue += spellMod->value;
                 }
                 else
                 {
                     modData.ModifierValue = 1.0f;
-                    for (SpellModifier* spellMod : m_spellMods[mod->op][SPELLMOD_PCT])
+                    for (SpellModifier* spellMod : m_spellMods[AsUnderlyingType(mod->op)][SPELLMOD_PCT])
                         if (spellMod->mask & mask)
                             modData.ModifierValue *= 1.0f + CalculatePct(1.0f, spellMod->value);
                 }
@@ -22869,7 +22970,7 @@ bool Player::ActivateTaxiPathTo(std::vector<uint32> const& nodes, Creature* npc 
     UpdateCriteria(CRITERIA_TYPE_FLIGHT_PATHS_TAKEN, 1);
 
     // prevent stealth flight
-    //RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TALK);
+    //RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags::Interacting);
 
     if (sWorld->getBoolConfig(CONFIG_INSTANT_TAXI))
     {
@@ -24302,6 +24403,19 @@ void Player::ClearComboPoints()
     SetPower(POWER_COMBO_POINTS, 0);
 }
 
+bool Player::IsInGroup(ObjectGuid groupGuid) const
+{
+    if (Group const* group = GetGroup())
+        if (group->GetGUID() == groupGuid)
+            return true;
+
+    if (Group const* group = GetOriginalGroup())
+        if (group->GetGUID() == groupGuid)
+            return true;
+
+    return false;
+}
+
 void Player::SetGroup(Group* group, int8 subgroup)
 {
     if (group == nullptr)
@@ -25364,6 +25478,7 @@ void Player::SummonIfPossible(bool agree)
     m_summon_expire = 0;
 
     UpdateCriteria(CRITERIA_TYPE_ACCEPTED_SUMMONINGS, 1);
+    RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags::Summon);
 
     TeleportTo(m_summon_location);
 }
@@ -26417,7 +26532,7 @@ void Player::StoreLootItem(uint8 lootSlot, Loot* loot, AELootResult* aeResult/* 
     // dont allow protected item to be looted by someone else
     if (!item->rollWinnerGUID.IsEmpty() && item->rollWinnerGUID != GetGUID())
     {
-        SendLootRelease(GetLootGUID());
+        SendLootReleaseAll();
         return;
     }
 
@@ -28213,6 +28328,8 @@ VoidStorageItem* Player::GetVoidStorageItem(uint64 id, uint8& slot) const
 
 void Player::OnCombatExit()
 {
+    Unit::OnCombatExit();
+
     UpdatePotionCooldown();
     m_combatExitTime = getMSTime();
 }
@@ -28386,39 +28503,6 @@ bool Player::MeetPlayerCondition(uint32 conditionId) const
             return false;
 
     return true;
-}
-
-float Player::GetCollisionHeight(bool mounted) const
-{
-    if (mounted)
-    {
-        CreatureDisplayInfoEntry const* mountDisplayInfo = sCreatureDisplayInfoStore.LookupEntry(GetMountDisplayId());
-        if (!mountDisplayInfo)
-            return GetCollisionHeight(false);
-
-        CreatureModelDataEntry const* mountModelData = sCreatureModelDataStore.LookupEntry(mountDisplayInfo->ModelID);
-        if (!mountModelData)
-            return GetCollisionHeight(false);
-
-        CreatureDisplayInfoEntry const* displayInfo = sCreatureDisplayInfoStore.LookupEntry(GetNativeDisplayId());
-        ASSERT(displayInfo);
-        CreatureModelDataEntry const* modelData = sCreatureModelDataStore.LookupEntry(displayInfo->ModelID);
-        ASSERT(modelData);
-
-        float scaleMod = GetObjectScale(); // 99% sure about this
-
-        return scaleMod * mountModelData->MountHeight + modelData->CollisionHeight * 0.5f;
-    }
-    else
-    {
-        //! Dismounting case - use basic default model data
-        CreatureDisplayInfoEntry const* displayInfo = sCreatureDisplayInfoStore.LookupEntry(GetNativeDisplayId());
-        ASSERT(displayInfo);
-        CreatureModelDataEntry const* modelData = sCreatureModelDataStore.LookupEntry(displayInfo->ModelID);
-        ASSERT(modelData);
-
-        return modelData->CollisionHeight;
-    }
 }
 
 std::string Player::GetMapAreaAndZoneString() const

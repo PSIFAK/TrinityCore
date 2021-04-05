@@ -92,6 +92,17 @@ namespace WorldPackets
         class GuildGetAchievementMembers;
     }
 
+    namespace AdventureJournal
+    {
+        class AdventureJournalOpenQuest;
+        class AdventureJournalUpdateSuggestions;
+    }
+
+    namespace AdventureMap
+    {
+        class AdventureMapStartQuest;
+    }
+
     namespace AreaTrigger
     {
         class AreaTrigger;
@@ -1679,6 +1690,13 @@ class TC_GAME_API WorldSession
         void HandleObjectUpdateRescuedOpcode(WorldPackets::Misc::ObjectUpdateRescued& objectUpdateRescued);
         void HandleRequestCategoryCooldowns(WorldPackets::Spells::RequestCategoryCooldowns& requestCategoryCooldowns);
         void HandleCloseInteraction(WorldPackets::Misc::CloseInteraction& closeInteraction);
+
+        // Adventure Journal
+        void HandleAdventureJournalOpenQuest(WorldPackets::AdventureJournal::AdventureJournalOpenQuest& openQuest);
+        void HandleAdventureJournalUpdateSuggestions(WorldPackets::AdventureJournal::AdventureJournalUpdateSuggestions& updateSuggestions);
+
+        // Adventure Map
+        void HandleAdventureMapStartQuest(WorldPackets::AdventureMap::AdventureMapStartQuest& startQuest);
 
         // Toys
         void HandleAddToy(WorldPackets::Toy::AddToy& packet);
