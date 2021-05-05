@@ -1093,6 +1093,7 @@ struct ChrCustomizationElementLoadInfo
             { true, FT_INT, "ChrCustomizationBoneSetID" },
             { true, FT_INT, "ChrCustomizationCondModelID" },
             { true, FT_INT, "ChrCustomizationDisplayInfoID" },
+            { true, FT_INT, "ChrCustItemGeoModifyID" },
         };
         static DB2LoadInfo const loadInfo(&fields[0], std::extent<decltype(fields)>::value, ChrCustomizationElementMeta::Instance(), HOTFIX_SEL_CHR_CUSTOMIZATION_ELEMENT);
         return &loadInfo;
@@ -2743,6 +2744,8 @@ struct ItemBonusTreeNodeLoadInfo
             { false, FT_SHORT, "ChildItemBonusTreeID" },
             { false, FT_SHORT, "ChildItemBonusListID" },
             { false, FT_SHORT, "ChildItemLevelSelectorID" },
+            { true, FT_INT, "ItemBonusListGroupID" },
+            { true, FT_INT, "ParentItemBonusTreeNodeID" },
             { false, FT_INT, "ParentItemBonusTreeID" },
         };
         static DB2LoadInfo const loadInfo(&fields[0], std::extent<decltype(fields)>::value, ItemBonusTreeNodeMeta::Instance(), HOTFIX_SEL_ITEM_BONUS_TREE_NODE);
@@ -3391,6 +3394,35 @@ struct KeychainLoadInfo
             { false, FT_BYTE, "Key32" },
         };
         static DB2LoadInfo const loadInfo(&fields[0], std::extent<decltype(fields)>::value, KeychainMeta::Instance(), HOTFIX_SEL_KEYCHAIN);
+        return &loadInfo;
+    }
+};
+
+struct LanguageWordsLoadInfo
+{
+    static DB2LoadInfo const* Instance()
+    {
+        static DB2FieldMeta const fields[] =
+        {
+            { false, FT_INT, "ID" },
+            { false, FT_STRING_NOT_LOCALIZED, "Word" },
+            { false, FT_INT, "LanguageID" },
+        };
+        static DB2LoadInfo const loadInfo(&fields[0], std::extent<decltype(fields)>::value, LanguageWordsMeta::Instance(), HOTFIX_SEL_LANGUAGE_WORDS);
+        return &loadInfo;
+    }
+};
+
+struct LanguagesLoadInfo
+{
+    static DB2LoadInfo const* Instance()
+    {
+        static DB2FieldMeta const fields[] =
+        {
+            { false, FT_STRING, "Name" },
+            { false, FT_INT, "ID" },
+        };
+        static DB2LoadInfo const loadInfo(&fields[0], std::extent<decltype(fields)>::value, LanguagesMeta::Instance(), HOTFIX_SEL_LANGUAGES);
         return &loadInfo;
     }
 };
@@ -4360,8 +4392,25 @@ struct RandPropPointsLoadInfo
         static DB2FieldMeta const fields[] =
         {
             { false, FT_INT, "ID" },
+            { false, FT_FLOAT, "DamageReplaceStatF" },
+            { false, FT_FLOAT, "DamageSecondaryF" },
             { true, FT_INT, "DamageReplaceStat" },
             { true, FT_INT, "DamageSecondary" },
+            { false, FT_FLOAT, "EpicF1" },
+            { false, FT_FLOAT, "EpicF2" },
+            { false, FT_FLOAT, "EpicF3" },
+            { false, FT_FLOAT, "EpicF4" },
+            { false, FT_FLOAT, "EpicF5" },
+            { false, FT_FLOAT, "SuperiorF1" },
+            { false, FT_FLOAT, "SuperiorF2" },
+            { false, FT_FLOAT, "SuperiorF3" },
+            { false, FT_FLOAT, "SuperiorF4" },
+            { false, FT_FLOAT, "SuperiorF5" },
+            { false, FT_FLOAT, "GoodF1" },
+            { false, FT_FLOAT, "GoodF2" },
+            { false, FT_FLOAT, "GoodF3" },
+            { false, FT_FLOAT, "GoodF4" },
+            { false, FT_FLOAT, "GoodF5" },
             { false, FT_INT, "Epic1" },
             { false, FT_INT, "Epic2" },
             { false, FT_INT, "Epic3" },

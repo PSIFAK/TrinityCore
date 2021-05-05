@@ -503,6 +503,7 @@ SpellValue::SpellValue(SpellInfo const* proto, Unit const* caster)
     MaxAffectedTargets = proto->MaxAffectedTargets;
     RadiusMod = 1.0f;
     AuraStackAmount = 1;
+    DurationMul = 1;
 }
 
 class TC_GAME_API SpellEvent : public BasicEvent
@@ -992,7 +993,7 @@ void Spell::SelectImplicitChannelTargets(SpellEffIndex effIndex, SpellImplicitTa
             else
             {
                 auto const& channelObjects = m_originalCaster->m_unitData->ChannelObjects;
-                WorldObject* target = channelObjects.size() > 0 ? ObjectAccessor::GetWorldObject(*m_caster, *channelObjects.begin()) : nullptr;
+                WorldObject* target = !channelObjects.empty() ? ObjectAccessor::GetWorldObject(*m_caster, *channelObjects.begin()) : nullptr;
                 if (target)
                 {
                     CallScriptObjectTargetSelectHandlers(target, effIndex, targetType);
@@ -1351,10 +1352,10 @@ void Spell::SelectImplicitCasterDestTargets(SpellEffIndex effIndex, SpellImplici
             float angle = float(rand_norm()) * static_cast<float>(M_PI * 35.0f / 180.0f) - static_cast<float>(M_PI * 17.5f / 180.0f);
             m_caster->GetClosePoint(x, y, z, DEFAULT_PLAYER_BOUNDING_RADIUS, dist, angle);
 
-            float ground = m_caster->GetMap()->GetHeight(m_caster->GetPhaseShift(), x, y, z, true, 50.0f);
+            float ground = m_caster->GetMapHeight(x, y, z);
             float liquidLevel = VMAP_INVALID_HEIGHT_VALUE;
             LiquidData liquidData;
-            if (m_caster->GetMap()->GetLiquidStatus(m_caster->GetPhaseShift(), x, y, z, MAP_ALL_LIQUIDS, &liquidData))
+            if (m_caster->GetMap()->GetLiquidStatus(m_caster->GetPhaseShift(), x, y, z, MAP_ALL_LIQUIDS, &liquidData, m_caster->GetCollisionHeight()))
                 liquidLevel = liquidData.level;
 
             if (liquidLevel <= ground) // When there is no liquid Map::GetWaterOrGroundLevel returns ground level
@@ -2650,9 +2651,7 @@ SpellMissInfo Spell::DoSpellHitOnUnit(Unit* unit, uint32 effectMask)
         diminishLevel = unit->GetDiminishing(diminishGroup);
         DiminishingReturnsType type = m_spellInfo->GetDiminishingReturnsGroupType();
         // Increase Diminishing on unit, current informations for actually casts will use values above
-        if ((type == DRTYPE_PLAYER &&
-            (unit->GetCharmerOrOwnerPlayerOrPlayerItself() || (unit->GetTypeId() == TYPEID_UNIT && unit->ToCreature()->GetCreatureTemplate()->flags_extra & CREATURE_FLAG_EXTRA_ALL_DIMINISH))) ||
-            type == DRTYPE_ALL)
+        if (type == DRTYPE_ALL || (type == DRTYPE_PLAYER && unit->IsAffectedByDiminishingReturns()))
             unit->IncrDiminishing(m_spellInfo);
     }
 
@@ -2719,6 +2718,8 @@ SpellMissInfo Spell::DoSpellHitOnUnit(Unit* unit, uint32 effectMask)
 
                     if (duration > 0)
                     {
+                        duration *= m_spellValue->DurationMul;
+
                         // Haste modifies duration of channeled spells
                         if (m_spellInfo->IsChanneled())
                             m_originalCaster->ModSpellDurationTime(m_spellInfo, duration, this);
@@ -2769,7 +2770,7 @@ void Spell::DoTriggersOnSpellHit(Unit* unit, uint32 effMask)
         {
             if (CanExecuteTriggersOnHit(effMask, i->triggeredByAura) && roll_chance_i(i->chance))
             {
-                m_caster->CastSpell(unit, i->triggeredSpell, TRIGGERED_FULL_MASK);
+                m_caster->CastSpell(unit, i->triggeredSpell->Id, CastSpellExtraArgs(TRIGGERED_FULL_MASK).SetCastDifficulty(i->triggeredSpell->Difficulty));
                 TC_LOG_DEBUG("spells", "Spell %d triggered spell %d by SPELL_AURA_ADD_TARGET_TRIGGER aura", m_spellInfo->Id, i->triggeredSpell->Id);
 
                 // SPELL_AURA_ADD_TARGET_TRIGGER auras shouldn't trigger auras without duration
@@ -2800,7 +2801,7 @@ void Spell::DoTriggersOnSpellHit(Unit* unit, uint32 effMask)
             if (*i < 0)
                 unit->RemoveAurasDueToSpell(-(*i));
             else
-                unit->CastSpell(unit, *i, true, nullptr, nullptr, m_caster->GetGUID());
+                unit->CastSpell(unit, *i, m_caster->GetGUID());
         }
     }
 }
@@ -2883,7 +2884,10 @@ bool Spell::UpdateChanneledTargetList()
             Unit* unit = m_caster->GetGUID() == ihit->targetGUID ? m_caster : ObjectAccessor::GetUnit(*m_caster, ihit->targetGUID);
 
             if (!unit)
+            {
+                m_caster->RemoveChannelObject(ihit->targetGUID);
                 continue;
+            }
 
             if (IsValidDeadOrAliveTarget(unit))
             {
@@ -2895,11 +2899,15 @@ bool Spell::UpdateChanneledTargetList()
                         {
                             ihit->effectMask &= ~aurApp->GetEffectMask();
                             unit->RemoveAura(aurApp);
+                            m_caster->RemoveChannelObject(ihit->targetGUID);
                             continue;
                         }
                     }
                     else // aura is dispelled
+                    {
+                        m_caster->RemoveChannelObject(ihit->targetGUID);
                         continue;
+                    }
                 }
 
                 channelTargetEffectMask &= ~ihit->effectMask;   // remove from need alive mask effect that have alive target
@@ -2911,7 +2919,7 @@ bool Spell::UpdateChanneledTargetList()
     return channelTargetEffectMask == 0;
 }
 
-void Spell::prepare(SpellCastTargets const* targets, AuraEffect const* triggeredByAura)
+void Spell::prepare(SpellCastTargets const& targets, AuraEffect const* triggeredByAura)
 {
     if (m_CastItem)
     {
@@ -2930,7 +2938,7 @@ void Spell::prepare(SpellCastTargets const* targets, AuraEffect const* triggered
         }
     }
 
-    InitExplicitTargets(*targets);
+    InitExplicitTargets(targets);
 
     m_spellState = SPELL_STATE_PREPARING;
 
@@ -3196,11 +3204,9 @@ void Spell::_cast(bool skipCheck)
     // skip check if done already (for instant cast spells for example)
     if (!skipCheck)
     {
-        uint32 param1 = 0, param2 = 0;
-        SpellCastResult castResult = CheckCast(false, &param1, &param2);
-        if (castResult != SPELL_CAST_OK)
+        auto cleanupSpell = [this, modOwner](SpellCastResult res, uint32* p1 = nullptr, uint32* p2 = nullptr)
         {
-            SendCastResult(castResult, &param1, &param2);
+            SendCastResult(res, p1, p2);
             SendInterrupted(0);
 
             if (modOwner)
@@ -3208,6 +3214,13 @@ void Spell::_cast(bool skipCheck)
 
             finish(false);
             SetExecutedCurrently(false);
+        };
+
+        uint32 param1 = 0, param2 = 0;
+        SpellCastResult castResult = CheckCast(false, &param1, &param2);
+        if (castResult != SPELL_CAST_OK)
+        {
+            cleanupSpell(castResult, &param1, &param2);
             return;
         }
 
@@ -3223,14 +3236,34 @@ void Spell::_cast(bool skipCheck)
                     {
                         // Spell will be cast after completing the trade. Silently ignore at this place
                         my_trade->SetSpell(m_spellInfo->Id, m_CastItem);
-                        SendCastResult(SPELL_FAILED_DONT_REPORT);
-                        SendInterrupted(0);
-
-                        modOwner->SetSpellModTakingSpell(this, false);
-
-                        finish(false);
-                        SetExecutedCurrently(false);
+                        cleanupSpell(SPELL_FAILED_DONT_REPORT);
                         return;
+                    }
+                }
+            }
+        }
+
+        // check diminishing returns (again, only after finish cast bar, tested on retail)
+        if (Unit* target = m_targets.GetUnitTarget())
+        {
+            uint8 aura_effmask = 0;
+            for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+                if (m_spellInfo->GetEffect(i) && m_spellInfo->GetEffect(i)->IsUnitOwnedAuraEffect())
+                    aura_effmask |= 1 << i;
+
+            if (aura_effmask)
+            {
+                if (DiminishingGroup diminishGroup = m_spellInfo->GetDiminishingReturnsGroupForSpell())
+                {
+                    DiminishingReturnsType type = m_spellInfo->GetDiminishingReturnsGroupType();
+                    if (type == DRTYPE_ALL || (type == DRTYPE_PLAYER && target->IsAffectedByDiminishingReturns()))
+                    {
+                        Unit* caster = m_originalCaster ? m_originalCaster : m_caster;
+                        if (target->HasStrongerAuraWithDR(m_spellInfo, caster))
+                        {
+                            cleanupSpell(SPELL_FAILED_AURA_BOUNCED);
+                            return;
+                        }
                     }
                 }
             }
@@ -3339,13 +3372,15 @@ void Spell::_cast(bool skipCheck)
 
     CallScriptAfterCastHandlers();
 
-    if (const std::vector<int32> *spell_triggered = sSpellMgr->GetSpellLinked(m_spellInfo->Id))
+    if (std::vector<int32> const* spell_triggered = sSpellMgr->GetSpellLinked(m_spellInfo->Id))
     {
-        for (std::vector<int32>::const_iterator i = spell_triggered->begin(); i != spell_triggered->end(); ++i)
-            if (*i < 0)
-                m_caster->RemoveAurasDueToSpell(-(*i));
+        for (int32 id : *spell_triggered)
+        {
+            if (id < 0)
+                m_caster->RemoveAurasDueToSpell(-id);
             else
-                m_caster->CastSpell(m_targets.GetUnitTarget() ? m_targets.GetUnitTarget() : m_caster, *i, true);
+                m_caster->CastSpell(m_targets.GetUnitTarget() ? m_targets.GetUnitTarget() : m_caster, id, true);
+        }
     }
 
     if (modOwner)
@@ -3402,6 +3437,8 @@ void Spell::handle_immediate()
             // Apply duration mod
             if (Player* modOwner = m_caster->GetSpellModOwner())
                 modOwner->ApplySpellMod(m_spellInfo, SpellModOp::Duration, duration);
+
+            duration *= m_spellValue->DurationMul;
 
             // Apply haste mods
             m_caster->ModSpellDurationTime(m_spellInfo, duration, this);
@@ -4509,9 +4546,28 @@ void Spell::SendChannelStart(uint32 duration)
     }
 
     m_timer = duration;
+
+    uint32 channelAuraMask = 0;
+    uint32 explicitTargetEffectMask = 0xFFFFFFFF;
+    // if there is an explicit target, only add channel objects from effects that also hit ut
+    if (!m_targets.GetUnitTargetGUID().IsEmpty())
+    {
+        auto explicitTargetItr = std::find_if(m_UniqueTargetInfo.begin(), m_UniqueTargetInfo.end(), [&](TargetInfo const& target)
+        {
+            return target.targetGUID == m_targets.GetUnitTargetGUID();
+        });
+        if (explicitTargetItr != m_UniqueTargetInfo.end())
+            explicitTargetEffectMask = explicitTargetItr->effectMask;
+    }
+
+    for (SpellEffectInfo const* effect : m_spellInfo->GetEffects())
+        if (effect && effect->Effect == SPELL_EFFECT_APPLY_AURA && (explicitTargetEffectMask & (1u << effect->EffectIndex)))
+            channelAuraMask |= 1 << effect->EffectIndex;
+
     for (TargetInfo const& target : m_UniqueTargetInfo)
     {
-        m_caster->AddChannelObject(target.targetGUID);
+        if (target.effectMask & channelAuraMask)
+            m_caster->AddChannelObject(target.targetGUID);
 
         if (m_UniqueTargetInfo.size() == 1 && m_UniqueGOTargetInfo.empty())
             if(target.targetGUID != m_caster->GetGUID())
@@ -4521,7 +4577,8 @@ void Spell::SendChannelStart(uint32 duration)
     }
 
     for (GOTargetInfo const& target : m_UniqueGOTargetInfo)
-        m_caster->AddChannelObject(target.targetGUID);
+        if (target.effectMask & channelAuraMask)
+            m_caster->AddChannelObject(target.targetGUID);
 
     m_caster->SetChannelSpellId(m_spellInfo->Id);
     m_caster->SetChannelVisual(m_SpellVisual);
@@ -5374,8 +5431,8 @@ SpellCastResult Spell::CheckCast(bool strict, uint32* param1 /*= nullptr*/, uint
                 if (!pet->HaveInDiet(foodItem->GetTemplate()))
                     return SPELL_FAILED_WRONG_PET_FOOD;
 
-                if (!pet->GetCurrentFoodBenefitLevel(foodItem->GetTemplate()->GetBaseItemLevel()))
-                    return SPELL_FAILED_FOOD_LOWLEVEL;
+                if (foodItem->GetTemplate()->GetBaseItemLevel() + 30 <= pet->getLevel())
+                   return SPELL_FAILED_FOOD_LOWLEVEL;
 
                 if (m_caster->IsInCombat() || pet->IsInCombat())
                     return SPELL_FAILED_AFFECTING_COMBAT;
@@ -5547,7 +5604,7 @@ SpellCastResult Spell::CheckCast(bool strict, uint32* param1 /*= nullptr*/, uint
                     {
                         if (strict)                         //starting cast, trigger pet stun (cast by pet so it doesn't attack player)
                             if (Pet* pet = m_caster->ToPlayer()->GetPet())
-                                pet->CastSpell(pet, 32752, true, nullptr, nullptr, pet->GetGUID());
+                                pet->CastSpell(pet, 32752, pet->GetGUID());
                     }
                     else if (!m_spellInfo->HasAttribute(SPELL_ATTR1_DISMISS_PET))
                         return SPELL_FAILED_ALREADY_HAVE_SUMMON;
@@ -7504,6 +7561,9 @@ void Spell::SetSpellValue(SpellValueMod mod, int32 value)
             break;
         case SPELLVALUE_AURA_STACK:
             m_spellValue->AuraStackAmount = uint8(value);
+            break;
+        case SPELLVALUE_DURATION_PCT:
+            m_spellValue->DurationMul = float(value) / 100.0f;
             break;
         default:
             break;

@@ -23,6 +23,7 @@
 #include "Containers.h"
 #include "DB2Stores.h"
 #include "DatabaseEnv.h"
+#include "LanguageMgr.h"
 #include "Log.h"
 #include "MotionMaster.h"
 #include "ObjectMgr.h"
@@ -2485,6 +2486,9 @@ void SpellMgr::LoadSpellInfoStore()
                 if (summonProperties->Slot == SUMMON_SLOT_MINIPET && summonProperties->Flags & SUMMON_PROP_FLAG_COMPANION)
                     if (BattlePetSpeciesEntry const* battlePetSpecies = Trinity::Containers::MapGetValuePtr(battlePetSpeciesByCreature, effect->EffectMiscValue[0]))
                         mBattlePets[effect->SpellID] = battlePetSpecies;
+
+        if (effect->Effect == SPELL_EFFECT_LANGUAGE)
+            sLanguageMgr->LoadSpellEffectLanguage(effect);
     }
 
     for (SpellAuraOptionsEntry const* auraOptions : sSpellAuraOptionsStore)
@@ -3455,14 +3459,16 @@ void SpellMgr::LoadSpellInfoCorrections()
         52438, // Summon Skittering Swarmer (Force Cast)
         52449, // Summon Skittering Infector (Force Cast)
         53609, // Summon Anub'ar Assassin (Force Cast)
-        53457  // Summon Impale Trigger (AoE)
+        53457, // Summon Impale Trigger (AoE)
+        45907  // Torch Target Picker
     }, [](SpellInfo* spellInfo)
     {
         spellInfo->MaxAffectedTargets = 1;
     });
 
-    // Skartax Purple Beam
-    ApplySpellFix({ 36384 }, [](SpellInfo* spellInfo)
+    ApplySpellFix({
+        36384  // Skartax Purple Beam
+    }, [](SpellInfo* spellInfo)
     {
         spellInfo->MaxAffectedTargets = 2;
     });
@@ -4370,6 +4376,20 @@ void SpellMgr::LoadSpellInfoCorrections()
         spellInfo->RangeEntry = sSpellRangeStore.LookupEntry(13); // 50000yd
     });
     // ENDOF ISLE OF CONQUEST SPELLS
+
+    // Aura of Fear
+    ApplySpellFix({ 40453 }, [](SpellInfo* spellInfo)
+    {
+        // Bad DBC data? Copying 25820 here due to spell description
+        // either is a periodic with chance on tick, or a proc
+
+        ApplySpellEffectFix(spellInfo, EFFECT_0, [](SpellEffectInfo* spellEffectInfo)
+        {
+                spellEffectInfo->ApplyAuraName = SPELL_AURA_PROC_TRIGGER_SPELL;
+                spellEffectInfo->ApplyAuraPeriod = 0;
+        });
+        spellInfo->ProcChance = 10;
+    });
 
     //
     // FIRELANDS SPELLS

@@ -680,6 +680,7 @@ struct PointOfInterest
     uint32 Icon;
     uint32 Flags;
     uint32 Importance;
+    uint32 Unknown905;
     std::string Name;
 };
 
@@ -916,16 +917,6 @@ struct ExtendedPlayerName
 };
 
 ExtendedPlayerName ExtractExtendedPlayerName(std::string const& name);
-
-struct LanguageDesc
-{
-    Language lang_id;
-    uint32   spell_id;
-    uint32   skill_id;
-};
-
-TC_GAME_API extern LanguageDesc lang_description[LANGUAGES_COUNT];
-LanguageDesc const* GetLanguageDescByID(uint32 lang);
 
 enum EncounterCreditType : uint8
 {

@@ -147,6 +147,8 @@ TC_GAME_API extern DB2Storage<ItemSetSpellEntry>                    sItemSetSpel
 TC_GAME_API extern DB2Storage<ItemSparseEntry>                      sItemSparseStore;
 TC_GAME_API extern DB2Storage<ItemSpecEntry>                        sItemSpecStore;
 TC_GAME_API extern DB2Storage<ItemSpecOverrideEntry>                sItemSpecOverrideStore;
+TC_GAME_API extern DB2Storage<LanguageWordsEntry>                   sLanguageWordsStore;
+TC_GAME_API extern DB2Storage<LanguagesEntry>                       sLanguagesStore;
 TC_GAME_API extern DB2Storage<LFGDungeonsEntry>                     sLFGDungeonsStore;
 TC_GAME_API extern DB2Storage<LiquidTypeEntry>                      sLiquidTypeStore;
 TC_GAME_API extern DB2Storage<LockEntry>                            sLockStore;
@@ -303,7 +305,7 @@ public:
         std::vector<uint8> Data;
     };
 
-    using HotfixContainer = std::set<HotfixRecord>;
+    using HotfixContainer = std::unordered_map<int32, std::vector<HotfixRecord>>;
 
     using ItemBonusList = std::vector<ItemBonusEntry const*>;
     using MapDifficultyContainer = std::unordered_map<uint32, std::unordered_map<uint32, MapDifficultyEntry const*>>;
