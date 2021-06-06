@@ -46,6 +46,14 @@ struct AchievementEntry
     int32 CovenantID;
 };
 
+struct Achievement_CategoryEntry
+{
+    LocalizedString Name;
+    uint32 ID;
+    int16 Parent;
+    int8 UiOrder;
+};
+
 struct AdventureJournalEntry
 {
     uint32 ID;
@@ -1136,6 +1144,8 @@ struct CriteriaTreeEntry
     uint32 CriteriaID;
     int32 OrderIndex;
     int32 Flags;
+
+    EnumFlag<CriteriaTreeFlags> GetFlags() const { return static_cast<CriteriaTreeFlags>(Flags); }
 };
 
 struct CurrencyTypesEntry
@@ -1389,6 +1399,27 @@ struct FactionTemplateEntry
         return EnemyGroup == 0 && FriendGroup == 0;
     }
     bool IsContestedGuardFaction() const { return (Flags & FACTION_TEMPLATE_FLAG_CONTESTED_GUARD) != 0; }
+};
+
+struct FriendshipRepReactionEntry
+{
+    uint32 ID;
+    LocalizedString Reaction;
+    uint32 FriendshipRepID;
+    uint16 ReactionThreshold;
+};
+
+struct FriendshipReputationEntry
+{
+    LocalizedString Description;
+    LocalizedString StandingModified;
+    LocalizedString StandingChanged;
+    uint32 ID;
+    int32 FactionID;
+    int32 TextureFileID;
+    int32 Flags;
+
+    EnumFlag<FriendshipReputationFlags> GetFlags() const { return static_cast<FriendshipReputationFlags>(Flags); }
 };
 
 struct GameObjectDisplayInfoEntry
@@ -2422,6 +2453,14 @@ struct OverrideSpellDataEntry
     uint8 Flags;
 };
 
+struct ParagonReputationEntry
+{
+    uint32 ID;
+    uint32 FactionID;
+    int32 LevelThreshold;
+    int32 QuestID;
+};
+
 struct PhaseEntry
 {
     uint32 ID;
@@ -3039,6 +3078,13 @@ struct SpellItemEnchantmentConditionEntry
     uint8 RtOperandType[5];
     uint8 RtOperand[5];
     uint8 Logic[5];
+};
+
+struct SpellLabelEntry
+{
+    uint32 ID;
+    uint32 LabelID;
+    uint32 SpellID;
 };
 
 struct SpellLearnSpellEntry
