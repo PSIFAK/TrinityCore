@@ -50,13 +50,15 @@ enum WarriorSpells
     SPELL_WARRIOR_GLYPH_OF_HEROIC_LEAP_BUFF         = 133278,
     SPELL_WARRIOR_HEROIC_LEAP_JUMP                  = 178368,
     SPELL_WARRIOR_IGNORE_PAIN                       = 190456,
+    SPELL_WARRIOR_INVIGORATING_FURY                 = 385174,
+    SPELL_WARRIOR_INVIGORATING_FURY_TALENT          = 383468,
     SPELL_WARRIOR_IN_FOR_THE_KILL                   = 248621,
     SPELL_WARRIOR_IN_FOR_THE_KILL_HASTE             = 248622,
     SPELL_WARRIOR_IMPENDING_VICTORY                 = 202168,
     SPELL_WARRIOR_IMPENDING_VICTORY_HEAL            = 202166,
     SPELL_WARRIOR_IMPROVED_HEROIC_LEAP              = 157449,
     SPELL_WARRIOR_MORTAL_STRIKE                     = 12294,
-    SPELL_WARRIOR_MORTAL_WOUNDS                     = 213667,
+    SPELL_WARRIOR_MORTAL_WOUNDS                     = 115804,
     SPELL_WARRIOR_RALLYING_CRY                      = 97463,
     SPELL_WARRIOR_RUMBLING_EARTH                    = 275339,
     SPELL_WARRIOR_SHIELD_BLOCK_AURA                 = 132404,
@@ -500,6 +502,33 @@ class spell_warr_intimidating_shout : public SpellScript
     }
 };
 
+// 385174 - Invigorating Fury (attached to 184364 - Enraged Regeneration)
+class spell_warr_invigorating_fury : public SpellScript
+{
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo({ SPELL_WARRIOR_INVIGORATING_FURY, SPELL_WARRIOR_INVIGORATING_FURY_TALENT });
+    }
+
+    bool Load() override
+    {
+        return GetCaster()->HasAura(SPELL_WARRIOR_INVIGORATING_FURY_TALENT);
+    }
+
+    void CastHeal() const
+    {
+        GetCaster()->CastSpell(nullptr, SPELL_WARRIOR_INVIGORATING_FURY, CastSpellExtraArgsInit{
+            .TriggerFlags = TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR,
+            .TriggeringSpell = GetSpell()
+        });
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_warr_invigorating_fury::CastHeal);
+    }
+};
+
 // 70844 - Item - Warrior T10 Protection 4P Bonus
 class spell_warr_item_t10_prot_4p_bonus : public AuraScript
 {
@@ -526,7 +555,7 @@ class spell_warr_item_t10_prot_4p_bonus : public AuraScript
     }
 };
 
-// 12294 - Mortal Strike 7.1.5
+// 12294 - Mortal Strike
 class spell_warr_mortal_strike : public SpellScript
 {
     bool Validate(SpellInfo const* /*spellInfo*/) override
@@ -534,15 +563,17 @@ class spell_warr_mortal_strike : public SpellScript
         return ValidateSpellInfo({ SPELL_WARRIOR_MORTAL_WOUNDS });
     }
 
-    void HandleDummy(SpellEffIndex /*effIndex*/)
+    void HandleMortalWounds(SpellEffIndex /*effIndex*/) const
     {
-        if (Unit* target = GetHitUnit())
-            GetCaster()->CastSpell(target, SPELL_WARRIOR_MORTAL_WOUNDS, true);
+        GetCaster()->CastSpell(GetHitUnit(), SPELL_WARRIOR_MORTAL_WOUNDS, CastSpellExtraArgsInit{
+            .TriggerFlags = TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR,
+            .TriggeringSpell = GetSpell()
+        });
     }
 
     void Register() override
     {
-        OnEffectHitTarget += SpellEffectFn(spell_warr_mortal_strike::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+        OnEffectHitTarget += SpellEffectFn(spell_warr_mortal_strike::HandleMortalWounds, EFFECT_0, SPELL_EFFECT_SCHOOL_DAMAGE);
     }
 };
 
@@ -742,27 +773,6 @@ class spell_warr_strategist : public AuraScript
     }
 };
 
-// 52437 - Sudden Death
-class spell_warr_sudden_death : public AuraScript
-{
-    bool Validate(SpellInfo const* /*spellInfo*/) override
-    {
-        return ValidateSpellInfo({ SPELL_WARRIOR_COLOSSUS_SMASH });
-    }
-
-    void HandleApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
-    {
-        // Remove cooldown on Colossus Smash
-        if (Player* player = GetTarget()->ToPlayer())
-            player->GetSpellHistory()->ResetCooldown(SPELL_WARRIOR_COLOSSUS_SMASH, true);
-    }
-
-    void Register() override
-    {
-        AfterEffectApply += AuraEffectRemoveFn(spell_warr_sudden_death::HandleApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL); // correct?
-    }
-};
-
 // 12328, 18765, 35429 - Sweeping Strikes
 class spell_warr_sweeping_strikes : public AuraScript
 {
@@ -916,6 +926,7 @@ void AddSC_warrior_spell_scripts()
     RegisterSpellScript(spell_warr_heroic_leap_jump);
     RegisterSpellScript(spell_warr_impending_victory);
     RegisterSpellScript(spell_warr_intimidating_shout);
+    RegisterSpellScript(spell_warr_invigorating_fury);
     RegisterSpellScript(spell_warr_item_t10_prot_4p_bonus);
     RegisterSpellScript(spell_warr_mortal_strike);
     RegisterSpellScript(spell_warr_rallying_cry);
@@ -926,7 +937,6 @@ void AddSC_warrior_spell_scripts()
     RegisterSpellScript(spell_warr_storm_bolt);
     RegisterSpellScript(spell_warr_storm_bolts);
     RegisterSpellScript(spell_warr_strategist);
-    RegisterSpellScript(spell_warr_sudden_death);
     RegisterSpellScript(spell_warr_sweeping_strikes);
     RegisterSpellScript(spell_warr_trauma);
     RegisterSpellScript(spell_warr_t3_prot_8p_bonus);
