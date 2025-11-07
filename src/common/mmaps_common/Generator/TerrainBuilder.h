@@ -18,6 +18,7 @@
 #ifndef _MMAP_TERRAIN_BUILDER_H
 #define _MMAP_TERRAIN_BUILDER_H
 
+#include "MMapDefines.h"
 #include "WorldModel.h"
 #include <G3D/Vector3.h>
 #include <boost/filesystem/path.hpp>
@@ -61,19 +62,6 @@ namespace MMAP
     // contrib/extractor/system.cpp
     // src/game/Map.cpp
 
-    struct OffMeshData
-    {
-        uint32 MapId;
-        uint32 TileX;
-        uint32 TileY;
-        float From[3];
-        float To[3];
-        bool Bidirectional;
-        float Radius;
-        uint8 AreaId;
-        uint16 Flags;
-    };
-
     struct MeshData
     {
         std::vector<float> solidVerts;
@@ -91,13 +79,15 @@ namespace MMAP
         std::vector<unsigned short> offMeshConnectionsFlags;
     };
 
-    class TerrainBuilder
+    class TC_MMAPS_COMMON_API TerrainBuilder
     {
         public:
             explicit TerrainBuilder(boost::filesystem::path const& inputDirectory, bool skipLiquid);
 
             void loadMap(uint32 mapID, uint32 tileX, uint32 tileY, MeshData& meshData, VMAP::VMapManager* vmapManager);
             bool loadVMap(uint32 mapID, uint32 tileX, uint32 tileY, MeshData& meshData, VMAP::VMapManager* vmapManager);
+            void loadVMapModel(VMAP::WorldModel const* worldModel, G3D::Vector3 const& position, G3D::Matrix3 const& rotation, float scale,
+                MeshData& meshData, VMAP::VMapManager* vmapManager);
             void loadOffMeshConnections(uint32 mapID, uint32 tileX, uint32 tileY, MeshData& meshData, std::vector<OffMeshData> const& offMeshConnections);
 
             bool usesLiquids() const { return !m_skipLiquid; }
@@ -135,6 +125,8 @@ namespace MMAP
             /// Get the liquid type for a specific position
             static map_liquidHeaderTypeFlags getLiquidType(int square, map_liquidHeaderTypeFlags const (&liquid_type)[16][16]);
     };
+
+    TC_MMAPS_COMMON_API extern std::unique_ptr<VMAP::VMapManager> (*CreateVMapManager)(uint32 mapId);
 }
 
 #endif
