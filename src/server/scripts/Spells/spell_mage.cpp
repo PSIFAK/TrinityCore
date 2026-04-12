@@ -293,7 +293,7 @@ class spell_mage_arcane_explosion : public SpellScript
             if (!requiredTargets)
                 return false;
 
-            return GetUnitTargetCountForEffect(EFFECT_1) >= requiredTargets->GetAmount() && roll_chance_f(triggerChance->GetAmount());
+            return GetUnitTargetCountForEffect(EFFECT_1) >= requiredTargets->GetAmount() && roll_chance(triggerChance->GetAmount());
         }();
 
         if (!procTriggered)
@@ -733,13 +733,13 @@ class spell_mage_fingers_of_frost : public AuraScript
     bool CheckFrostboltProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
     {
         return eventInfo.GetSpellInfo() && eventInfo.GetSpellInfo()->IsAffected(SPELLFAMILY_MAGE, flag128(0, 0x2000000, 0, 0))
-            && roll_chance_f(aurEff->GetAmount());
+            && roll_chance(aurEff->GetAmount());
     }
 
     bool CheckFrozenOrbProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
     {
         return eventInfo.GetSpellInfo() && eventInfo.GetSpellInfo()->IsAffected(SPELLFAMILY_MAGE, flag128(0, 0, 0x80, 0))
-            && roll_chance_f(aurEff->GetAmount());
+            && roll_chance(aurEff->GetAmount());
     }
 
     void Trigger(AuraEffect* aurEff, ProcEventInfo& eventInfo)
@@ -1120,8 +1120,9 @@ class spell_mage_hot_streak_ignite_marker : public SpellScript
 public:
     static bool IsActive(Spell const* spell)
     {
-        if (spell_mage_hot_streak_ignite_marker const* script = spell->GetScript<spell_mage_hot_streak_ignite_marker>())
-            return script->_affectedByHotStreak;
+        if (spell)
+            if (spell_mage_hot_streak_ignite_marker const* script = spell->GetScript<spell_mage_hot_streak_ignite_marker>())
+                return script->_affectedByHotStreak;
         return false;
     }
 };

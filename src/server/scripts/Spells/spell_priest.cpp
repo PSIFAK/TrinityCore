@@ -38,6 +38,7 @@
 #include "TaskScheduler.h"
 #include "TemporarySummon.h"
 #include "CommonPredicates.h"
+#include <queue>
 
 enum PriestSpells
 {
@@ -241,6 +242,7 @@ enum PriestSpells
     SPELL_PRIEST_STRENGTH_OF_SOUL_EFFECT            = 197548,
     SPELL_PRIEST_SURGE_OF_LIGHT                     = 109186,
     SPELL_PRIEST_SURGE_OF_LIGHT_EFFECT              = 114255,
+    SPELL_PRIEST_TITHE_EVASION                      = 373223,
     SPELL_PRIEST_TRANQUIL_LIGHT                     = 196816,
     SPELL_PRIEST_THE_PENITENT_AURA                  = 200347,
     SPELL_PRIEST_TRAIL_OF_LIGHT_HEAL                = 234946,
@@ -838,7 +840,7 @@ class spell_pri_benediction : public SpellScript
     void HandleEffectHitTarget(SpellEffIndex /*effIndex*/) const
     {
         if (AuraEffect const* benediction = GetCaster()->GetAuraEffect(SPELL_PRIEST_BENEDICTION, EFFECT_0))
-            if (roll_chance_f(benediction->GetAmount()))
+            if (roll_chance(benediction->GetAmount()))
                 GetCaster()->CastSpell(GetHitUnit(), SPELL_PRIEST_RENEW, TRIGGERED_IGNORE_GCD | TRIGGERED_IGNORE_CAST_IN_PROGRESS);
     }
 
@@ -1024,7 +1026,7 @@ class spell_pri_dark_indulgence : public SpellScript
         if (!aurEff)
             return;
 
-        if (roll_chance_f(aurEff->GetAmount()))
+        if (roll_chance(aurEff->GetAmount()))
             GetCaster()->CastSpell(GetCaster(), SPELL_PRIEST_POWER_OF_THE_DARK_SIDE, true);
     }
 
@@ -1933,7 +1935,7 @@ class spell_pri_epiphany : public AuraScript
 
     static bool CheckProc(AuraScript const&, AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
     {
-        return roll_chance_f(aurEff->GetAmount());
+        return roll_chance(aurEff->GetAmount());
     }
 
     void HandleOnProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/) const
@@ -2896,7 +2898,7 @@ class spell_pri_mind_devourer : public SpellScript
     void HandleEffectHitTarget(SpellEffIndex /*effIndex*/) const
     {
         AuraEffect const* aurEff = GetCaster()->GetAuraEffect(SPELL_PRIEST_MIND_DEVOURER, EFFECT_0);
-        if (aurEff && roll_chance_f(aurEff->GetAmount()))
+        if (aurEff && roll_chance(aurEff->GetAmount()))
             GetCaster()->CastSpell(GetCaster(), SPELL_PRIEST_MIND_DEVOURER_AURA, GetSpell());
     }
 
@@ -3455,7 +3457,7 @@ class spell_pri_power_word_shield : public AuraScript
         float critChanceDone = caster->SpellCritChanceDone(nullptr, aurEff, GetSpellInfo()->GetSchoolMask(), GetSpellInfo()->GetAttackType());
         float critChanceTaken = GetUnitOwner()->SpellCritChanceTaken(caster, nullptr, aurEff, GetSpellInfo()->GetSchoolMask(), critChanceDone, GetSpellInfo()->GetAttackType());
 
-        if (roll_chance_f(critChanceTaken))
+        if (roll_chance(critChanceTaken))
             pctMod *= 2;
     }
 
@@ -3704,7 +3706,7 @@ class spell_pri_prayer_of_mending_aura : public AuraScript
 
                 int32 newStackAmount = stackAmount - 1;
                 if (AuraEffect* sayYourPrayers = caster->GetAuraEffect(SPELL_PRIEST_SAY_YOUR_PRAYERS, EFFECT_0))
-                    if (roll_chance_f(sayYourPrayers->GetAmount()))
+                    if (roll_chance(sayYourPrayers->GetAmount()))
                         ++newStackAmount;
 
                 args.AddSpellMod(SPELLVALUE_BASE_POINT0, newStackAmount);
@@ -3831,7 +3833,7 @@ class spell_pri_holy_10_1_class_set_2pc : public AuraScript
 
     static bool CheckProc(AuraScript const&, AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
     {
-        return roll_chance_f(aurEff->GetAmount());
+        return roll_chance(aurEff->GetAmount());
     }
 
     void HandleProc(AuraEffect const* aurEff, ProcEventInfo const& eventInfo) const
@@ -4470,6 +4472,9 @@ class spell_pri_shadow_word_death : public SpellScript
             if (spell_pri_deaths_torment::Data const* deathsTorment = std::any_cast<spell_pri_deaths_torment::Data>(&GetSpell()->m_customArg))
                 backlashDamage = CalculatePct(backlashDamage, deathsTorment->BacklashPct);
 
+            if (AuraEffect const* titheEvasion = caster->GetAuraEffect(SPELL_PRIEST_TITHE_EVASION, EFFECT_0))
+                AddPct(backlashDamage, -titheEvasion->GetAmount());
+
             caster->m_Events.AddEventAtOffset([caster, originalCastId = GetSpell()->m_castId, backlashDamage]
             {
                 caster->CastSpell(caster, SPELL_PRIEST_SHADOW_WORD_DEATH_DAMAGE, CastSpellExtraArgs()
@@ -4641,7 +4646,7 @@ class spell_pri_surge_of_light : public AuraScript
 
     void HandleEffectProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/) const
     {
-        if (roll_chance_f(aurEff->GetAmount()))
+        if (roll_chance(aurEff->GetAmount()))
             GetTarget()->CastSpell(GetTarget(), SPELL_PRIEST_SURGE_OF_LIGHT_EFFECT, aurEff);
     }
 
