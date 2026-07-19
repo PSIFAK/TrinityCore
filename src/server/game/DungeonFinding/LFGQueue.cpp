@@ -17,6 +17,7 @@
 
 #include "LFGQueue.h"
 #include "Containers.h"
+#include "DB2Stores.h"
 #include "GameTime.h"
 #include "Group.h"
 #include "LFGMgr.h"
@@ -25,6 +26,24 @@
 
 namespace lfg
 {
+
+namespace
+{
+uint8 GetRequiredPlayerCount(LfgDungeonSet const& dungeons)
+{
+    for (uint32 dungeonId : dungeons)
+    {
+        if (LFGDungeonsEntry const* dungeon = sLFGDungeonsStore.LookupEntry(dungeonId))
+        {
+            uint8 requiredPlayers = dungeon->CountTank + dungeon->CountHealer + dungeon->CountDamage;
+            if (requiredPlayers)
+                return requiredPlayers;
+        }
+    }
+
+    return MAX_GROUP_SIZE;
+}
+}
 
 /**
    Given a list of guids returns the concatenation using | as delimiter
@@ -420,19 +439,37 @@ LfgCompatibility LFGQueue::CheckCompatibility(GuidList check)
         }
     }
 
-    // Group with less that MAX_GROUP_SIZE members always compatible
-    if (check.size() == 1 && numPlayers != MAX_GROUP_SIZE)
+    // A single queued party still needs more players unless it already matches
+    // the composition defined by LFGDungeons.db2 (some scenarios are solo).
+    if (check.size() == 1)
     {
-        TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) single group. Compatibles", GetDetailedMatchRoles(check));
         LfgQueueDataContainer::iterator itQueue = QueueDataStore.find(check.front());
+        uint8 requiredPlayers = GetRequiredPlayerCount(itQueue->second.dungeons);
+        if (numPlayers == requiredPlayers)
+        {
+            TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) single group already has the required {} players",
+                GetDetailedMatchRoles(check), requiredPlayers);
+        }
+        else
+        {
+            if (numPlayers > requiredPlayers)
+            {
+                TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Too many players ({}, required {})",
+                    GetDetailedMatchRoles(check), numPlayers, requiredPlayers);
+                SetCompatibles(strGuids, LFG_INCOMPATIBLES_TOO_MUCH_PLAYERS);
+                return LFG_INCOMPATIBLES_TOO_MUCH_PLAYERS;
+            }
 
-        LfgCompatibilityData data(LFG_COMPATIBLES_WITH_LESS_PLAYERS);
-        data.roles = itQueue->second.roles;
-        LFGMgr::CheckGroupRoles(data.roles);
+            TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) single group. Compatibles", GetDetailedMatchRoles(check));
 
-        UpdateBestCompatibleInQueue(itQueue, strGuids, data.roles);
-        SetCompatibilityData(strGuids, data);
-        return LFG_COMPATIBLES_WITH_LESS_PLAYERS;
+            LfgCompatibilityData data(LFG_COMPATIBLES_WITH_LESS_PLAYERS);
+            data.roles = itQueue->second.roles;
+            LFGMgr::CheckGroupRoles(data.roles);
+
+            UpdateBestCompatibleInQueue(itQueue, strGuids, data.roles);
+            SetCompatibilityData(strGuids, data);
+            return LFG_COMPATIBLES_WITH_LESS_PLAYERS;
+        }
     }
 
     if (numLfgGroups > 1)
@@ -518,10 +555,20 @@ LfgCompatibility LFGQueue::CheckCompatibility(GuidList check)
         LFGMgr::CheckGroupRoles(proposalRoles);          // assing new roles
     }
 
-    // Enough players?
-    if (numPlayers != MAX_GROUP_SIZE)
+    // Enough players for the selected dungeon/scenario?
+    uint8 requiredPlayers = GetRequiredPlayerCount(proposalDungeons);
+    if (numPlayers != requiredPlayers)
     {
-        TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Compatibles but not enough players({})", GetDetailedMatchRoles(check), numPlayers);
+        if (numPlayers > requiredPlayers)
+        {
+            TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Too many players ({}, required {})",
+                GetDetailedMatchRoles(check), numPlayers, requiredPlayers);
+            SetCompatibles(strGuids, LFG_INCOMPATIBLES_TOO_MUCH_PLAYERS);
+            return LFG_INCOMPATIBLES_TOO_MUCH_PLAYERS;
+        }
+
+        TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Compatibles but not enough players ({}, required {})",
+            GetDetailedMatchRoles(check), numPlayers, requiredPlayers);
         LfgCompatibilityData data(LFG_COMPATIBLES_WITH_LESS_PLAYERS);
         data.roles = proposalRoles;
 

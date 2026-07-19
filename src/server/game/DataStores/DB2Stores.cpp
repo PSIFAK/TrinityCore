@@ -16,6 +16,7 @@
  */
 
 #include "DB2Stores.h"
+#include "RetailDB2Stores.h"
 #include "Containers.h"
 #include "DB2LoadInfo.h"
 #include "DatabaseEnv.h"
@@ -1051,6 +1052,8 @@ uint32 DB2Manager::LoadStores(std::string const& dataPath, LocaleConstant defaul
     LOAD_DB2(sWorldEffectStore);
     LOAD_DB2(sWorldMapOverlayStore);
     LOAD_DB2(sWorldStateExpressionStore);
+
+    RetailSystems::DB2::LoadStores(db2Path, defaultLocale, loadErrors);
 
     // error checks
 

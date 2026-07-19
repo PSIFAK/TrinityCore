@@ -1202,6 +1202,7 @@ enum OpcodeServer : uint32
     SMSG_BATTLE_PAY_ACK_FAILED                                      = 0x420233,
     SMSG_BATTLE_PAY_BATTLE_PET_DELIVERED                            = 0x420222,
     SMSG_BATTLE_PAY_COLLECTION_ITEM_DELIVERED                       = 0x420223,
+    SMSG_BATTLE_PAY_DELIVERABLE_DELIVERED                           = 0x420224,
     SMSG_BATTLE_PAY_CONFIRM_PURCHASE                                = 0x420232,
     SMSG_BATTLE_PAY_DELIVERY_ENDED                                  = 0x420220,
     SMSG_BATTLE_PAY_DELIVERY_STARTED                                = 0x42021F,

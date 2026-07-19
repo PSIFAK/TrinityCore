@@ -16,6 +16,7 @@
  */
 
 #include "WorldserverServiceDispatcher.h"
+#include "Custom/RetailSystems/BattlePay/BattlePayResourcesService.h"
 
 Battlenet::WorldserverServiceDispatcher::WorldserverServiceDispatcher()
 {
@@ -28,7 +29,7 @@ Battlenet::WorldserverServiceDispatcher::WorldserverServiceDispatcher()
     AddService<Services::ClubService>();
     AddService<WorldserverService<connection::v1::ConnectionService>>();
     AddService<WorldserverService<friends::v1::FriendsService>>();
-    AddService<WorldserverService<friends::v2::client::FriendsService>>();
+    AddService<Services::RetailBattlePayFriendsService>();
     AddService<WorldserverService<game_utilities::v1::GameUtilitiesService>>();
     AddService<Services::GameUtilitiesService>();
     AddService<WorldserverService<notification::v1::NotificationService>>();
@@ -38,7 +39,7 @@ Battlenet::WorldserverServiceDispatcher::WorldserverServiceDispatcher()
     AddService<WorldserverService<report::v1::ReportService>>();
     AddService<WorldserverService<report::v2::ReportService>>();
     AddService<WorldserverService<report::v3::client::ReportService>>();
-    AddService<WorldserverService<resources::v1::ResourcesService>>();
+    AddService<Services::RetailBattlePayResourcesService>();
     AddService<WorldserverService<whisper::v2::client::WhisperService>>();
 }
 

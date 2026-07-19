@@ -23,7 +23,7 @@
 #define DCScriptName "instance_darkmaul_citadel"
 #define DataHeader "DarkmaulCitadel"
 
-constexpr uint32 EncounterCount = 2;
+constexpr uint32 EncounterCount = 3;
 
 enum DarkmaulCitadelDataTypes
 {

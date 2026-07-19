@@ -16,6 +16,7 @@
  */
 
 #include "WorldSession.h"
+#include "BattlePayService.h"
 #include "GameTime.h"
 #include "HotfixPackets.h"
 #include "Log.h"
@@ -30,6 +31,21 @@ void WorldSession::HandleDBQueryBulk(WorldPackets::Hotfix::DBQueryBulk& dbQuery)
         WorldPackets::Hotfix::DBReply dbReply;
         dbReply.TableHash = dbQuery.TableHash;
         dbReply.RecordID = record.RecordID;
+
+        uint8 capturedStatus = 0;
+        std::vector<uint8> capturedData;
+        uint32 capturedDelayMs = 0;
+        if (RetailSystems::BattlePay::GetCapturedDBReply(dbQuery.TableHash, record.RecordID,
+            capturedStatus, capturedData, capturedDelayMs))
+        {
+            dbReply.Status = DB2Manager::HotfixRecord::Status(capturedStatus);
+            dbReply.Timestamp = GameTime::GetGameTime();
+            if (!capturedData.empty())
+                dbReply.Data.append(capturedData.data(), capturedData.size());
+
+            RetailSystems::BattlePay::SendCapturedPacket(this, dbReply.Write(), capturedDelayMs);
+            continue;
+        }
 
         if (store && store->HasRecord(record.RecordID))
         {
@@ -58,6 +74,9 @@ void WorldSession::HandleDBQueryBulk(WorldPackets::Hotfix::DBQueryBulk& dbQuery)
 
 void WorldSession::SendAvailableHotfixes()
 {
+    if (RetailSystems::BattlePay::SendCapturedAvailableHotfixes(this))
+        return;
+
     WorldPackets::Hotfix::AvailableHotfixes availableHotfixes;
     availableHotfixes.VirtualRealmAddress = GetVirtualRealmAddress();
 
@@ -74,6 +93,9 @@ void WorldSession::SendAvailableHotfixes()
 
 void WorldSession::HandleHotfixRequest(WorldPackets::Hotfix::HotfixRequest& hotfixQuery)
 {
+    if (RetailSystems::BattlePay::SendCapturedHotfixConnect(this, hotfixQuery.Hotfixes))
+        return;
+
     DB2Manager::HotfixContainer const& hotfixes = sDB2Manager.GetHotfixData();
     WorldPackets::Hotfix::HotfixConnect hotfixQueryResponse;
     hotfixQueryResponse.Hotfixes.reserve(hotfixQuery.Hotfixes.size());

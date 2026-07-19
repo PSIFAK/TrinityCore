@@ -21,6 +21,7 @@
 #include "BattlegroundScript.h"
 #include "CellImpl.h"
 #include "CharacterPackets.h"
+#include "ChallengeModeService.h"
 #include "ChatPackets.h"
 #include "Conversation.h"
 #include "DB2Stores.h"
@@ -3366,7 +3367,7 @@ bool Map::IsMythic() const
 
 bool Map::IsMythicPlus() const
 {
-    return IsDungeon() && i_spawnMode == DIFFICULTY_MYTHIC_KEYSTONE;
+    return IsDungeon() && (i_spawnMode == DIFFICULTY_MYTHIC_KEYSTONE || RetailSystems::ChallengeMode::IsActive(this));
 }
 
 bool Map::IsHeroicOrHigher() const

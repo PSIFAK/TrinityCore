@@ -17,18 +17,24 @@
 
 // This is where scripts' loading functions should be declared:
 void AddSC_zone_exiles_reach();
+void AddSC_zone_exiles_reach_human_mage();
 
 // Darkmaul Citacel
 void AddSC_instance_darkmaul_citadel();
 void AddSC_boss_tunk();
+void AddSC_boss_gorgroth();
+void AddSC_boss_ravnyr();
 
 // The name of this function should match:
 // void Add${NameOfDirectory}Scripts()
 void AddExilesReachScripts()
 {
     AddSC_zone_exiles_reach();
+    AddSC_zone_exiles_reach_human_mage();
 
     // Darkmaul Citacel
     AddSC_instance_darkmaul_citadel();
     AddSC_boss_tunk();
+    AddSC_boss_gorgroth();
+    AddSC_boss_ravnyr();
 }

@@ -279,6 +279,41 @@ namespace WorldPackets
         enum class LoginFailureReason : uint8;
     }
 
+    namespace ChromieTime
+    {
+        class SelectExpansion;
+    }
+
+    namespace RetailBattlePay
+    {
+        class AckFailedResponse;
+        class CatalogShopLicenseGameDataRequest;
+        class CommerceTokenGetMarketPrice;
+        class ConfirmPurchaseResponse;
+        class ConsumableTokenCanVeteranBuy;
+        class GetAllLicensedDecorQuantities;
+        class GetDecorRefundList;
+        class GetLastCatalogFetch;
+        class GetProductList;
+        class GetPurchaseList;
+        class OpenCheckout;
+        class RequestPriceInfo;
+        class RequestStoreFrontInfoUpdate;
+        class StartPurchase;
+        class UpdateLastCatalogFetch;
+    }
+
+    namespace RetailChallengeMode
+    {
+        class RequestAffixes;
+        class RequestLeaders;
+        class RequestMapStats;
+        class RequestSeasonData;
+        class ResetCheatRequest;
+        class ResetRequest;
+        class StartRequest;
+    }
+
     namespace ClientConfig
     {
         class RequestAccountData;
@@ -1906,6 +1941,35 @@ class TC_GAME_API WorldSession
         void HandleRequestLatestSplashScreen(WorldPackets::Misc::RequestLatestSplashScreen& requestLatestSplashScreen);
 
         void HandleSocialContractRequest(WorldPackets::Social::SocialContractRequest& socialContractRequest);
+
+        // RetailSystems: Chromie Time
+        void HandleChromieTimeSelectExpansion(WorldPackets::ChromieTime::SelectExpansion& packet);
+
+        // RetailSystems: BattlePay
+        void HandleBattlePayGetProductList(WorldPackets::RetailBattlePay::GetProductList& packet);
+        void HandleBattlePayGetPurchaseList(WorldPackets::RetailBattlePay::GetPurchaseList& packet);
+        void HandleBattlePayOpenCheckout(WorldPackets::RetailBattlePay::OpenCheckout& packet);
+        void HandleBattlePayGetLastCatalogFetch(WorldPackets::RetailBattlePay::GetLastCatalogFetch& packet);
+        void HandleBattlePayUpdateLastCatalogFetch(WorldPackets::RetailBattlePay::UpdateLastCatalogFetch& packet);
+        void HandleBattlePayGetDecorRefundList(WorldPackets::RetailBattlePay::GetDecorRefundList& packet);
+        void HandleBattlePayGetAllLicensedDecorQuantities(WorldPackets::RetailBattlePay::GetAllLicensedDecorQuantities& packet);
+        void HandleBattlePayRequestStoreFrontInfoUpdate(WorldPackets::RetailBattlePay::RequestStoreFrontInfoUpdate& packet);
+        void HandleBattlePayStartPurchase(WorldPackets::RetailBattlePay::StartPurchase& packet);
+        void HandleBattlePayConfirmPurchase(WorldPackets::RetailBattlePay::ConfirmPurchaseResponse& packet);
+        void HandleBattlePayAckFailed(WorldPackets::RetailBattlePay::AckFailedResponse& packet);
+        void HandleBattlePayRequestPriceInfo(WorldPackets::RetailBattlePay::RequestPriceInfo& packet);
+        void HandleBattlePayCatalogShopLicenseGameDataRequest(WorldPackets::RetailBattlePay::CatalogShopLicenseGameDataRequest& packet);
+        void HandleBattlePayCommerceTokenGetMarketPrice(WorldPackets::RetailBattlePay::CommerceTokenGetMarketPrice& packet);
+        void HandleBattlePayConsumableTokenCanVeteranBuy(WorldPackets::RetailBattlePay::ConsumableTokenCanVeteranBuy& packet);
+
+        // RetailSystems: Challenge Mode / Mythic+
+        void HandleStartChallengeMode(WorldPackets::RetailChallengeMode::StartRequest& packet);
+        void HandleResetChallengeMode(WorldPackets::RetailChallengeMode::ResetRequest& packet);
+        void HandleResetChallengeModeCheat(WorldPackets::RetailChallengeMode::ResetCheatRequest& packet);
+        void HandleRequestMythicPlusAffixes(WorldPackets::RetailChallengeMode::RequestAffixes& packet);
+        void HandleRequestMythicPlusSeasonData(WorldPackets::RetailChallengeMode::RequestSeasonData& packet);
+        void HandleMythicPlusRequestMapStats(WorldPackets::RetailChallengeMode::RequestMapStats& packet);
+        void HandleChallengeModeRequestLeaders(WorldPackets::RetailChallengeMode::RequestLeaders& packet);
 
         union ConnectToKey
         {

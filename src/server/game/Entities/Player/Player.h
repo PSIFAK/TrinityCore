@@ -3019,6 +3019,9 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
 
         void SetTransportServerTime(int32 transportServerTime) { SetUpdateFieldValue(m_values.ModifyValue(&Player::m_activePlayerData).ModifyValue(&UF::ActivePlayerData::TransportServerTime), transportServerTime); }
 
+        uint32 GetChromieTimeExpansionID() const { return uint32(*m_activePlayerData->UiChromieTimeExpansionID); }
+        void SetChromieTimeExpansion(uint32 expansionId, uint32 expansionLevelMask);
+
         void SetRequiredMountCapabilityFlag(uint8 flag) { SetUpdateFieldFlagValue(m_values.ModifyValue(&Player::m_activePlayerData).ModifyValue(&UF::ActivePlayerData::RequiredMountCapabilityFlags), flag); }
         void ReplaceAllRequiredMountCapabilityFlags(uint8 flags) { SetUpdateFieldValue(m_values.ModifyValue(&Player::m_activePlayerData).ModifyValue(&UF::ActivePlayerData::RequiredMountCapabilityFlags), flags); }
 

@@ -17,6 +17,7 @@
 
 #include "WorldSession.h"
 #include "AuthenticationPackets.h"
+#include "BattlePayService.h"
 #include "BattlenetRpcErrorCodes.h"
 #include "CharacterTemplateDataStore.h"
 #include "ClientConfigPackets.h"
@@ -108,8 +109,9 @@ void WorldSession::SendSetTimeZoneInformation()
 void WorldSession::SendFeatureSystemStatusGlueScreen()
 {
     WorldPackets::System::FeatureSystemStatusGlueScreen features;
-    features.BpayStoreAvailable = false;
+    features.BpayStoreAvailable = RetailSystems::BattlePay::IsEnabled();
     features.BpayStoreDisabledByParentalControls = false;
+    features.CommerceServerEnabled = RetailSystems::BattlePay::IsEnabled();
     features.CharUndeleteEnabled = sWorld->getBoolConfig(CONFIG_FEATURE_SYSTEM_CHARACTER_UNDELETE_ENABLED);
     features.MaxCharactersOnThisRealm = sWorld->getIntConfig(CONFIG_CHARACTERS_PER_REALM);
     features.MinimumExpansionLevel = EXPANSION_CLASSIC;
@@ -147,8 +149,9 @@ void WorldSession::SendFeatureSystemStatusGlueScreen()
         { "raidLockoutExtendEnabled"sv, "1"sv },
         { "sellAllJunkEnabled"sv, "1"sv },
         { "bypassItemLevelScalingCode"sv, "0"sv },
-        { "shop2Enabled"sv, "0"sv },
-        { "bpayStoreEnable"sv, "0"sv },
+        { "shop2Enabled"sv, RetailSystems::BattlePay::IsEnabled() ? "1"sv : "0"sv },
+        { "bpayStoreEnable"sv, RetailSystems::BattlePay::IsEnabled() ? "1"sv : "0"sv },
+        { "bpayStorePurchaseTimeout"sv, "30"sv },
         { "recentAlliesEnabledClient"sv, "0"sv },
         { "browserEnabled"sv, "0"sv },
         { "housingEnableCreateGuildNeighborhood"sv, "0"sv },
@@ -163,4 +166,6 @@ void WorldSession::SendFeatureSystemStatusGlueScreen()
     WorldPackets::System::MirrorVars variables;
     variables.Variables = vars;
     SendPacket(variables.Write());
+
+    RetailSystems::BattlePay::SendLoginBootstrap(this);
 }

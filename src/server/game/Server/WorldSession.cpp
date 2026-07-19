@@ -21,6 +21,7 @@
 #include "AuthenticationPackets.h"
 #include "Bag.h"
 #include "BattlePetMgr.h"
+#include "BattlePayService.h"
 #include "BattlegroundMgr.h"
 #include "BattlenetPackets.h"
 #include "CharacterPackets.h"
@@ -163,6 +164,8 @@ WorldSession::WorldSession(uint32 id, std::string&& name, uint32 battlenetAccoun
 /// WorldSession destructor
 WorldSession::~WorldSession()
 {
+    RetailSystems::BattlePay::ClearDelayedPackets(this);
+
     ///- unload player if not unloaded
     if (_player)
         LogoutPlayer (true);
@@ -506,6 +509,9 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
     TC_METRIC_VALUE("processed_packets", processedPackets);
 
     _recvQueue.readd(requeuePackets.begin(), requeuePackets.end());
+
+    if (updater.ProcessUnsafe())
+        RetailSystems::BattlePay::ProcessDelayedPackets(this);
 
     if (!updater.ProcessUnsafe()) // <=> updater is of type MapSessionFilter
     {

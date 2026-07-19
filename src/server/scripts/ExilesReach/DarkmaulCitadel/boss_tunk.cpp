@@ -56,6 +56,12 @@ struct boss_tunk : public BossAI
     {
         instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
         _JustDied();
+
+        if (Creature* gorgroth = instance->GetCreature(DATA_GORGROTH))
+        {
+            gorgroth->RemoveUnitFlag(UnitFlags(UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_NON_ATTACKABLE));
+            gorgroth->SetReactState(REACT_AGGRESSIVE);
+        }
     }
 
     void EnterEvadeMode(EvadeReason /*why*/) override
@@ -116,6 +122,8 @@ struct boss_tunk : public BossAI
             if (me->HasUnitState(UNIT_STATE_CASTING))
                 return;
         }
+
+        me->DoMeleeAttackIfReady();
     }
 };
 

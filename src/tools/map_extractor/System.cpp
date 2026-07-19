@@ -1352,6 +1352,8 @@ void ExtractGameTables()
         { .FileDataId = 4494528, .Name = "BaseProfessionRatings.txt" },
         { .FileDataId = 1391665, .Name = "BattlePetTypeDamageMod.txt" },
         { .FileDataId = 1391666, .Name = "BattlePetXP.txt" },
+        { .FileDataId = 1391667, .Name = "ChallengeModeDamage.txt" },
+        { .FileDataId = 1391668, .Name = "ChallengeModeHealth.txt" },
         { .FileDataId = 1391669, .Name = "CombatRatings.txt" },
         { .FileDataId = 1391670, .Name = "CombatRatingsMultByILvl.txt" },
         { .FileDataId = 1391671, .Name = "HonorLevel.txt" },

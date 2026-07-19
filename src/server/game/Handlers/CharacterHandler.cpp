@@ -16,6 +16,7 @@
  */
 
 #include "WorldSession.h"
+#include "BattlePayService.h"
 #include "AccountMgr.h"
 #include "ArenaTeam.h"
 #include "ArenaTeamMgr.h"
@@ -1507,6 +1508,8 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder const& holder)
 void WorldSession::SendFeatureSystemStatus()
 {
     WorldPackets::System::FeatureSystemStatus features;
+    features.BpayStoreAvailable = RetailSystems::BattlePay::IsEnabled();
+    features.CommerceServerEnabled = RetailSystems::BattlePay::IsEnabled();
 
     /// START OF DUMMY VALUES
     features.ComplaintStatus = COMPLAINT_ENABLED_WITH_AUTO_IGNORE;
