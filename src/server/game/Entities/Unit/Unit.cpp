@@ -14615,7 +14615,7 @@ SpellInfo const* Unit::GetCastSpellInfo(SpellInfo const* spellInfo, TriggerCastF
     {
         for (AuraEffect const* auraEffect : GetAuraEffectsByType(type))
         {
-            bool matches = auraEffect->GetMiscValue() ? uint32(auraEffect->GetMiscValue()) == spellInfo->Id : auraEffect->IsAffectingSpell(spellInfo);
+            bool matches = auraEffect->GetMiscValue() && !auraEffect->HasSpellClassMask() ? uint32(auraEffect->GetMiscValue()) == spellInfo->Id : auraEffect->IsAffectingSpell(spellInfo);
             if (matches && context->AddSpell(auraEffect->GetAmountAsInt()))
             {
                 if (SpellInfo const* newInfo = sSpellMgr->GetSpellInfo(auraEffect->GetAmountAsInt(), GetMap()->GetDifficultyID()))

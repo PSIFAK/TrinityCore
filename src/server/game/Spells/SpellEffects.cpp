@@ -384,8 +384,8 @@ NonDefaultConstructible<SpellEffectHandlerFn> SpellEffectHandlers[TOTAL_SPELL_EF
     &Spell::EffectModifyCooldownsByCategory,                //292 SPELL_EFFECT_MODIFY_COOLDOWNS_BY_CATEGORY
     &Spell::EffectModifySpellCharges,                       //293 SPELL_EFFECT_MODIFY_CHARGES
     &Spell::EffectNULL,                                     //294 SPELL_EFFECT_CRAFT_LOOT
-    &Spell::EffectNULL,                                     //295 SPELL_EFFECT_SALVAGE_ITEM
-    &Spell::EffectNULL,                                     //296 SPELL_EFFECT_CRAFT_SALVAGE_ITEM
+    &Spell::EffectSalvageItem,                              //295 SPELL_EFFECT_SALVAGE_ITEM
+    &Spell::EffectSalvageItem,                              //296 SPELL_EFFECT_CRAFT_SALVAGE_ITEM
     &Spell::EffectNULL,                                     //297 SPELL_EFFECT_RECRAFT_ITEM
     &Spell::EffectNULL,                                     //298 SPELL_EFFECT_CANCEL_ALL_PRIVATE_CONVERSATIONS
     &Spell::EffectNULL,                                     //299 SPELL_EFFECT_299
@@ -4674,6 +4674,56 @@ void Spell::EffectMilling()
     itemTarget->m_loot.reset(new Loot(player->GetMap(), itemTarget->GetGUID(), LOOT_MILLING, nullptr));
     itemTarget->m_loot->FillLoot(itemTarget->GetEntry(), LootTemplates_Milling, player, true);
     player->SendLoot(*itemTarget->m_loot);
+}
+
+void Spell::EffectSalvageItem()
+{
+    if (effectHandleMode != SPELL_EFFECT_HANDLE_HIT_TARGET)
+        return;
+
+    Player* player = m_caster->ToPlayer();
+    if (!player)
+        return;
+
+    if (!itemTarget)
+        return;
+
+    // BasePoints holds the amount consumed by mass milling/prospecting spells
+    uint32 count = std::max<uint32>(5, uint32(effectInfo->BasePoints));
+    if (itemTarget->GetCount() < count)
+        return;
+
+    ItemTemplate const* proto = itemTarget->GetTemplate();
+    uint32 itemEntry = itemTarget->GetEntry();
+
+    auto updateSkill = [&](SkillType professionSkill, WorldBoolConfigs config)
+    {
+        if (!sWorld->getBoolConfig(config))
+            return;
+
+        if (uint32 skill = player->GetProfessionSkillForExp(professionSkill, proto->GetRequiredExpansion()))
+            player->UpdateGatherSkill(skill, player->GetPureSkillValue(skill), proto->GetRequiredSkillRank());
+    };
+
+    LootStore const* store = nullptr;
+    if (LootTemplates_Milling.HaveLootFor(itemEntry))
+    {
+        updateSkill(SKILL_INSCRIPTION, CONFIG_SKILL_MILLING);
+        store = &LootTemplates_Milling;
+    }
+    else if (LootTemplates_Prospecting.HaveLootFor(itemEntry))
+    {
+        updateSkill(SKILL_JEWELCRAFTING, CONFIG_SKILL_PROSPECTING);
+        store = &LootTemplates_Prospecting;
+    }
+    else
+        return;
+
+    // one loot roll per 5 consumed items
+    for (uint32 i = 0; i < count / 5; ++i)
+        player->AutoStoreLoot(itemEntry, *store, ItemContext::NONE, false, true);
+
+    player->DestroyItemCount(itemEntry, count, true);
 }
 
 void Spell::EffectSkill()

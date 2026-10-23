@@ -22,6 +22,7 @@
 #include "Group.h"
 #include "LFGMgr.h"
 #include "Log.h"
+#include "World.h"
 #include <sstream>
 
 namespace lfg
@@ -42,6 +43,12 @@ uint8 GetRequiredPlayerCount(LfgDungeonSet const& dungeons)
     }
 
     return MAX_GROUP_SIZE;
+}
+
+// DungeonFinder.SoloMode: groups smaller than the dungeon requires are matched as-is
+bool IsSoloMode()
+{
+    return sWorld->getBoolConfig(CONFIG_LFG_SOLO_MODE);
 }
 }
 
@@ -445,7 +452,7 @@ LfgCompatibility LFGQueue::CheckCompatibility(GuidList check)
     {
         LfgQueueDataContainer::iterator itQueue = QueueDataStore.find(check.front());
         uint8 requiredPlayers = GetRequiredPlayerCount(itQueue->second.dungeons);
-        if (numPlayers == requiredPlayers)
+        if (numPlayers == requiredPlayers || (IsSoloMode() && numPlayers < requiredPlayers))
         {
             TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) single group already has the required {} players",
                 GetDetailedMatchRoles(check), requiredPlayers);
@@ -557,7 +564,7 @@ LfgCompatibility LFGQueue::CheckCompatibility(GuidList check)
 
     // Enough players for the selected dungeon/scenario?
     uint8 requiredPlayers = GetRequiredPlayerCount(proposalDungeons);
-    if (numPlayers != requiredPlayers)
+    if (numPlayers != requiredPlayers && !(IsSoloMode() && numPlayers < requiredPlayers))
     {
         if (numPlayers > requiredPlayers)
         {

@@ -1396,6 +1396,15 @@ Command.LookupMaxResults = 0
 DungeonFinder.OptionsMask = 1
 
 #
+#     DungeonFinder.SoloMode
+#        Description: Allow the dungeon finder to start a dungeon with fewer players than the
+#                     dungeon normally requires (e.g. a single player).
+#        Default:     0 - (Disabled)
+#                     1 - (Enabled)
+
+DungeonFinder.SoloMode = 0
+
+#
 #   DBC.EnforceItemAttributes
 #        Description: Disallow overriding item attributes stored in DBC files with values from the
 #                     database.

@@ -7867,6 +7867,32 @@ SpellCastResult Spell::CheckItems(int32* param1 /*= nullptr*/, int32* param2 /*=
 
                 break;
             }
+            case SPELL_EFFECT_SALVAGE_ITEM:
+            case SPELL_EFFECT_CRAFT_SALVAGE_ITEM:
+            {
+                Item* item = m_targets.GetItemTarget();
+                if (!item)
+                    return SPELL_FAILED_CANT_BE_SALVAGED;
+                // prevent salvaging in trade slot
+                if (item->GetOwnerGUID() != player->GetGUID())
+                    return SPELL_FAILED_CANT_BE_SALVAGED;
+                // make sure the player has the required items in inventory
+                uint32 count = std::max<uint32>(5, uint32(spellEffectInfo.BasePoints));
+                if (item->GetCount() < count)
+                {
+                    if (param1 && param2)
+                    {
+                        *param1 = item->GetEntry();
+                        *param2 = count;
+                    }
+                    return SPELL_FAILED_NEED_MORE_ITEMS;
+                }
+
+                if (!LootTemplates_Milling.HaveLootFor(item->GetEntry()) && !LootTemplates_Prospecting.HaveLootFor(item->GetEntry()))
+                    return SPELL_FAILED_CANT_BE_SALVAGED;
+
+                break;
+            }
             case SPELL_EFFECT_WEAPON_DAMAGE:
             case SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL:
             {

@@ -5473,6 +5473,8 @@ bool Player::UpdateGatherSkill(uint32 skillId, uint32 skillValue, uint32 redLeve
     switch (skillEntry->ParentSkillLineID)
     {
         case SKILL_HERBALISM:
+        case SKILL_INSCRIPTION:     // milling
+        case SKILL_JEWELCRAFTING:   // prospecting
             return UpdateSkillPro(skillId, SkillGainChance(skillValue, grayLevel, greenLevel, yellowLevel) * multiplicator, gatheringSkillGain);
         case SKILL_SKINNING:
             if (sWorld->getIntConfig(CONFIG_SKILL_CHANCE_SKINNING_STEPS) == 0)
