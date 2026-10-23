@@ -28,6 +28,7 @@
 #include "Common.h"
 #include "ConditionMgr.h"
 #include "Containers.h"
+#include "CraftingService.h"
 #include "CreatureAI.h"
 #include "DB2Stores.h"
 #include "DatabaseEnv.h"
@@ -135,6 +136,10 @@ SpellCastTargets::SpellCastTargets(Unit* caster, WorldPackets::Spells::SpellCast
 
     SetPitch(spellCastRequest.MissileTrajectory.Pitch);
     SetSpeed(spellCastRequest.MissileTrajectory.Speed);
+
+    for (WorldPackets::Spells::SpellCraftingReagent const& reagent : spellCastRequest.CraftingReagents)
+        if (reagent.Reagent.ItemID)
+            m_craftingReagents.push_back({ .Slot = reagent.Slot, .ItemID = *reagent.Reagent.ItemID, .Quantity = reagent.Quantity });
 
     Update(caster);
 }
@@ -7865,6 +7870,13 @@ SpellCastResult Spell::CheckItems(int32* param1 /*= nullptr*/, int32* param2 /*=
                 if (!LootTemplates_Milling.HaveLootFor(m_targets.GetItemTargetEntry()))
                     return SPELL_FAILED_CANT_BE_MILLED;
 
+                break;
+            }
+            case SPELL_EFFECT_CRAFT_ITEM:
+            {
+                SpellCastResult craftResult = RetailSystems::Crafting::CheckCraft(player, m_spellInfo, spellEffectInfo, m_targets);
+                if (craftResult != SPELL_CAST_OK)
+                    return craftResult;
                 break;
             }
             case SPELL_EFFECT_SALVAGE_ITEM:

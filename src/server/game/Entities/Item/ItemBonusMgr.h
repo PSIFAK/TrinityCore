@@ -46,6 +46,8 @@ struct ItemBonusGenerationParams
     ItemContext Context;
     Optional<int32> MythicPlusKeystoneLevel;
     Optional<int32> PvpTier;
+    std::vector<uint32> ExtraBonusTreeIDs;  // applied in addition to the item's own bonus trees (e.g. crafting)
+    int32 SequenceLevel = 0;                // selects ItemBonusListGroupEntry::SequenceValue (e.g. crafting quality tier)
 };
 
 TC_GAME_API std::vector<int32> GetBonusListsForItem(uint32 itemId, ItemBonusGenerationParams const& params);

@@ -368,6 +368,14 @@ struct TC_GAME_API SpellDestination
     Position _transportOffset;
 };
 
+// Modified crafting reagent sent by the client with a cast request
+struct SpellCraftingReagentTarget
+{
+    int32 Slot = 0;
+    int32 ItemID = 0;
+    int32 Quantity = 0;
+};
+
 class TC_GAME_API SpellCastTargets
 {
 public:
@@ -439,6 +447,8 @@ public:
     void Update(WorldObject* caster);
     std::string const& GetTargetString() const { return m_strTarget; }
 
+    std::vector<SpellCraftingReagentTarget> const& GetCraftingReagents() const { return m_craftingReagents; }
+
 private:
     uint32 m_targetMask;
 
@@ -456,6 +466,7 @@ private:
 
     float m_pitch, m_speed;
     std::string m_strTarget;
+    std::vector<SpellCraftingReagentTarget> m_craftingReagents;
 };
 
 struct TC_GAME_API CastSpellTargetArg

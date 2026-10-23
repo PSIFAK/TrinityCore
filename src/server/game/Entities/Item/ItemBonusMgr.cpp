@@ -422,8 +422,21 @@ std::vector<int32> GetBonusListsForItem(uint32 itemId, ItemBonusGenerationParams
 
     uint32 itemLevelSelectorId = 0;
 
+    std::vector<uint32> appliedBonusTrees;
     for (auto [_, itemBonusTreeId] : Trinity::Containers::MapEqualRange(_itemToBonusTree, itemId))
-        ApplyBonusTreeHelper(itemTemplate, itemBonusTreeId, params, 0, &itemLevelSelectorId, &bonusListIDs);
+    {
+        ApplyBonusTreeHelper(itemTemplate, itemBonusTreeId, params, params.SequenceLevel, &itemLevelSelectorId, &bonusListIDs);
+        appliedBonusTrees.push_back(itemBonusTreeId);
+    }
+
+    for (uint32 itemBonusTreeId : params.ExtraBonusTreeIDs)
+    {
+        if (advstd::ranges::contains(appliedBonusTrees, itemBonusTreeId))
+            continue;
+
+        ApplyBonusTreeHelper(itemTemplate, itemBonusTreeId, params, params.SequenceLevel, &itemLevelSelectorId, &bonusListIDs);
+        appliedBonusTrees.push_back(itemBonusTreeId);
+    }
 
     if (ItemLevelSelectorEntry const* selector = sItemLevelSelectorStore.LookupEntry(itemLevelSelectorId))
     {

@@ -29,6 +29,7 @@
 #include "CombatPackets.h"
 #include "Common.h"
 #include "Conversation.h"
+#include "CraftingService.h"
 #include "Creature.h"
 #include "CreatureAI.h"
 #include "CreatureTextMgr.h"
@@ -377,7 +378,7 @@ NonDefaultConstructible<SpellEffectHandlerFn> SpellEffectHandlers[TOTAL_SPELL_EF
     &Spell::EffectNULL,                                     //285 SPELL_EFFECT_MODIFY_KEYSTONE_2
     &Spell::EffectGrantBattlePetExperience,                 //286 SPELL_EFFECT_GRANT_BATTLEPET_EXPERIENCE
     &Spell::EffectNULL,                                     //287 SPELL_EFFECT_SET_GARRISON_FOLLOWER_LEVEL
-    &Spell::EffectNULL,                                     //288 SPELL_EFFECT_CRAFT_ITEM
+    &Spell::EffectCraftItem,                                //288 SPELL_EFFECT_CRAFT_ITEM
     &Spell::EffectModifyAuraStacks,                         //289 SPELL_EFFECT_MODIFY_AURA_STACKS
     &Spell::EffectModifyCooldown,                           //290 SPELL_EFFECT_MODIFY_COOLDOWN
     &Spell::EffectModifyCooldowns,                          //291 SPELL_EFFECT_MODIFY_COOLDOWNS
@@ -4724,6 +4725,20 @@ void Spell::EffectSalvageItem()
         player->AutoStoreLoot(itemEntry, *store, ItemContext::NONE, false, true);
 
     player->DestroyItemCount(itemEntry, count, true);
+}
+
+void Spell::EffectCraftItem()
+{
+    if (effectHandleMode != SPELL_EFFECT_HANDLE_HIT_TARGET)
+        return;
+
+    Player* player = m_caster->ToPlayer();
+    if (!player)
+        return;
+
+    SpellCastResult result = RetailSystems::Crafting::Craft(player, m_spellInfo, *effectInfo, m_targets);
+    if (result != SPELL_CAST_OK)
+        SendCastResult(result);
 }
 
 void Spell::EffectSkill()
