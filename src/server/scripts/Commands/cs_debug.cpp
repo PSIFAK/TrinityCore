@@ -78,6 +78,8 @@ public:
             { "sound",              HandleDebugPlaySoundCommand,            rbac::RBAC_PERM_COMMAND_DEBUG,  Console::No },
             { "music",              HandleDebugPlayMusicCommand,            rbac::RBAC_PERM_COMMAND_DEBUG,  Console::No },
             { "objectsound",        HandleDebugPlayObjectSoundCommand,      rbac::RBAC_PERM_COMMAND_DEBUG,  Console::No },
+            { "spellvisual",        HandleDebugPlaySpellVisualCommand,      rbac::RBAC_PERM_COMMAND_DEBUG,  Console::No },
+            { "spellvisualkit",     HandleDebugPlaySpellVisualKitCommand,   rbac::RBAC_PERM_COMMAND_DEBUG,  Console::No },
         };
         static ChatCommandTable debugSendCommandTable =
         {
@@ -273,6 +275,45 @@ public:
         player->PlayDirectMusic(musicId, player);
 
         handler->PSendSysMessage(LANG_YOU_HEAR_SOUND, musicId);
+        return true;
+    }
+
+    // plays a SpellVisual from the player to the selected unit (or on the player)
+    static bool HandleDebugPlaySpellVisualCommand(ChatHandler* handler, uint32 spellVisualId, Optional<float> travelSpeed)
+    {
+        if (!sSpellVisualStore.LookupEntry(spellVisualId))
+        {
+            handler->PSendSysMessage("SpellVisual %u does not exist.", spellVisualId);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        Player* player = handler->GetPlayer();
+        Unit* target = handler->getSelectedUnit();
+        if (!target)
+            target = player;
+
+        player->SendPlaySpellVisual(target, spellVisualId, 0, 0, travelSpeed.value_or(60.0f));
+        handler->PSendSysMessage("Playing SpellVisual %u on %s.", spellVisualId, target->GetName().c_str());
+        return true;
+    }
+
+    // plays a SpellVisualKit on the selected unit (or on the player)
+    static bool HandleDebugPlaySpellVisualKitCommand(ChatHandler* handler, uint32 spellVisualKitId, Optional<uint32> duration)
+    {
+        if (!sSpellVisualKitStore.LookupEntry(spellVisualKitId))
+        {
+            handler->PSendSysMessage("SpellVisualKit %u does not exist.", spellVisualKitId);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        Unit* target = handler->getSelectedUnit();
+        if (!target)
+            target = handler->GetPlayer();
+
+        target->SendPlaySpellVisualKit(spellVisualKitId, 0, duration.value_or(0));
+        handler->PSendSysMessage("Playing SpellVisualKit %u on %s.", spellVisualKitId, target->GetName().c_str());
         return true;
     }
 
