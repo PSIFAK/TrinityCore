@@ -40,6 +40,20 @@ void AddSC_instance_neltharions_lair();
 void AddSC_boss_king_deepbeard();
 void AddSC_instance_eye_of_azshara();
 
+// Halls of Valor
+void AddSC_instance_halls_of_valor();
+void AddSC_boss_hymdall();
+void AddSC_boss_hyrja();
+void AddSC_boss_fenryr();
+void AddSC_boss_god_king_skovald();
+void AddSC_boss_odyn();
+void AddSC_halls_of_valor();
+// Court of Stars
+void AddSC_instance_court_of_stars();
+void AddSC_boss_patrol_captain_gerdo();
+void AddSC_boss_talixae_flamewreath();
+void AddSC_boss_advisor_melandrus();
+void AddSC_court_of_stars();
 // Orderhalls
 void AddSC_orderhall_warrior();
 void AddSC_orderhall_rogue();
@@ -71,6 +85,20 @@ void AddBrokenIslesScripts()
     AddSC_boss_king_deepbeard();
     AddSC_instance_eye_of_azshara();
 
+    // Halls of Valor
+    AddSC_instance_halls_of_valor();
+    AddSC_boss_hymdall();
+    AddSC_boss_hyrja();
+    AddSC_boss_fenryr();
+    AddSC_boss_god_king_skovald();
+    AddSC_boss_odyn();
+    AddSC_halls_of_valor();
+    // Court of Stars
+    AddSC_instance_court_of_stars();
+    AddSC_boss_patrol_captain_gerdo();
+    AddSC_boss_talixae_flamewreath();
+    AddSC_boss_advisor_melandrus();
+    AddSC_court_of_stars();
     // Orderhalls
     AddSC_orderhall_warrior();
     AddSC_orderhall_rogue();
