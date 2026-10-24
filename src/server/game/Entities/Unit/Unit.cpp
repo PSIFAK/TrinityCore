@@ -14160,6 +14160,19 @@ void Unit::ApplyMovementForce(ObjectGuid id, Position origin, float magnitude, M
     }
 }
 
+void Unit::AddMoveImpulse(Position const& impulse)
+{
+    Player const* movingPlayer = GetPlayerMovingMe();
+    if (!movingPlayer)
+        return;
+
+    WorldPackets::Movement::MoveAddImpulse addImpulse;
+    addImpulse.MoverGUID = GetGUID();
+    addImpulse.SequenceIndex = m_movementCounter++;
+    addImpulse.Impulse = impulse;
+    movingPlayer->SendDirectMessage(addImpulse.Write());
+}
+
 void Unit::RemoveMovementForce(ObjectGuid id)
 {
     if (!_movementForces)

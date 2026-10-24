@@ -989,6 +989,15 @@ WorldPacket const* MoveApplyMovementForce::Write()
     return &_worldPacket;
 }
 
+WorldPacket const* MoveAddImpulse::Write()
+{
+    _worldPacket << MoverGUID;
+    _worldPacket << SequenceIndex;
+    _worldPacket << Impulse;
+
+    return &_worldPacket;
+}
+
 void MoveApplyMovementForceAck::Read()
 {
     _worldPacket >> Ack;

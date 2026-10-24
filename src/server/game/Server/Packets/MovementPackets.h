@@ -417,6 +417,19 @@ namespace WorldPackets
             ObjectGuid ID;
         };
 
+        // Layout verified against retail 12.0.5.67186 captures: packed guid, sequence index, impulse vector
+        class MoveAddImpulse final : public ServerPacket
+        {
+        public:
+            explicit MoveAddImpulse() : ServerPacket(SMSG_MOVE_ADD_IMPULSE, 16 + 4 + 12) { }
+
+            WorldPacket const* Write() override;
+
+            ObjectGuid MoverGUID;
+            int32 SequenceIndex = 0;
+            TaggedPosition<Position::XYZ> Impulse;
+        };
+
         class MoveUpdateApplyMovementForce final : public ServerPacket
         {
         public:

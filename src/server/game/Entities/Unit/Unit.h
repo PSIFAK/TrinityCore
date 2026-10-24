@@ -1188,6 +1188,7 @@ class TC_GAME_API Unit : public WorldObject
 
         MovementForces const* GetMovementForces() const { return _movementForces.get(); }
         void ApplyMovementForce(ObjectGuid id, Position origin, float magnitude, MovementForceType type, Position direction = {}, ObjectGuid transportGuid = ObjectGuid::Empty);
+        void AddMoveImpulse(Position const& impulse); // advanced flying (skyriding) impulse, only for player controlled units
         void RemoveMovementForce(ObjectGuid id);
         bool SetIgnoreMovementForces(bool ignore);
         void UpdateMovementForcesModMagnitude();
