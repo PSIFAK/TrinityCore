@@ -1381,10 +1381,10 @@ void Spell::EffectHealthLeech()
     }
 }
 
-void Spell::DoCreateItem(uint32 itemId, ItemContext context /*= ItemContext::NONE*/, std::vector<int32> const* bonusListIDs /*= nullptr*/)
+bool Spell::DoCreateItem(uint32 itemId, ItemContext context /*= ItemContext::NONE*/, std::vector<int32> const* bonusListIDs /*= nullptr*/)
 {
     if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
-        return;
+        return false;
 
     Player* player = unitTarget->ToPlayer();
 
@@ -1393,7 +1393,7 @@ void Spell::DoCreateItem(uint32 itemId, ItemContext context /*= ItemContext::NON
     if (!pProto)
     {
         player->SendEquipError(EQUIP_ERR_ITEM_NOT_FOUND, nullptr, nullptr);
-        return;
+        return false;
     }
 
     uint32 num_to_add = std::clamp<int32>(GetEffectValueAsInt(), 1, pProto->GetMaxStackSize());
@@ -1444,7 +1444,7 @@ void Spell::DoCreateItem(uint32 itemId, ItemContext context /*= ItemContext::NON
         {
             // if not created by another reason from full inventory or unique items amount limitation
             player->SendEquipError(msg, nullptr, nullptr, newitemid);
-            return;
+            return false;
         }
     }
 
@@ -1468,13 +1468,31 @@ void Spell::DoCreateItem(uint32 itemId, ItemContext context /*= ItemContext::NON
         // we succeeded in creating at least one item, so a levelup is possible
         if (!m_CastItem)
             player->UpdateCraftSkill(m_spellInfo);
+
+        return true;
     }
+
+    return false;
 }
 
 void Spell::EffectCreateItem()
 {
     if (effectHandleMode != SPELL_EFFECT_HANDLE_HIT_TARGET)
         return;
+
+    // optional crafting reagents (e.g. Shadowlands missives, crafter's marks, legendary memories)
+    if (!m_targets.GetCraftingReagents().empty())
+    {
+        if (Player* player = m_caster->ToPlayer())
+        {
+            SpellCastResult result = RetailSystems::Crafting::CreateItemWithReagents(this, player, m_spellInfo, *effectInfo, m_targets);
+            if (result != SPELL_CAST_OK)
+                SendCastResult(result);
+            else
+                ExecuteLogEffectCreateItem(effectInfo->Effect, effectInfo->ItemType);
+            return;
+        }
+    }
 
     DoCreateItem(effectInfo->ItemType, m_spellInfo->HasAttribute(SPELL_ATTR0_IS_TRADESKILL) ? ItemContext::Trade_Skill : ItemContext::NONE);
     ExecuteLogEffectCreateItem(effectInfo->Effect, effectInfo->ItemType);

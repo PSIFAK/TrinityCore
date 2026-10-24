@@ -19,6 +19,7 @@
 #include "ObjectMgr.h"
 #include "Player.h"
 #include "RetailDB2Stores.h"
+#include "Spell.h"
 #include "SpellDefines.h"
 #include "SpellInfo.h"
 #include "SpellMgr.h"
@@ -85,6 +86,24 @@ CraftingIndexes const& GetIndexes()
     return indexes;
 }
 
+struct QualitySlot
+{
+    float Weight;
+    int32 ReagentCount;
+    float QualityQuantity; // sum of quantity * (quality order / max quality order)
+};
+
+// Validated modified crafting reagents of a cast
+struct ReagentResult
+{
+    std::vector<uint32> BonusTreeIDs;
+    std::unordered_map<uint32 /*itemId*/, uint32 /*count*/> ReagentsToConsume;
+    int32 DifficultyAdjustment = 0;
+    int32 ItemContextOffset = 0;
+    std::vector<QualitySlot> QualitySlots;
+    bool HasQualityWeights = false;
+};
+
 struct CraftResult
 {
     CraftingDataEntry const* Data = nullptr;
@@ -94,8 +113,7 @@ struct CraftResult
     int32 Skill = 0;
     int32 SkillFromReagents = 0;
     SkillLineAbilityEntry const* SkillLineAbility = nullptr;
-    std::vector<uint32> BonusTreeIDs;
-    std::unordered_map<uint32 /*itemId*/, uint32 /*count*/> ReagentsToConsume;
+    ReagentResult Reagents;
 };
 
 // Category of a reagent item: quality reagents are listed in CraftingReagentQuality,
@@ -125,19 +143,10 @@ SkillLineAbilityEntry const* GetSkillLineAbility(uint32 spellId)
     return bounds.first != bounds.second ? bounds.first->second : nullptr;
 }
 
-SpellCastResult ResolveCraft(Player const* player, SpellInfo const* spellInfo, SpellEffectInfo const& effectInfo, SpellCastTargets const& targets, CraftResult& result)
+// Validates the modified crafting reagents sent with a cast against the spell's ModifiedCraftingSpellSlot entries
+SpellCastResult ResolveReagents(Player const* player, SpellInfo const* spellInfo, SpellCastTargets const& targets, ReagentResult& result)
 {
     CraftingIndexes const& indexes = GetIndexes();
-
-    result.Data = CraftingDataStore.LookupEntry(effectInfo.MiscValue);
-    if (!result.Data)
-    {
-        TC_LOG_ERROR("spells", "RetailSystems::Crafting: spell {} references missing CraftingData {}", spellInfo->Id, effectInfo.MiscValue);
-        return SPELL_FAILED_ERROR;
-    }
-
-    if (result.Data->ItemBonusTreeID)
-        result.BonusTreeIDs.push_back(result.Data->ItemBonusTreeID);
 
     std::unordered_map<int32, std::vector<SpellCraftingReagentTarget const*>> reagentsBySlot;
     for (SpellCraftingReagentTarget const& reagent : targets.GetCraftingReagents())
@@ -154,19 +163,6 @@ SpellCastResult ResolveCraft(Player const* player, SpellInfo const* spellInfo, S
     for (auto const& [slot, _] : reagentsBySlot)
         if (!spellSlots || std::ranges::none_of(*spellSlots, [slot](ModifiedCraftingSpellSlotEntry const* spellSlot) { return spellSlot->Slot == slot; }))
             return SPELL_FAILED_REAGENTS;
-
-    int32 difficulty = result.Data->CraftingDifficulty;
-    float totalQualityWeight = 0.0f;
-    float achievedQualityWeight = 0.0f;
-    bool hasQualityWeights = false;
-
-    struct QualitySlot
-    {
-        float Weight;
-        int32 ReagentCount;
-        float QualityQuantity; // sum of quantity * (quality order / max quality order)
-    };
-    std::vector<QualitySlot> qualitySlots;
 
     if (spellSlots)
     {
@@ -207,12 +203,17 @@ SpellCastResult ResolveCraft(Player const* player, SpellInfo const* spellInfo, S
                 providedCount += reagent->Quantity;
                 result.ReagentsToConsume[reagent->ItemID] += reagent->Quantity;
 
-                if (reagentItem && reagentItem->ItemBonusTreeID)
-                    result.BonusTreeIDs.push_back(reagentItem->ItemBonusTreeID);
+                if (reagentItem)
+                {
+                    if (reagentItem->ItemBonusTreeID)
+                        result.BonusTreeIDs.push_back(reagentItem->ItemBonusTreeID);
+
+                    result.ItemContextOffset = std::max(result.ItemContextOffset, reagentItem->ItemContextOffset);
+                }
 
                 if (CraftingReagentQualityEntry const* reagentQuality = Trinity::Containers::MapGetValuePtr(indexes.ReagentQualityByItem, reagent->ItemID))
                 {
-                    difficulty += int32(reagentQuality->MaxDifficultyAdjustment);
+                    result.DifficultyAdjustment += int32(reagentQuality->MaxDifficultyAdjustment);
 
                     int32 const* maxOrder = Trinity::Containers::MapGetValuePtr(indexes.MaxReagentOrderByCategory, categoryId);
                     if (reagentSlot->ReagentType == MCR_REAGENT_TYPE_REQUIRED && maxOrder && *maxOrder > 0)
@@ -230,8 +231,8 @@ SpellCastResult ResolveCraft(Player const* player, SpellInfo const* spellInfo, S
 
             if (isQualitySlot)
             {
-                qualitySlots.push_back({ slotWeight, spellSlot->ReagentCount, qualityQuantity });
-                hasQualityWeights = hasQualityWeights || slotWeight > 0.0f;
+                result.QualitySlots.push_back({ slotWeight, spellSlot->ReagentCount, qualityQuantity });
+                result.HasQualityWeights = result.HasQualityWeights || slotWeight > 0.0f;
             }
         }
     }
@@ -240,10 +241,35 @@ SpellCastResult ResolveCraft(Player const* player, SpellInfo const* spellInfo, S
         if (!player->HasItemCount(itemId, count))
             return SPELL_FAILED_REAGENTS;
 
-    // categories without MatQualityWeight contribute equally
-    for (QualitySlot const& qualitySlot : qualitySlots)
+    return SPELL_CAST_OK;
+}
+
+SpellCastResult ResolveCraft(Player const* player, SpellInfo const* spellInfo, SpellEffectInfo const& effectInfo, SpellCastTargets const& targets, CraftResult& result)
+{
+    CraftingIndexes const& indexes = GetIndexes();
+
+    result.Data = CraftingDataStore.LookupEntry(effectInfo.MiscValue);
+    if (!result.Data)
     {
-        float weight = hasQualityWeights ? qualitySlot.Weight : 1.0f;
+        TC_LOG_ERROR("spells", "RetailSystems::Crafting: spell {} references missing CraftingData {}", spellInfo->Id, effectInfo.MiscValue);
+        return SPELL_FAILED_ERROR;
+    }
+
+    SpellCastResult reagentResult = ResolveReagents(player, spellInfo, targets, result.Reagents);
+    if (reagentResult != SPELL_CAST_OK)
+        return reagentResult;
+
+    if (result.Data->ItemBonusTreeID)
+        result.Reagents.BonusTreeIDs.insert(result.Reagents.BonusTreeIDs.begin(), result.Data->ItemBonusTreeID);
+
+    int32 difficulty = result.Data->CraftingDifficulty + result.Reagents.DifficultyAdjustment;
+    float totalQualityWeight = 0.0f;
+    float achievedQualityWeight = 0.0f;
+
+    // categories without MatQualityWeight contribute equally
+    for (QualitySlot const& qualitySlot : result.Reagents.QualitySlots)
+    {
+        float weight = result.Reagents.HasQualityWeights ? qualitySlot.Weight : 1.0f;
         totalQualityWeight += weight * float(qualitySlot.ReagentCount);
         achievedQualityWeight += weight * qualitySlot.QualityQuantity;
     }
@@ -373,7 +399,7 @@ SpellCastResult Craft(Player* player, SpellInfo const* spellInfo, SpellEffectInf
     ItemContext context = spellInfo->HasAttribute(SPELL_ATTR0_IS_TRADESKILL) ? ItemContext::Trade_Skill : ItemContext::NONE;
 
     ItemBonusMgr::ItemBonusGenerationParams bonusParams(context);
-    bonusParams.ExtraBonusTreeIDs = result.BonusTreeIDs;
+    bonusParams.ExtraBonusTreeIDs = result.Reagents.BonusTreeIDs;
     bonusParams.SequenceLevel = result.Quality ? result.Quality->QualityTier : 0;
     std::vector<int32> bonusListIDs = ItemBonusMgr::GetBonusListsForItem(result.ItemID, bonusParams);
 
@@ -389,11 +415,47 @@ SpellCastResult Craft(Player* player, SpellInfo const* spellInfo, SpellEffectInf
     if (itemTemplate->HasSignature())
         item->SetCreator(player->GetGUID());
 
-    for (auto const& [itemId, count] : result.ReagentsToConsume)
+    for (auto const& [itemId, count] : result.Reagents.ReagentsToConsume)
         player->DestroyItemCount(itemId, count, true);
 
     SendCraftedItem(player, item, quantity, result);
     player->UpdateCraftSkill(spellInfo);
+    return SPELL_CAST_OK;
+}
+
+SpellCastResult CheckCreateItemReagents(Player const* player, SpellInfo const* spellInfo, SpellCastTargets const& targets)
+{
+    if (targets.GetCraftingReagents().empty())
+        return SPELL_CAST_OK;
+
+    ReagentResult result;
+    return ResolveReagents(player, spellInfo, targets, result);
+}
+
+SpellCastResult CreateItemWithReagents(Spell* spell, Player* player, SpellInfo const* spellInfo, SpellEffectInfo const& effectInfo, SpellCastTargets const& targets)
+{
+    ReagentResult result;
+    SpellCastResult castResult = ResolveReagents(player, spellInfo, targets, result);
+    if (castResult != SPELL_CAST_OK)
+        return castResult;
+
+    int32 context = effectInfo.MiscValue;
+    if (!context && spellInfo->HasAttribute(SPELL_ATTR0_IS_TRADESKILL))
+        context = int32(ItemContext::Trade_Skill);
+
+    if (context && result.ItemContextOffset)
+        context += result.ItemContextOffset;
+
+    ItemBonusMgr::ItemBonusGenerationParams bonusParams{ ItemContext(context) };
+    bonusParams.ExtraBonusTreeIDs = result.BonusTreeIDs;
+    std::vector<int32> bonusListIDs = ItemBonusMgr::GetBonusListsForItem(effectInfo.ItemType, bonusParams);
+
+    if (!spell->DoCreateItem(effectInfo.ItemType, ItemContext(context), &bonusListIDs))
+        return SPELL_FAILED_DONT_REPORT;
+
+    for (auto const& [itemId, count] : result.ReagentsToConsume)
+        player->DestroyItemCount(itemId, count, true);
+
     return SPELL_CAST_OK;
 }
 }

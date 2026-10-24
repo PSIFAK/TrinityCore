@@ -7620,6 +7620,13 @@ SpellCastResult Spell::CheckItems(int32* param1 /*= nullptr*/, int32* param2 /*=
             case SPELL_EFFECT_CREATE_ITEM:
             case SPELL_EFFECT_CREATE_LOOT:
             {
+                if (spellEffectInfo.Effect == SPELL_EFFECT_CREATE_ITEM)
+                {
+                    SpellCastResult reagentResult = RetailSystems::Crafting::CheckCreateItemReagents(player, m_spellInfo, m_targets);
+                    if (reagentResult != SPELL_CAST_OK)
+                        return reagentResult;
+                }
+
                 // m_targets.GetUnitTarget() means explicit cast, otherwise we dont check for possible equip error
                 Unit* target = m_targets.GetUnitTarget() ? m_targets.GetUnitTarget() : player;
                 if (target->GetTypeId() == TYPEID_PLAYER && !IsTriggered())
