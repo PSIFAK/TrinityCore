@@ -138,12 +138,12 @@ constexpr DB2FieldMeta CraftingDataFields[16] =
     { .IsSigned = true , .Type = FT_INT, .Name = "CraftedItemID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ItemBonusTreeID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "CraftingDifficulty" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "Unknown1" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "CraftSkillBonusPercent" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "ReCraftSkillBonusPercent" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "InspirationSkillBonusPercent" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "Unknown2" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "Unknown3" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "Unknown1" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "CraftSkillBonusPercent" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "ReCraftSkillBonusPercent" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "InspirationSkillBonusPercent" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "Unknown2" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "Unknown3" },
     { .IsSigned = true , .Type = FT_INT, .Name = "FirstCraftFlagQuestID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "FirstCraftTreasureID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Unknown4" },
@@ -162,7 +162,7 @@ constexpr DB2FieldMeta CraftingDataItemQualityFields[3] =
 {
     { .IsSigned = false, .Type = FT_INT, .Name = "ID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ItemID" },
-    { .IsSigned = true , .Type = FT_INT, .Name = "CraftingDataID" }
+    { .IsSigned = false, .Type = FT_INT, .Name = "CraftingDataID" }
 };
 
 constexpr DB2LoadInfo CraftingDataItemQualityLoadInfo
@@ -176,11 +176,11 @@ constexpr DB2LoadInfo CraftingDataItemQualityLoadInfo
 constexpr DB2FieldMeta CraftingDifficultyFields[8] =
 {
     { .IsSigned = false, .Type = FT_INT, .Name = "ID" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "MaxRandomSkillBonusPercent" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "CraftSkillBonusPercent" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "ReCraftSkillBonusPercent" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "InspirationSkillBonusPercent" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "Unknown1" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "MaxRandomSkillBonusPercent" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "CraftSkillBonusPercent" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "ReCraftSkillBonusPercent" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "InspirationSkillBonusPercent" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "Unknown1" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ConcentrationSkillCurveID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ConcentrationDifficultyCurveID" }
 };
@@ -198,9 +198,9 @@ constexpr DB2FieldMeta CraftingDifficultyQualityFields[6] =
     { .IsSigned = false, .Type = FT_INT, .Name = "ID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Order" },
     { .IsSigned = true , .Type = FT_INT, .Name = "CraftingQualityID" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "QualityPercentage" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "QualityMultiplier" },
-    { .IsSigned = true , .Type = FT_INT, .Name = "CraftingDifficultyID" }
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "QualityPercentage" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "QualityMultiplier" },
+    { .IsSigned = false, .Type = FT_INT, .Name = "CraftingDifficultyID" }
 };
 
 constexpr DB2LoadInfo CraftingDifficultyQualityLoadInfo
@@ -217,10 +217,10 @@ constexpr DB2FieldMeta CraftingReagentQualityFields[8] =
     { .IsSigned = true , .Type = FT_INT, .Name = "OrderIndex" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ItemID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Unknown1" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "MaxDifficultyAdjustment" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "ReagentEffectPct" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "MaxDifficultyAdjustment" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "ReagentEffectPct" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Unknown2" },
-    { .IsSigned = true , .Type = FT_INT, .Name = "ModifiedCraftingCategoryID" }
+    { .IsSigned = false, .Type = FT_INT, .Name = "ModifiedCraftingCategoryID" }
 };
 
 constexpr DB2LoadInfo CraftingReagentQualityLoadInfo
@@ -234,7 +234,7 @@ constexpr DB2LoadInfo CraftingReagentQualityLoadInfo
 constexpr DB2FieldMeta ModifiedCraftingSpellSlotFields[7] =
 {
     { .IsSigned = false, .Type = FT_INT, .Name = "ID" },
-    { .IsSigned = true , .Type = FT_INT, .Name = "SpellID" },
+    { .IsSigned = false, .Type = FT_INT, .Name = "SpellID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Slot" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ModifiedCraftingReagentSlotID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Unknown1" },
@@ -252,14 +252,14 @@ constexpr DB2LoadInfo ModifiedCraftingSpellSlotLoadInfo
 
 constexpr DB2FieldMeta ModifiedCraftingReagentSlotFields[8] =
 {
-    { .IsSigned = true , .Type = FT_STRING, .Name = "Name" },
+    { .IsSigned = false, .Type = FT_STRING, .Name = "Name" },
     { .IsSigned = false, .Type = FT_INT, .Name = "ID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Unknown1" },
     { .IsSigned = true , .Type = FT_INT, .Name = "PlayerConditionID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ReagentType" },
     { .IsSigned = false, .Type = FT_BYTE, .Name = "Unknown2" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Unknown3" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "Unknown4" }
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "Unknown4" }
 };
 
 constexpr DB2LoadInfo ModifiedCraftingReagentSlotLoadInfo
@@ -275,7 +275,7 @@ constexpr DB2FieldMeta MCRSlotXMCRCategoryFields[4] =
     { .IsSigned = false, .Type = FT_INT, .Name = "ID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ModifiedCraftingCategoryID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Order" },
-    { .IsSigned = true , .Type = FT_INT, .Name = "ModifiedCraftingReagentSlotID" }
+    { .IsSigned = false, .Type = FT_INT, .Name = "ModifiedCraftingReagentSlotID" }
 };
 
 constexpr DB2LoadInfo MCRSlotXMCRCategoryLoadInfo
@@ -289,10 +289,10 @@ constexpr DB2LoadInfo MCRSlotXMCRCategoryLoadInfo
 constexpr DB2FieldMeta ModifiedCraftingCategoryFields[6] =
 {
     { .IsSigned = false, .Type = FT_INT, .Name = "ID" },
-    { .IsSigned = true , .Type = FT_STRING, .Name = "DisplayName" },
-    { .IsSigned = true , .Type = FT_STRING, .Name = "Description" },
+    { .IsSigned = false, .Type = FT_STRING, .Name = "DisplayName" },
+    { .IsSigned = false, .Type = FT_STRING, .Name = "Description" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Unknown1" },
-    { .IsSigned = true , .Type = FT_FLOAT, .Name = "MatQualityWeight" },
+    { .IsSigned = false, .Type = FT_FLOAT, .Name = "MatQualityWeight" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Unknown2" }
 };
 
@@ -307,7 +307,7 @@ constexpr DB2LoadInfo ModifiedCraftingCategoryLoadInfo
 constexpr DB2FieldMeta ModifiedCraftingReagentItemFields[7] =
 {
     { .IsSigned = false, .Type = FT_INT, .Name = "ID" },
-    { .IsSigned = true , .Type = FT_STRING, .Name = "Description" },
+    { .IsSigned = false, .Type = FT_STRING, .Name = "Description" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ModifiedCraftingCategoryID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "ItemBonusTreeID" },
     { .IsSigned = true , .Type = FT_INT, .Name = "Flags" },
