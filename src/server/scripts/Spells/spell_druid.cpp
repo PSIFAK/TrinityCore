@@ -27,6 +27,7 @@
 #include "CellImpl.h"
 #include "Containers.h"
 #include "DB2Stores.h"
+#include "G3DPosition.hpp"
 #include "GridNotifiersImpl.h"
 #include "ObjectAccessor.h"
 #include "Player.h"
@@ -98,6 +99,7 @@ enum DruidSpells
     SPELL_DRUID_FLOWER_WALK                    = 439901,
     SPELL_DRUID_FLOWER_WALK_HEAL               = 439902,
     SPELL_DRUID_FULL_MOON                      = 274283,
+    SPELL_DRUID_FURY_OF_ELUNE_DAMAGE           = 211545,
     SPELL_DRUID_GALACTIC_GUARDIAN_AURA         = 213708,
     SPELL_DRUID_GERMINATION                    = 155675,
     SPELL_DRUID_GLYPH_OF_STARS                 = 114301,
@@ -1537,6 +1539,45 @@ struct at_dru_lunar_beam : AreaTriggerAI
     }
 
 private:
+    TaskScheduler _scheduler;
+};
+
+// 202770 - Fury of Elune
+// AreaTriggerCreatePropertiesId - 6887
+struct at_dru_fury_of_elune : AreaTriggerAI
+{
+    using AreaTriggerAI::AreaTriggerAI;
+
+    void OnCreate(Spell const* /*creatingSpell*/) override
+    {
+        FollowTarget();
+
+        _scheduler.Schedule(500ms, [this](TaskContext& task)
+        {
+            if (Unit* caster = at->GetCaster())
+                caster->CastSpell(at->GetPosition(), SPELL_DRUID_FURY_OF_ELUNE_DAMAGE, TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR);
+
+            FollowTarget();
+            task.Repeat(500ms);
+        });
+    }
+
+    void OnUpdate(uint32 diff) override
+    {
+        _scheduler.Update(diff);
+    }
+
+private:
+    // the beam follows the enemy it was cast on
+    void FollowTarget()
+    {
+        Unit* target = at->GetTarget();
+        if (!target || !target->IsAlive() || at->GetExactDist2d(target) < 1.0f)
+            return;
+
+        at->InitSplines({ PositionToVector3(at->GetPosition()), PositionToVector3(target->GetPosition()) });
+    }
+
     TaskScheduler _scheduler;
 };
 
@@ -3155,6 +3196,7 @@ void AddSC_druid_spell_scripts()
     RegisterSpellScript(spell_dru_item_t6_trinket);
     RegisterSpellScript(spell_dru_lifebloom);
     RegisterAreaTriggerAI(at_dru_lunar_beam);
+    RegisterAreaTriggerAI(at_dru_fury_of_elune);
     RegisterSpellScript(spell_dru_lunar_inspiration);
     RegisterSpellScript(spell_dru_lunar_wrath);
     RegisterSpellScript(spell_dru_luxuriant_soil);
