@@ -14,6 +14,7 @@
 #include "Player.h"
 #include "RetailGameTables.h"
 #include "ScriptMgr.h"
+#include "WorldQuestService.h"
 #include "WorldSession.h"
 
 namespace
@@ -31,11 +32,13 @@ public:
         RetailSystems::DB2::LoadGameTables(clientDataDir);
         RetailSystems::BattlePay::Initialize();
         RetailSystems::ChallengeMode::Initialize();
+        RetailSystems::WorldQuests::Initialize();
     }
 
     void OnUpdate(uint32 diff) override
     {
         RetailSystems::ChallengeMode::Update(diff);
+        RetailSystems::WorldQuests::Update(diff);
     }
 };
 
@@ -48,6 +51,7 @@ public:
     {
         RetailSystems::ChromieTime::Restore(player);
         RetailSystems::ChallengeMode::RestoreKeystones(player);
+        RetailSystems::WorldQuests::OnLogin(player);
     }
 
     void OnMapChanged(Player* player) override
@@ -58,12 +62,19 @@ public:
     void OnLogout(Player* player) override
     {
         RetailSystems::BattlePay::ClearPending(player->GetSession()->GetAccountId());
+        RetailSystems::WorldQuests::OnLogout(player);
+    }
+
+    void OnQuestStatusChange(Player* player, uint32 questId) override
+    {
+        RetailSystems::WorldQuests::OnQuestStatusChange(player, questId);
     }
 
     void OnDelete(ObjectGuid guid, uint32 /*accountId*/) override
     {
         RetailSystems::ChromieTime::RemoveCharacterState(guid.GetCounter());
         RetailSystems::ChallengeMode::RemoveCharacterState(guid.GetCounter());
+        RetailSystems::WorldQuests::RemoveCharacterState(guid.GetCounter());
     }
 };
 
