@@ -1,0 +1,45 @@
+-- Exile's Reach: movement fixes of TDB spawns, from the retail sniff (12.0.1.66709). Path ids 217501000-217501999 belong to this file.
+
+-- Killclaw the Terrible patrols around the quilboar camp; the sniff saw it walk this loop and respawn on it.
+DELETE FROM `waypoint_path_node` WHERE `PathId` BETWEEN 217501000 AND 217501999;
+DELETE FROM `waypoint_path` WHERE `PathId` BETWEEN 217501000 AND 217501999;
+INSERT INTO `waypoint_path` (`PathId`, `MoveType`, `Flags`, `Velocity`, `Comment`) VALUES
+(217501000, 0, 0, NULL, 'Killclaw the Terrible - patrol from the retail sniff');
+INSERT INTO `waypoint_path_node` (`PathId`, `NodeId`, `PositionX`, `PositionY`, `PositionZ`, `Orientation`, `Delay`) VALUES
+(217501000, 1, 240.8789, -2024.3269, 80.5479, NULL, 0),
+(217501000, 2, 228.6968, -2022.8711, 80.2177, NULL, 0),
+(217501000, 3, 209.362, -2058.4, 78.9906, NULL, 0),
+(217501000, 4, 154.2696, -2090.8958, 79.6356, NULL, 0),
+(217501000, 5, 213.209, -2075.619, 78.4386, NULL, 0),
+(217501000, 6, 209.362, -2058.4, 78.9906, NULL, 0),
+(217501000, 7, 223.2848, -2025.6105, 78.9618, NULL, 0),
+(217501000, 8, 245.0218, -2013.9957, 80.1025, NULL, 0),
+(217501000, 9, 222.3358, -2035.9386, 79.0196, NULL, 0),
+(217501000, 10, 235.5269, -2029.6022, 79.9502, NULL, 0),
+(217501000, 11, 228.0581, -2024.3124, 79.9395, NULL, 0),
+(217501000, 12, 222.0513, -2035.772, 78.9673, NULL, 0),
+(217501000, 13, 209.3075, -2058.3684, 78.9807, NULL, 0),
+(217501000, 14, 236.338, -2030.7341, 79.8625, NULL, 0),
+(217501000, 15, 226.1186, -2015.7316, 80.7992, NULL, 0),
+(217501000, 16, 236.2053, -2025.1538, 79.9971, NULL, 0),
+(217501000, 17, 245.2419, -2014.265, 80.089, NULL, 0),
+(217501000, 18, 228.2313, -2020.0592, 80.5279, NULL, 0),
+(217501000, 19, 221.7733, -2035.6382, 78.9179, NULL, 0),
+(217501000, 20, 209.2571, -2058.3403, 78.9716, NULL, 0),
+(217501000, 21, 213.3846, -2074.8804, 78.6738, NULL, 0),
+(217501000, 22, 223.4375, -2016.666, 80.4083, NULL, 0),
+(217501000, 23, 244.4978, -2013.0872, 80.0746, NULL, 0),
+(217501000, 24, 240.2237, -2024.0703, 80.5201, NULL, 0),
+(217501000, 25, 185.4229, -2078.364, 77.1854, NULL, 0),
+(217501000, 26, 206.9707, -2012.584, 75.3347, NULL, 0),
+(217501000, 27, 173.0414, -2099.1833, 78.3441, NULL, 0),
+(217501000, 28, 216.4922, -2067.629, 78.9112, NULL, 0),
+(217501000, 29, 215.1026, -2074.835, 78.6118, NULL, 0),
+(217501000, 30, 224.0545, -2025.871, 79.1096, NULL, 0),
+(217501000, 31, 235.1648, -2027.3927, 80.0594, NULL, 0),
+(217501000, 32, 226.2503, -2015.6204, 80.8045, NULL, 0);
+UPDATE `creature` SET `MovementType` = 2, `wander_distance` = 0 WHERE `guid` = 1051201 AND `id` = 153266;
+INSERT INTO `creature_addon` (`guid`, `PathId`, `SheathState`) VALUES (1051201, 217501000, 1) ON DUPLICATE KEY UPDATE `PathId` = VALUES(`PathId`);
+
+-- Cockroach had a waypoint movement type without a path.
+UPDATE `creature` SET `MovementType` = 1, `wander_distance` = 3 WHERE `guid` = 1051322 AND `id` = 172026 AND `MovementType` = 2;
