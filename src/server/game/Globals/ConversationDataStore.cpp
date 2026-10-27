@@ -22,6 +22,8 @@
 #include "MapUtils.h"
 #include "ObjectMgr.h"
 #include "Timer.h"
+#include <cstdlib>
+#include <limits>
 
 namespace
 {
@@ -198,6 +200,20 @@ void ConversationDataStore::LoadConversationTemplates()
         TC_LOG_INFO("server.loading", ">> Loaded 0 Conversation actors. DB table `conversation_actors` is empty.");
     }
 
+    // BroadcastTextID of the first line above USHRT_MAX - lines with older texts were authored before any such line existed
+    uint32 firstWideLineBroadcastTextId = std::numeric_limits<uint32>::max();
+    for (uint32 lineId = USHRT_MAX + 1; lineId < sConversationLineStore.GetNumRows(); ++lineId)
+    {
+        if (ConversationLineEntry const* conversationLine = sConversationLineStore.LookupEntry(lineId))
+        {
+            if (conversationLine->BroadcastTextID)
+            {
+                firstWideLineBroadcastTextId = conversationLine->BroadcastTextID;
+                break;
+            }
+        }
+    }
+
     // TODO: Remove this hack when NextConversationLineID is changed to uint32
     auto getNextConversationLineId = [&](ConversationLineEntry const* conversationLine)
     {
@@ -205,10 +221,31 @@ void ConversationDataStore::LoadConversationTemplates()
         {
             static constexpr uint32 FirstLineId = 60000; // Arbitrary id to cover the affected rows
 
-            if (conversationLine->ID > FirstLineId && conversationLine->NextConversationLineID < (sConversationLineStore.GetNumRows() - USHRT_MAX - 1))
-                return (uint32)(USHRT_MAX + conversationLine->NextConversationLineID + 1);
+            uint32 narrowLineId = conversationLine->NextConversationLineID;
+            uint32 wideLineId = USHRT_MAX + narrowLineId + 1;
 
-            return (uint32)conversationLine->NextConversationLineID;
+            if (conversationLine->ID > FirstLineId && narrowLineId < (sConversationLineStore.GetNumRows() - USHRT_MAX - 1))
+                return wideLineId;
+
+            // Older lines reused for newer content can also point above USHRT_MAX
+            // pick the candidate whose text is closest to the current one, but only if the current text is new enough
+            if (conversationLine->BroadcastTextID >= firstWideLineBroadcastTextId)
+            {
+                ConversationLineEntry const* narrowLine = sConversationLineStore.LookupEntry(narrowLineId);
+                ConversationLineEntry const* wideLine = sConversationLineStore.LookupEntry(wideLineId);
+                if (narrowLine && wideLine && narrowLine->BroadcastTextID && wideLine->BroadcastTextID)
+                {
+                    auto distance = [&](ConversationLineEntry const* line)
+                    {
+                        return std::abs(int64(line->BroadcastTextID) - int64(conversationLine->BroadcastTextID));
+                    };
+
+                    if (distance(wideLine) < distance(narrowLine))
+                        return wideLineId;
+                }
+            }
+
+            return narrowLineId;
         }
 
         return 0u;
