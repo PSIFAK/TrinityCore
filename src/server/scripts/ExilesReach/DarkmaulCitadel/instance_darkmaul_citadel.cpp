@@ -18,6 +18,7 @@
 #include "ScriptMgr.h"
 #include "Conversation.h"
 #include "Creature.h"
+#include "GameObject.h"
 #include "InstanceScript.h"
 #include "Map.h"
 #include "Player.h"
@@ -33,22 +34,27 @@ enum DarkmaulCitadelConversations
     CONVERSATION_TUNK_ENGAGE       = 12945,
     CONVERSATION_TUNK_DEFEATED     = 12946,
     CONVERSATION_GORGROTH_APPROACH = 12953,
-    CONVERSATION_GORGROTH_ENGAGE   = 12956,
-    CONVERSATION_GORGROTH_COMBAT   = 12957,
-    CONVERSATION_GORGROTH_DEFEATED = 13421,
-    CONVERSATION_RAVNYR_AWAKENS    = 12958
-};
-
-enum DarkmaulCitadelConversationActors
-{
-    ACTOR_GORGROTH                 = 71723,
-    ACTOR_RAVNYR                   = 71232
+    CONVERSATION_GORGROTH_ENGAGE   = 12956
 };
 
 enum DarkmaulCitadelMisc
 {
-    NPC_SHADOWY_ORB                = 156828
+    NPC_SHADOWY_ORB                = 156828,
+    NPC_DARKMAUL_SHADOWCALLER      = 156821,
+    SPELL_SHADOWY_ORB_RELEASED     = 306537,
+    SPELL_NECROTIC_WEATHER         = 314675,   // fog and screen effect until Ravnyr is defeated
+    SPELL_WRATHION_PERIODIC_ATTACK = 1259806,
+    SPELL_WRATHION_TRANSFORM       = 373400
 };
+
+// retail starts Gor'groth's ritual when the group reaches the stairs before his hall
+static constexpr Position GorgrothApproachPosition = { 884.3f, -1858.2f, 249.0f };
+static constexpr float GorgrothApproachDistance = 20.0f;
+static constexpr Position WrathionLandPosition = { 820.7f, -1757.0f, 248.7f };
+static constexpr Position WrathionWalkPosition = { 831.4f, -1776.8f, 248.7f };
+
+// the shadowcallers channelling the orb in the first room
+static constexpr float ShadowcallerSearchDistance = 40.0f;
 
 static constexpr float ConversationApproachDistance = 40.0f;
 
@@ -86,8 +92,11 @@ public:
             LoadDungeonEncounterData(encounters);
         }
 
-        void OnPlayerEnter(Player* /*player*/) override
+        void OnPlayerEnter(Player* player) override
         {
+            if (GetBossState(DATA_RAVNYR) != DONE)
+                player->CastSpell(player, SPELL_NECROTIC_WEATHER, true);
+
             if (_entranceStarted)
                 return;
 
@@ -99,13 +108,67 @@ public:
             });
         }
 
+        void OnCreatureCreate(Creature* creature) override
+        {
+            InstanceScript::OnCreatureCreate(creature);
+            if (creature->GetEntry() == NPC_SHADOWY_ORB)
+                _shadowyOrbGuid = creature->GetGUID();
+            else if (creature->GetEntry() == NPC_WRATHION)
+                _wrathionGuid = creature->GetGUID();
+        }
+
+        uint32 GetData(uint32 type) const override
+        {
+            return type == DATA_GORGROTH_RITUAL ? uint32(_gorgrothRitualDone) : 0;
+        }
+
+        void SetData(uint32 type, uint32 data) override
+        {
+            if (type == DATA_GORGROTH_RITUAL)
+                _gorgrothRitualDone = data != 0;
+        }
+
+        void OnGameObjectCreate(GameObject* go) override
+        {
+            InstanceScript::OnGameObjectCreate(go);
+            if (go->GetEntry() == GO_GORGROTH_DOOR)
+                _gorgrothDoorGuid = go->GetGUID();
+
+            if (go->GetEntry() != GO_SHADOWY_DOOR)
+                return;
+
+            _shadowyDoorGuid = go->GetGUID();
+            if (_shadowyOrbDone || GetBossState(DATA_TUNK) != NOT_STARTED)
+                go->SetGoState(GO_STATE_ACTIVE);
+        }
+
+        // retail: once the last shadowcaller of the first room dies, the orb is released, the door to the
+        // citadel opens and the companions comment on the orb a moment later
         void OnUnitDeath(Unit* unit) override
         {
-            if (unit->GetEntry() == NPC_SHADOWY_ORB && !_shadowyOrbDone)
+            if (unit->GetEntry() != NPC_DARKMAUL_SHADOWCALLER || _shadowyOrbDone)
+                return;
+
+            Creature* orb = instance->GetCreature(_shadowyOrbGuid);
+            if (!orb || !orb->IsWithinDist(unit, ShadowcallerSearchDistance))
+                return;
+
+            std::list<Creature*> shadowcallers;
+            orb->GetCreatureListWithEntryInGrid(shadowcallers, NPC_DARKMAUL_SHADOWCALLER, ShadowcallerSearchDistance);
+            for (Creature const* shadowcaller : shadowcallers)
+                if (shadowcaller->IsAlive())
+                    return;
+
+            _shadowyOrbDone = true;
+            orb->CastSpell(orb, SPELL_SHADOWY_ORB_RELEASED, true);
+            if (GameObject* door = instance->GetGameObject(_shadowyDoorGuid))
+                door->SetGoState(GO_STATE_ACTIVE);
+
+            _scheduler.Schedule(3s, [this](TaskContext const& /*context*/)
             {
-                _shadowyOrbDone = true;
-                StartConversation(CONVERSATION_SHADOWY_ORB, unit);
-            }
+                if (Creature* releasedOrb = instance->GetCreature(_shadowyOrbGuid))
+                    StartConversation(CONVERSATION_SHADOWY_ORB, releasedOrb);
+            });
         }
 
         bool SetBossState(uint32 id, EncounterState state) override
@@ -125,23 +188,45 @@ public:
                     else if (state == DONE)
                         StartConversation(CONVERSATION_TUNK_DEFEATED, boss);
                     break;
+                // Gor'groth and Ravnyr are one encounter in retail: the hall door closes 4.5 seconds after the pull and
+                // opens again on a wipe or once Ravnyr is defeated; a wipe brings both back
                 case DATA_GORGROTH:
                     if (state == IN_PROGRESS)
                     {
+                        // encounter 2326 is Ravnyr's, but retail starts it with Gor'groth
+                        SendDungeonEncounterStart(GetBossDungeonEncounter(DATA_RAVNYR));
                         StartConversation(CONVERSATION_GORGROTH_ENGAGE, boss);
-                        _scheduler.Schedule(19s, [this](TaskContext const& /*context*/)
+                        _scheduler.Schedule(4500ms, [this](TaskContext const& /*context*/)
                         {
                             if (GetBossState(DATA_GORGROTH) == IN_PROGRESS)
-                                if (Creature* gorgroth = GetCreature(DATA_GORGROTH))
-                                    StartConversation(CONVERSATION_GORGROTH_COMBAT, gorgroth, { { ACTOR_GORGROTH, 0, gorgroth } });
+                                SetGorgrothDoor(false);
                         });
                     }
-                    else if (state == DONE)
-                        StartConversation(CONVERSATION_GORGROTH_DEFEATED, boss);
+                    else if (state == FAIL)
+                    {
+                        SendDungeonEncounterEnd(GetBossDungeonEncounter(DATA_RAVNYR), false);
+                        SetGorgrothDoor(true);
+                    }
                     break;
                 case DATA_RAVNYR:
-                    if (state == IN_PROGRESS)
-                        StartConversation(CONVERSATION_RAVNYR_AWAKENS, boss, { { ACTOR_RAVNYR, 0, boss } });
+                    if (state == FAIL)
+                    {
+                        SetGorgrothDoor(true);
+                        if (GetBossState(DATA_GORGROTH) == DONE)
+                        {
+                            InstanceScript::SetBossState(DATA_GORGROTH, NOT_STARTED);
+                            if (Creature* gorgroth = GetCreature(DATA_GORGROTH))
+                                gorgroth->AI()->DoAction(ACTION_GORGROTH_RETURN);
+                        }
+                    }
+                    else if (state == DONE)
+                    {
+                        SetGorgrothDoor(true);
+                        for (MapReference const& ref : instance->GetPlayers())
+                            if (Player* player = ref.GetSource())
+                                player->RemoveAurasDueToSpell(SPELL_NECROTIC_WEATHER);
+                        StartWrathionEnding();
+                    }
                     break;
                 default:
                     break;
@@ -168,29 +253,72 @@ public:
                         StartConversation(CONVERSATION_TUNK_APPROACH, tunk);
                     }
 
+            // the companions comment on the hall, Gor'groth raises his ghouls 5 seconds later
             if (!_gorgrothApproached && GetBossState(DATA_TUNK) == DONE && GetBossState(DATA_GORGROTH) == NOT_STARTED)
                 if (Creature* gorgroth = GetCreature(DATA_GORGROTH))
-                    if (IsPlayerNear(gorgroth))
+                    if (IsPlayerNear(GorgrothApproachPosition, GorgrothApproachDistance))
                     {
                         _gorgrothApproached = true;
                         StartConversation(CONVERSATION_GORGROTH_APPROACH, gorgroth);
+                        _scheduler.Schedule(5s, [this](TaskContext const& /*context*/)
+                        {
+                            if (Creature* raiser = GetCreature(DATA_GORGROTH))
+                                raiser->AI()->DoAction(ACTION_RAISE_GHOULS);
+                        });
                     }
+
+            // released spirits get the fog back when they return
+            if (GetBossState(DATA_RAVNYR) != DONE)
+                for (MapReference const& ref : instance->GetPlayers())
+                    if (Player* player = ref.GetSource())
+                        if (player->IsAlive() && !player->HasAura(SPELL_NECROTIC_WEATHER))
+                            player->CastSpell(player, SPELL_NECROTIC_WEATHER, true);
         }
 
     private:
-        struct ActorRef
-        {
-            int32 ActorId;
-            uint32 Index;
-            Creature* Actor;
-        };
-
         Player* GetAnyPlayer() const
         {
             for (MapReference const& ref : instance->GetPlayers())
                 if (Player* player = ref.GetSource())
                     return player;
             return nullptr;
+        }
+
+        bool IsPlayerNear(Position const& position, float distance) const
+        {
+            for (MapReference const& ref : instance->GetPlayers())
+                if (Player* player = ref.GetSource())
+                    if (player->IsAlive() && player->IsWithinDist3d(&position, distance))
+                        return true;
+            return false;
+        }
+
+        void SetGorgrothDoor(bool open)
+        {
+            if (GameObject* door = instance->GetGameObject(_gorgrothDoorGuid))
+                door->SetGoState(open ? GO_STATE_ACTIVE : GO_STATE_READY);
+        }
+
+        // retail: Wrathion stops circling, lands next to Kalecgos, takes his visage and walks over
+        void StartWrathionEnding()
+        {
+            Creature* wrathion = instance->GetCreature(_wrathionGuid);
+            if (!wrathion)
+                return;
+
+            wrathion->RemoveAurasDueToSpell(SPELL_WRATHION_PERIODIC_ATTACK);
+            wrathion->GetMotionMaster()->Clear();
+            wrathion->GetMotionMaster()->MovePoint(0, WrathionLandPosition);
+            _scheduler.Schedule(5800ms, [this](TaskContext const& /*context*/)
+            {
+                Creature* landed = instance->GetCreature(_wrathionGuid);
+                if (!landed)
+                    return;
+
+                landed->SetDisableGravity(false);
+                landed->CastSpell(landed, SPELL_WRATHION_TRANSFORM, true);
+                landed->GetMotionMaster()->MovePoint(0, WrathionWalkPosition);
+            });
         }
 
         bool IsPlayerNear(Creature const* creature) const
@@ -203,20 +331,22 @@ public:
         }
 
         // actors listed in conversation_actors are filled in by the core
-        static void StartConversation(uint32 conversationId, Unit* creator, std::initializer_list<ActorRef> actors = {})
+        static void StartConversation(uint32 conversationId, Unit* creator)
         {
             Conversation* conversation = Conversation::CreateConversation(conversationId, creator, *creator, ObjectGuid::Empty, nullptr, false);
             if (!conversation)
                 return;
-
-            for (ActorRef const& actor : actors)
-                conversation->AddActor(actor.ActorId, actor.Index, actor.Actor->GetGUID());
 
             if (!conversation->Start())
                 delete conversation;
         }
 
         TaskScheduler _scheduler;
+        ObjectGuid _shadowyOrbGuid;
+        ObjectGuid _shadowyDoorGuid;
+        ObjectGuid _gorgrothDoorGuid;
+        ObjectGuid _wrathionGuid;
+        bool _gorgrothRitualDone = false;
         uint32 _approachCheckTimer = 0;
         bool _entranceStarted = false;
         bool _shadowyOrbDone = false;

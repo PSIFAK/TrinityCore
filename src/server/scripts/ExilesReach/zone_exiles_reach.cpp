@@ -26,6 +26,7 @@
 #include "GridNotifiersImpl.h"
 #include "MapUtils.h"
 #include "MotionMaster.h"
+#include "MoveSpline.h"
 #include "ObjectAccessor.h"
 #include "PassiveAI.h"
 #include "PhasingHandler.h"
@@ -1902,7 +1903,8 @@ public:
         {
             case QUEST_STATUS_INCOMPLETE:
                 player->CastSpell(player, SPELL_UPDATE_PHASE_SHIFT);
-                player->CastSpell(player, summonSpellId);
+                if (summonSpellId)
+                    player->CastSpell(player, summonSpellId);
 
                 if (Creature* survivor1 = FindCreatureIgnorePhase(player, survivor1StringId, 25.0f))
                 {
@@ -1916,7 +1918,8 @@ public:
 
                 break;
             case QUEST_STATUS_NONE:
-                player->RemoveAura(summonSpellId);
+                if (summonSpellId)
+                    player->RemoveAura(summonSpellId);
                 player->CastSpell(player, SPELL_UPDATE_PHASE_SHIFT);
                 break;
             default:
@@ -1933,8 +1936,9 @@ public:
 
     void OnQuestStatusChange(Player* player, Quest const* /*quest*/, QuestStatus /*oldStatus*/, QuestStatus newStatus) override
     {
+        // 12.x: Jaina stays on the beach and no follower is summoned (retail sniff 12.0.1.66709)
         HandleQuestStatusChange(player, newStatus,
-            SPELL_SUMMON_ADMIRAL_GARRICK_GUARDIAN,
+            0,
             "kee_la_beach",
             "bjorn_stouthands_beach",
             "austin_huxworth_beach");
@@ -2092,26 +2096,17 @@ struct areatrigger_find_the_lost_expedition_follower : AreaTriggerAI
         if (!player)
             return;
 
+        // 12.x: the Alliance has no follower on this quest anymore
         if (player->GetTeam() == ALLIANCE)
-        {
-            if (player->GetQuestStatus(QUEST_FINDING_THE_LOST_EXPEDITION_ALLIANCE) != QUEST_STATUS_INCOMPLETE)
-                return;
+            return;
 
-            if (player->HasAura(SPELL_SUMMON_ADMIRAL_GARRICK_GUARDIAN))
-                return;
+        if (player->GetQuestStatus(QUEST_FINDING_THE_LOST_EXPEDITION_HORDE) != QUEST_STATUS_INCOMPLETE)
+            return;
 
-            player->CastSpell(player, SPELL_SUMMON_ADMIRAL_GARRICK_GUARDIAN);
-        }
-        else
-        {
-            if (player->GetQuestStatus(QUEST_FINDING_THE_LOST_EXPEDITION_HORDE) != QUEST_STATUS_INCOMPLETE)
-                return;
+        if (player->HasAura(SPELL_SUMMON_WARLORD_GRIMAXE_GUARDIAN))
+            return;
 
-            if (player->HasAura(SPELL_SUMMON_WARLORD_GRIMAXE_GUARDIAN))
-                return;
-
-            player->CastSpell(player, SPELL_SUMMON_WARLORD_GRIMAXE_GUARDIAN);
-        }
+        player->CastSpell(player, SPELL_SUMMON_WARLORD_GRIMAXE_GUARDIAN);
     }
 };
 
@@ -5213,6 +5208,7 @@ enum ResizingQuestData
 
     EVENT_RESIZING_FOLLOW_PLAYER                    = 1,
     EVENT_RESIZING_RUN_HOME                         = 2,
+    EVENT_RESIZING_LEAVE                            = 3,
 
     POINT_HOME_POSITION                             = 0,
 
@@ -5257,8 +5253,11 @@ struct npc_lindie_springstock_q56034 : public ScriptedAI
         if (uiId != 0)
             return;
 
-        if (Unit* owner = me->GetOwner())
-            owner->CastSpell(owner, SPELL_LINDIE_DESUMMON_Q56034);
+        // retail (12.1.5 sniff): she is gone right as she arrives, not after the desummon cast
+        Unit* owner = me->GetOwner();
+        me->DespawnOrUnsummon();
+        if (owner)
+            owner->CastSpell(owner, SPELL_LINDIE_DESUMMON_Q56034, true);
     }
 
     void SpellHit(WorldObject* /*caster*/, SpellInfo const* spellInfo) override
@@ -5286,6 +5285,19 @@ struct npc_lindie_springstock_q56034 : public ScriptedAI
                 case EVENT_RESIZING_RUN_HOME:
                 {
                     me->GetMotionMaster()->MovePoint(POINT_HOME_POSITION, ResizingGuardianPosition);
+                    _events.ScheduleEvent(EVENT_RESIZING_LEAVE, 200ms);
+                    break;
+                }
+                case EVENT_RESIZING_LEAVE:
+                {
+                    // retail (12.1.5 sniff): she disappears in the last steps of her run
+                    if (!me->movespline->Finalized() && me->movespline->Duration() - me->movespline->timePassed() > 400)
+                    {
+                        _events.ScheduleEvent(EVENT_RESIZING_LEAVE, 100ms);
+                        break;
+                    }
+
+                    MovementInform(POINT_MOTION_TYPE, POINT_HOME_POSITION);
                     break;
                 }
                 default:
@@ -5374,6 +5386,19 @@ struct npc_cork_fizzlepop_q59941 : public ScriptedAI
                 case EVENT_RESIZING_RUN_HOME:
                 {
                     me->GetMotionMaster()->MovePoint(POINT_HOME_POSITION, ResizingGuardianPosition);
+                    _events.ScheduleEvent(EVENT_RESIZING_LEAVE, 200ms);
+                    break;
+                }
+                case EVENT_RESIZING_LEAVE:
+                {
+                    // retail (12.1.5 sniff): she disappears in the last steps of her run
+                    if (!me->movespline->Finalized() && me->movespline->Duration() - me->movespline->timePassed() > 400)
+                    {
+                        _events.ScheduleEvent(EVENT_RESIZING_LEAVE, 100ms);
+                        break;
+                    }
+
+                    MovementInform(POINT_MOTION_TYPE, POINT_HOME_POSITION);
                     break;
                 }
                 default:
@@ -5390,6 +5415,9 @@ enum ReSizedBoarData
 {
     EVENT_BOAR_GROW   = 1,
     EVENT_BOAR_MOVE   = 2,
+    EVENT_BOAR_WAIT_FOR_PHASE = 3,
+
+    SPELL_RESIZER_HIT_THREE_AURA = 305742,
 
     SPELL_GROW_Q56034 = 129310,
 
@@ -5418,10 +5446,9 @@ struct npc_re_sized_boar_q56034 : public ScriptedAI
 
         me->SetFacingTo(0.785398f);
 
-        if (Unit* summoner = me->GetDemonCreator())
-            summoner->CastSpell(summoner, SPELL_UPDATE_PHASE_SHIFT);
-
-        me->DespawnOrUnsummon();
+        // retail (12.1.5 sniff): the grown boar waits on the spot until the Resizer Hit aura of the player (15 s) runs
+        // out; then the boar of the next quest takes its place (phase 13775 asks for that aura to be gone)
+        _events.ScheduleEvent(EVENT_BOAR_WAIT_FOR_PHASE, 500ms);
     }
 
     void UpdateAI(uint32 diff) override
@@ -5441,6 +5468,20 @@ struct npc_re_sized_boar_q56034 : public ScriptedAI
                     me->SetWalk(false);
                     me->GetMotionMaster()->MovePoint(POINT_HOME_POSITION, GiantBoarPosition);
                     break;
+                case EVENT_BOAR_WAIT_FOR_PHASE:
+                {
+                    Unit* summoner = me->GetDemonCreator();
+                    if (summoner && summoner->HasAura(SPELL_RESIZER_HIT_THREE_AURA))
+                    {
+                        _events.ScheduleEvent(EVENT_BOAR_WAIT_FOR_PHASE, 500ms);
+                        break;
+                    }
+
+                    if (summoner)
+                        summoner->CastSpell(summoner, SPELL_UPDATE_PHASE_SHIFT);
+                    me->DespawnOrUnsummon(400ms);
+                    break;
+                }
                 default:
                     break;
             }
@@ -5496,7 +5537,9 @@ enum ReSizingData
     SPELL_RESIZER_HIT_TWO_Q56034_Q59941              = 305721,
     SPELL_RESIZER_HIT_THREE_Q56034                   = 305742,
     SPELL_RESIZING_Q59941                            = 325345,
-    SPELL_RE_SIZER_OVERCHARGED_Q56034                = 325347
+    SPELL_RE_SIZER_OVERCHARGED_Q56034                = 325347,
+
+    DISPLAY_INVISIBLE_BUNNY                          = 11686
 };
 
 // 305716 - Re-Sizing
@@ -5551,7 +5594,11 @@ class spell_re_sizing_aura_q56034 : public AuraScript
                 break;
             case 1:
                 player->CastSpell(creature, SPELL_RESIZER_HIT_TWO_Q56034_Q59941, true);
-                creature->DespawnOrUnsummon();
+                // retail (12.1.5 sniff): the boar turns into an invisible bunny at the moment it explodes and is
+                // removed 6 s later, so no corpse lingers
+                creature->SetDisplayId(DISPLAY_INVISIBLE_BUNNY);
+                creature->SetUninteractible(true);
+                creature->DespawnOrUnsummon(6s);
                 break;
             case 2:
                 player->CastSpell(creature, SPELL_RESIZER_HIT_THREE_Q56034, true);
@@ -5729,7 +5776,11 @@ class spell_re_sizing_aura_q59941 : public AuraScript
                 break;
             case 1:
                 player->CastSpell(creature, SPELL_RESIZER_HIT_TWO_Q56034_Q59941, true);
-                creature->DespawnOrUnsummon();
+                // retail (12.1.5 sniff): the boar turns into an invisible bunny at the moment it explodes and is
+                // removed 6 s later, so no corpse lingers
+                creature->SetDisplayId(DISPLAY_INVISIBLE_BUNNY);
+                creature->SetUninteractible(true);
+                creature->DespawnOrUnsummon(6s);
                 break;
             default:
                 break;
@@ -5837,11 +5888,21 @@ class quest_ride_of_the_scientifically_enhanced_boar : public QuestScript
 public:
     quest_ride_of_the_scientifically_enhanced_boar() : QuestScript("quest_ride_of_the_scientifically_enhanced_boar") { }
 
+    static void DespawnFollowingCaptain(Player* player)
+    {
+        std::list<Creature*> captains;
+        player->GetCreatureListWithOptionsInGrid(captains, 100.0f, { .CreatureId = NPC_ALLIANCE_CAPTAIN, .IgnorePhases = true, .OwnerGuid = player->GetGUID() });
+        for (Creature* captain : captains)
+            captain->DespawnOrUnsummon();
+    }
+
     void OnQuestStatusChange(Player* player, Quest const* /*quest*/, QuestStatus /*oldStatus*/, QuestStatus newStatus) override
     {
         switch (newStatus)
         {
             case QUEST_STATUS_INCOMPLETE:
+                // a quest taken again must not leave a second Garrick behind
+                DespawnFollowingCaptain(player);
                 player->CastSpell(player, SPELL_UPDATE_PHASE_SHIFT);
                 player->CastSpell(player, SPELL_SUMMON_DARKMAUL_PLAINS_QUESTGIVERS_SUMMON);
                 break;
@@ -5863,6 +5924,7 @@ public:
                 player->RemoveAura(SPELL_RITUAL_SCENE_HARPY_BEAM_DNT);
                 player->RemoveAura(SPELL_RITUAL_SCENE_MAIN_BEAM_DNT);
                 player->RemoveAura(SPELL_SUMMON_DARKMAUL_PLAINS_QUESTGIVERS_AURA);
+                DespawnFollowingCaptain(player);
                 player->CastSpell(player, SPELL_UPDATE_PHASE_SHIFT);
                 player->NearTeleportTo(ReDeatherAbandonTeleportPos);
                 break;

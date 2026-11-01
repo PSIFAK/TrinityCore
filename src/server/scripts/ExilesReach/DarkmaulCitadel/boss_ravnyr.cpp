@@ -7,7 +7,10 @@
  * option) any later version.
  */
 
+#include "Conversation.h"
+#include "Group.h"
 #include "InstanceScript.h"
+#include "LFGMgr.h"
 #include "ObjectAccessor.h"
 #include "PhasingHandler.h"
 #include "Player.h"
@@ -24,7 +27,17 @@ enum RavnyrSpells
     SPELL_DARK_BREATH             = 305515,
     SPELL_TAIL_SWIPE              = 305567,
     SPELL_RAVNYR_DEFEATED         = 1238253,
-    SPELL_KALECGOS_RESTORED       = 1238361
+    SPELL_KALECGOS_RESTORED       = 1238361,
+    SPELL_DETECT_PLAYER           = 274651,
+    SPELL_NECROTIC_STORM          = 321904
+};
+
+enum RavnyrMisc
+{
+    SAY_WARNING_DARK_BREATH       = 0,
+    CONVERSATION_RAVNYR_AWAKENS   = 12958,
+    ACTOR_RAVNYR                  = 71232,
+    ANIM_KIT_RAVNYR_AWAKEN        = 11062
 };
 
 enum RavnyrEvents
@@ -37,6 +50,7 @@ constexpr uint32 QUEST_DUNGEON_DARKMAUL_CITADEL = 55992;
 constexpr uint32 NPC_DARKMAUL_EXIT_CREDIT = 161350;
 constexpr uint32 GOSSIP_MENU_KALECGOS_DARKMAUL = 39497;
 constexpr uint32 SPELL_DARKMAUL_EXIT_TELEPORT = 319030;
+constexpr uint32 LFG_DUNGEON_DARKMAUL_CITADEL = 2043;
 
 // 156501 - Ravnyr / Kalecgos
 struct boss_ravnyr : public BossAI
@@ -61,27 +75,58 @@ struct boss_ravnyr : public BossAI
             return;
         }
 
+        // asleep until Gor'groth's final sacrifice awakens him (ACTION_RAVNYR_AWAKEN)
         me->SetUnitFlag(UnitFlags(UNIT_FLAG_UNINTERACTIBLE | UNIT_FLAG_IMMUNE_TO_PC));
-        DoCastSelf(SPELL_RAVNYR_TRANSFORMATION, true);
+    }
 
-        if (instance && instance->GetBossState(DATA_GORGROTH) == DONE)
-            me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_UNINTERACTIBLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_NON_ATTACKABLE));
+    void DoAction(int32 action) override
+    {
+        if (action != ACTION_RAVNYR_AWAKEN || _defeated)
+            return;
+
+        me->SetAIAnimKitId(0);
+        me->PlayOneShotAnimKitId(ANIM_KIT_RAVNYR_AWAKEN);
+        DoCastSelf(SPELL_DETECT_PLAYER, true);
+        DoCastSelf(SPELL_RAVNYR_ENGAGE, true);
+        DoCastSelf(SPELL_RAVNYR_ENGAGE_VISUAL, true);
+        me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_UNINTERACTIBLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_NON_ATTACKABLE));
+
+        if (Conversation* conversation = Conversation::CreateConversation(CONVERSATION_RAVNYR_AWAKENS, me, *me, ObjectGuid::Empty, nullptr, false))
+        {
+            conversation->AddActor(ACTOR_RAVNYR, 0, me->GetGUID());
+            if (!conversation->Start())
+                delete conversation;
+        }
+
+        // retail: he attacks on his own about 5 seconds later
+        scheduler.Schedule(5s, [this](TaskContext const& /*context*/)
+        {
+            if (Player* player = me->SelectNearestPlayer(100.0f))
+                AttackStart(player);
+        });
     }
 
     void JustEngagedWith(Unit* who) override
     {
         BossAI::JustEngagedWith(who);
-        instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, me, 1);
-        DoCastSelf(SPELL_RAVNYR_ENGAGE, true);
-        DoCastSelf(SPELL_RAVNYR_ENGAGE_VISUAL, true);
+        instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, me, 2);
+        if (Creature* bunny = me->FindNearestCreature(NPC_STORM_BUNNY, 100.0f))
+            bunny->CastSpell(bunny, SPELL_NECROTIC_STORM, true);
 
-        events.ScheduleEvent(EVENT_DARK_BREATH, 7s);
-        events.ScheduleEvent(EVENT_TAIL_SWIPE, 17s);
+        events.ScheduleEvent(EVENT_DARK_BREATH, 2300ms);
+        events.ScheduleEvent(EVENT_TAIL_SWIPE, 15500ms);
+    }
+
+    void SpellHitTarget(WorldObject* target, SpellInfo const* spellInfo) override
+    {
+        if (spellInfo->Id == SPELL_DARK_BREATH && target->IsPlayer())
+            Talk(SAY_WARNING_DARK_BREATH, target);
     }
 
     void DamageTaken(Unit* /*attacker*/, uint32& damage, DamageEffectType /*damageType*/, SpellInfo const* /*spellInfo = nullptr*/) override
     {
-        if (_defeated || damage < me->GetHealth())
+        // retail: defeated at half health
+        if (_defeated || !me->HealthBelowPctDamaged(50, damage))
             return;
 
         damage = 0;
@@ -92,7 +137,8 @@ struct boss_ravnyr : public BossAI
         me->SetReactState(REACT_PASSIVE);
         me->SetHealth(me->GetMaxHealth());
         me->RemoveAllAuras();
-        me->SetUnitFlag(UnitFlags(UNIT_FLAG_UNINTERACTIBLE | UNIT_FLAG_IMMUNE_TO_PC));
+        me->SetFaction(FACTION_FRIENDLY);
+        me->SetUnitFlag(UnitFlags(UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC));
         instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
         _JustDied();
         DoCastSelf(SPELL_RAVNYR_DEFEATED, true);
@@ -102,12 +148,16 @@ struct boss_ravnyr : public BossAI
             {
                 player->UpdateQuestObjectiveProgress(QUEST_OBJECTIVE_CRITERIA_TREE, 89016, 1);
                 player->KilledMonsterCredit(me->GetEntry(), me->GetGUID());
+
+                // LFGDungeons.db2 names no final encounter for the citadel: the dungeon finder learns it is done from here
+                if (Group* group = player->GetGroup())
+                    if (group->isLFGGroup())
+                        sLFGMgr->FinishDungeon(group->GetGUID(), LFG_DUNGEON_DARKMAUL_CITADEL, me->GetMap());
             }
 
-        scheduler.Schedule(5s, [this](TaskContext const& /*context*/)
+        scheduler.Schedule(7s, [this](TaskContext const& /*context*/)
         {
-            me->SetFaction(FACTION_FRIENDLY);
-            me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_UNINTERACTIBLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_NON_ATTACKABLE));
+            me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_UNINTERACTIBLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_NON_ATTACKABLE));
             me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             DoCastSelf(SPELL_KALECGOS_RESTORED, true);
         });
@@ -115,14 +165,18 @@ struct boss_ravnyr : public BossAI
 
     bool OnGossipSelect(Player* player, uint32 menuId, uint32 gossipListId) override
     {
-        if (!_defeated || menuId != GOSSIP_MENU_KALECGOS_DARKMAUL || gossipListId != 0 ||
-            player->GetQuestStatus(QUEST_DUNGEON_DARKMAUL_CITADEL) != QUEST_STATUS_INCOMPLETE)
+        if (!_defeated || menuId != GOSSIP_MENU_KALECGOS_DARKMAUL || gossipListId != 0)
             return false;
 
         player->PlayerTalkClass->SendCloseGossip();
-        player->KilledMonsterCredit(NPC_DARKMAUL_EXIT_CREDIT);
-        PhasingHandler::OnConditionChange(player);
-        player->TeleportTo(2175, 721.7f, -1838.4f, 186.5f, 4.326671f, TELE_TO_NONE, {}, SPELL_DARKMAUL_EXIT_TELEPORT);
+        if (player->GetQuestStatus(QUEST_DUNGEON_DARKMAUL_CITADEL) == QUEST_STATUS_INCOMPLETE)
+        {
+            player->KilledMonsterCredit(NPC_DARKMAUL_EXIT_CREDIT);
+            PhasingHandler::OnConditionChange(player);
+        }
+
+        // retail: the player casts the teleport to the island; leaving the map ends the one-player dungeon finder party
+        player->CastSpell(player, SPELL_DARKMAUL_EXIT_TELEPORT, true);
         return true;
     }
 
@@ -131,7 +185,9 @@ struct boss_ravnyr : public BossAI
         if (_defeated)
             return;
 
+        // a wipe resets the whole encounter: Gor'groth comes back too
         instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
+        instance->SetBossState(DATA_RAVNYR, FAIL);
         _EnterEvadeMode();
         _DespawnAtEvade();
     }
@@ -152,7 +208,7 @@ struct boss_ravnyr : public BossAI
             {
                 case EVENT_DARK_BREATH:
                     DoCastVictim(SPELL_DARK_BREATH);
-                    events.Repeat(18s);
+                    events.Repeat(23s);
                     break;
                 case EVENT_TAIL_SWIPE:
                     DoCastSelf(SPELL_TAIL_SWIPE);

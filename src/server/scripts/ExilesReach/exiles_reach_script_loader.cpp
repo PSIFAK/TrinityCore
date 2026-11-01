@@ -24,6 +24,7 @@ void AddSC_instance_darkmaul_citadel();
 void AddSC_boss_tunk();
 void AddSC_boss_gorgroth();
 void AddSC_boss_ravnyr();
+void AddSC_npc_darkmaul_allies();
 
 // The name of this function should match:
 // void Add${NameOfDirectory}Scripts()
@@ -37,4 +38,5 @@ void AddExilesReachScripts()
     AddSC_boss_tunk();
     AddSC_boss_gorgroth();
     AddSC_boss_ravnyr();
+    AddSC_npc_darkmaul_allies();
 }

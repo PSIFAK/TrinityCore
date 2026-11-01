@@ -31,7 +31,17 @@ enum DarkmaulCitadelDataTypes
     DATA_TUNK     = 0,
     DATA_RAVNYR   = 1,
 
-    DATA_GORGROTH
+    DATA_GORGROTH,
+
+    // Misc
+    DATA_GORGROTH_RITUAL        // the ghouls of Gor'groth's ritual are dead: he can be attacked
+};
+
+enum DarkmaulCitadelActions
+{
+    ACTION_RAISE_GHOULS = 1,
+    ACTION_RAVNYR_AWAKEN,
+    ACTION_GORGROTH_RETURN
 };
 
 enum DarkmaulCitadelCreatureIds
@@ -39,13 +49,18 @@ enum DarkmaulCitadelCreatureIds
     // Bosses
     BOSS_TUNK     = 157300,
     BOSS_GORGROTH = 156814,
-    BOSS_RAVNYR   = 156501
+    BOSS_RAVNYR   = 156501,
+
+    NPC_DECAYING_CORPSE  = 156913,
+    NPC_STORM_BUNNY      = 165198,
+    NPC_WRATHION         = 253710
 };
 
 enum DarkmaulCitadelGameObjectIds
 {
-    GO_SHADOWY_DOOR = 334578,
-    GO_TEMP_DOOR    = 334502
+    GO_SHADOWY_DOOR  = 334578,
+    GO_TEMP_DOOR     = 334502,
+    GO_GORGROTH_DOOR = 336442
 };
 
 template <class AI, class T>

@@ -26,7 +26,7 @@ INSERT INTO `creature` (`guid`, `id`, `map`, `zoneId`, `areaId`, `spawnDifficult
 (@CGUID+15, 150238, 2175, 10424, 10503, '0', 0, 0, 0, 0, 99.307289, -2575.098877, 65.108643, 4.068734, 120, 0, 0, 66709), -- Quilboar Geomancer (phase: TDB spawns of this entry are unphased)
 (@CGUID+16, 152843, 2175, 10424, 10528, '0', 0, 0, 0, 0, 463.493073, -2507.791748, 147.01944, 6.064158, 120, 0, 0, 66709), -- Harpy Boltcaller (phase: TDB spawns of this entry are unphased)
 (@CGUID+17, 152843, 2175, 10424, 10528, '0', 0, 0, 0, 0, 474.517365, -2444.355957, 153.124634, 0.943629, 120, 0, 0, 66709), -- Harpy Boltcaller (phase: TDB spawns of this entry are unphased)
-(@CGUID+18, 153211, 2175, 10424, 10528, '0', 0, 15356, 0, 0, 495.411469, -2354.564209, 163.207825, 4.638272, 120, 0, 0, 66709), -- Meredy Huntswell (phase: guess: most specific active phase)
+(@CGUID+18, 153211, 2175, 10424, 10528, '0', 0, 13566, 0, 0, 495.411469, -2354.564209, 163.207825, 4.638272, 120, 0, 0, 66709), -- Meredy Huntswell (phase: guess: most specific active phase)
 (@CGUID+19, 153239, 2175, 10424, 10530, '0', 0, 0, 0, 0, 451.958344, -2114.267334, 130.55011, 2.721333, 120, 0, 0, 66709), -- Ogre Brute (phase: TDB spawns of this entry are unphased)
 (@CGUID+20, 153239, 2175, 10424, 10530, '0', 0, 0, 0, 0, 467.772583, -2003.888916, 143.8871, 1.626329, 120, 0, 0, 66709), -- Ogre Brute (phase: TDB spawns of this entry are unphased)
 (@CGUID+21, 153239, 2175, 10424, 10530, '0', 0, 0, 0, 0, 592.871521, -2062.473877, 160.633148, 5.45098, 120, 0, 0, 66709), -- Ogre Brute (phase: TDB spawns of this entry are unphased)
@@ -46,139 +46,135 @@ INSERT INTO `creature` (`guid`, `id`, `map`, `zoneId`, `areaId`, `spawnDifficult
 (@CGUID+35, 153242, 2175, 10424, 10530, '0', 0, 0, 0, 0, 557.482239, -1962.730225, 169.923813, 2.440952, 120, 0, 0, 66709), -- Ogre Shadowcaster (phase: TDB spawns of this entry are unphased)
 (@CGUID+36, 153242, 2175, 10424, 10530, '0', 0, 0, 0, 0, 454.729156, -2102.086914, 130.526398, 3.068994, 120, 0, 0, 66709), -- Ogre Shadowcaster (phase: TDB spawns of this entry are unphased)
 (@CGUID+37, 153580, 2175, 10424, 10530, '0', 0, 15490, 0, 0, 587.006958, -2063.293457, 159.616608, 3.519447, 120, 0, 0, 66709), -- Gor'groth (phase: guess: most specific active phase)
-(@CGUID+38, 153964, 2175, 10424, 10529, '0', 0, 13833, 0, 0, 490.625, -2429.618164, 174.187897, 1.518376, 120, 0, 0, 66709), -- Bloodbeak (phase: guess: most specific active phase)
+(@CGUID+38, 153964, 2175, 10424, 10529, '0', 0, 0, 0, 0, 494.18045, -2353.3406, 161.47388, 1.518376, 120, 0, 2, 66709), -- Bloodbeak (phase: guess: most specific active phase)
 (@CGUID+39, 154103, 2175, 10424, 10530, '0', 0, 0, 0, 0, 604.81427, -2067.197998, 159.533264, 5.963083, 120, 0, 0, 66709), -- Ogre Chef (phase: TDB spawns of this entry are unphased)
 (@CGUID+40, 154145, 2175, 10424, 10530, '0', 0, 15490, 0, 0, 577.743042, -2058.711914, 159.602432, 5.584357, 120, 0, 0, 66709), -- Grunk (phase: guess: most specific active phase)
 (@CGUID+41, 154146, 2175, 10424, 10530, '0', 0, 15490, 0, 0, 593.199646, -2069.715332, 159.625031, 2.279518, 120, 0, 0, 66709), -- Wug (phase: guess: most specific active phase)
 (@CGUID+42, 154147, 2175, 10424, 10530, '0', 0, 15490, 0, 0, 575.527771, -2071.791748, 159.49234, 0.753501, 120, 0, 0, 66709), -- Jugnug (phase: guess: most specific active phase)
 (@CGUID+43, 154268, 2175, 10424, 10588, '0', 0, 0, 0, 0, 111.115768, -2241.265381, 121.840645, 5.608749, 120, 0, 0, 66709), -- Hungry Vulture (phase: TDB spawns of this entry are unphased)
-(@CGUID+44, 154301, 2175, 10424, 10503, '0', 0, 15276, 0, 0, 16.427084, -2511.81958, 78.821541, 5.663976, 120, 0, 0, 66709), -- Lindie Springstock (phase: appeared when phase was added)
-(@CGUID+45, 155192, 2175, 10424, 10528, '0', 0, 15356, 0, 0, 494.49762, -2355.44165, 160.320984, 1.792626, 120, 0, 0, 66709), -- Harpy Ambusher (phase: guess: most specific active phase)
-(@CGUID+46, 155192, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 493.594147, -2353.614258, 160.473328, 3.104482, 120, 0, 0, 66709), -- Harpy Ambusher (phase: guess: most specific active phase)
-(@CGUID+47, 155192, 2175, 10424, 10528, '0', 0, 0, 0, 0, 484.22049, -2363.001709, 158.884628, 0.587938, 120, 0, 0, 66709), -- Harpy Ambusher (phase: not found in parsed text)
-(@CGUID+48, 155192, 2175, 10424, 10528, '0', 0, 0, 0, 0, 511.309021, -2365.409668, 158.982025, 2.934264, 120, 0, 0, 66709), -- Harpy Ambusher (phase: not found in parsed text)
-(@CGUID+49, 155197, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 491.861115, -2376.862793, 157.718353, 1.400047, 120, 0, 0, 66709), -- Henry Garrick (phase: guess: most specific active phase)
-(@CGUID+50, 155199, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 494.871521, -2383.690918, 155.859055, 1.640949, 120, 0, 0, 66709), -- Kee-La (phase: guess: most specific active phase)
-(@CGUID+51, 155371, 2175, 10424, 10588, '0', 0, 0, 0, 0, 149.359375, -2411.121582, 88.239342, 5.588287, 120, 0, 0, 66709), -- InvisBunny (phase: not found in parsed text)
-(@CGUID+52, 155371, 2175, 10424, 10588, '0', 0, 0, 0, 0, 69.174377, -2429.181152, 94.34967, 1.767426, 120, 0, 0, 66709), -- InvisBunny (phase: not found in parsed text)
-(@CGUID+53, 155371, 2175, 10424, 10588, '0', 0, 0, 0, 0, 144.199844, -2480.831299, 101.702484, 5.938585, 120, 0, 0, 66709), -- InvisBunny (phase: not found in parsed text)
-(@CGUID+54, 155371, 2175, 10424, 10588, '0', 0, 0, 0, 0, 132.354172, -2428.291748, 90.789566, 4.670226, 120, 0, 0, 66709), -- InvisBunny (phase: not found in parsed text)
-(@CGUID+55, 156716, 2175, 10424, 10503, '0', 0, 13393, 0, 0, 87.854881, -2400.647217, 93.846123, 4.667687, 120, 0, 0, 66709), -- Wandering Boar (phase: disappeared when phase was removed)
-(@CGUID+56, 156716, 2175, 10424, 10588, '0', 0, 13783, 0, 0, 63.144798, -2409.758545, 96.213745, 0.832721, 120, 0, 0, 66709), -- Wandering Boar (phase: same as TDB spawns of this entry)
-(@CGUID+57, 156902, 2175, 10424, 10527, '0', 0, 13816, 0, 0, 73.550346, -2129.298584, -25.744324, 2.207988, 120, 0, 0, 66709), -- Ralia Dreamchaser (phase: guess: most specific active phase)
-(@CGUID+58, 156944, 2175, 10424, 10530, '0', 0, 15612, 0, 0, 704.616333, -1858.545166, 186.965622, 4.49201, 120, 0, 0, 66709), -- Ralia Dreamchaser (phase: guess: most specific active phase)
-(@CGUID+59, 156954, 2175, 10424, 10530, '0', 0, 0, 0, 0, 708.779541, -1868.828125, 189.181076, 4.501599, 120, 0, 0, 66709), -- Captain Kelra (phase: unknown)
-(@CGUID+60, 156960, 2175, 10424, 10530, '0', 0, 15612, 0, 0, 718.904541, -1863.949707, 186.591187, 3.930045, 120, 0, 0, 66709), -- Wrathion (phase: guess: most specific active phase)
-(@CGUID+61, 160394, 2175, 10424, 10529, '0', 0, 0, 0, 0, 108.514435, -2215.567627, 31.498638, 2.75986, 120, 4, 1, 66709), -- Barrow Spider (phase: TDB spawns of this entry are unphased)
-(@CGUID+62, 160433, 2175, 10424, 10527, '0', 0, 15011, 0, 0, 93.359711, -2281.304932, -2.904523, 4.381563, 120, 2, 1, 66709), -- Barrow Spiderling (phase: appeared when phase was added)
-(@CGUID+63, 160451, 2175, 10424, 10527, '0', 0, 13816, 0, 0, 75.597221, -2118.472168, -27.330992, 5.623931, 120, 0, 0, 66709), -- Hrun the Exiled (phase: guess: most specific active phase)
-(@CGUID+64, 160451, 2175, 10424, 10527, '0', 0, 13816, 0, 0, 63.670139, -2124.836914, -27.254286, 5.623931, 120, 0, 0, 66709), -- Hrun the Exiled (phase: guess: most specific active phase)
-(@CGUID+65, 161306, 2175, 10424, 10530, '0', 0, 0, 0, 0, 713.199646, -1873.571167, 186.591187, 4.3882, 120, 0, 0, 66709), -- Invisible Stalker (phase: unknown)
-(@CGUID+66, 161306, 2175, 10424, 10530, '0', 0, 0, 0, 0, 701.967041, -1869.114624, 186.591187, 3.555722, 120, 0, 0, 66709), -- Invisible Stalker (phase: unknown)
-(@CGUID+67, 161306, 2175, 10424, 10530, '0', 0, 0, 0, 0, 710.935791, -1862.227417, 186.591187, 3.216429, 120, 0, 0, 66709), -- Invisible Stalker (phase: unknown)
-(@CGUID+68, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 353.847229, -2277.19458, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+69, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 357.065979, -2280.388916, 102.924103, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+70, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 358.836823, -2276.772705, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+71, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 360.888885, -2280.862793, 102.921509, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+72, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 362.852448, -2277.951416, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+73, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 364.972229, -2275.314209, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+74, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 342.161469, -2234.229248, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+75, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 349.203125, -2237.897705, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+76, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 345.380219, -2237.423584, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+77, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 353.286469, -2232.348877, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+78, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 347.151031, -2233.807373, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+79, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 351.166656, -2234.986084, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+80, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 243.909729, -2187.574707, 95.874573, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+81, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 241.067703, -2184.222168, 95.082458, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+82, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 241.678818, -2179.81958, 94.890755, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+83, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 239.083328, -2177.432373, 94.771683, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+84, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 240.519104, -2173.784668, 95.444649, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+85, 163039, 2175, 10424, 10529, '0', 0, 14987, 0, 0, 305.947906, -2155.682373, 104.680435, 0, 120, 0, 0, 66709), -- InvisBunny (phase: appeared when phase was added)
-(@CGUID+86, 163040, 2175, 10424, 10529, '0', 0, 14987, 0, 0, 307.02951, -2161.790039, 104.680435, 0, 120, 0, 0, 66709), -- InvisBunny (phase: appeared when phase was added)
-(@CGUID+87, 163040, 2175, 10424, 10529, '0', 0, 14987, 0, 0, 306.496521, -2166.119873, 104.680435, 0, 120, 0, 0, 66709), -- InvisBunny (phase: appeared when phase was added)
-(@CGUID+88, 163040, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 304.6875, -2159.045166, 105.061462, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+89, 163040, 2175, 10424, 10529, '0', 0, 14987, 0, 0, 309.338531, -2169.472168, 104.680435, 0, 120, 0, 0, 66709), -- InvisBunny (phase: appeared when phase was added)
-(@CGUID+90, 163069, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 253.385422, -2457.369873, 119.715973, 1.902208, 120, 0, 0, 66709), -- Yorah (phase: guess: most specific active phase)
-(@CGUID+91, 163533, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 333.940979, -2223.335205, 102.462769, 2.262254, 120, 0, 0, 66709), -- Hjalmar the Undying (phase: guess: most specific active phase)
-(@CGUID+92, 164827, 2175, 10424, 10529, '0', 0, 0, 0, 0, 311.209473, -2352.768311, 103.629326, 2.762491, 120, 0, 0, 66709), -- Sharpbeak Hawk (phase: TDB spawns of this entry are unphased)
-(@CGUID+93, 164827, 2175, 10424, 10529, '0', 0, 0, 0, 0, 275.75119, -2097.98877, 123.641182, 4.605097, 120, 0, 0, 66709), -- Sharpbeak Hawk (phase: TDB spawns of this entry are unphased)
-(@CGUID+94, 164827, 2175, 10424, 11011, '0', 0, 0, 0, 0, 306.144867, -2088.452637, 131.389374, 2.623653, 120, 0, 0, 66709), -- Sharpbeak Hawk (phase: TDB spawns of this entry are unphased)
-(@CGUID+95, 164827, 2175, 10424, 10530, '0', 0, 0, 0, 0, 307.136749, -2143.634277, 126.231636, 1.769539, 120, 0, 0, 66709), -- Sharpbeak Hawk (phase: TDB spawns of this entry are unphased)
-(@CGUID+96, 164927, 2175, 10424, 10530, '0', 0, 13328, 0, 0, 324.270844, -2051.524414, 114.817085, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
-(@CGUID+97, 165727, 2175, 10424, 11011, '0', 0, 13328, 0, 0, 304.957611, -2099.485596, 113.35038, 5.680316, 120, 0, 0, 66709), -- Plains Doe (phase: guess: most specific active phase)
-(@CGUID+98, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 214.975693, -2261.902832, 80.628586, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+99, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 225.713547, -2268.868164, 81.060486, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+100, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 226.300354, -2325.355957, 81.062317, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+101, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 217.019104, -2279.807373, 80.914627, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+102, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 230.380203, -2316.494873, 81.061913, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+103, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 204.442703, -2273.286377, 80.885872, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+104, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 217.946182, -2333.008789, 81.042397, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+105, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 213.40625, -2321.314209, 81.105652, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+106, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 210.190979, -2294.826416, 80.855194, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+107, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 210.947922, -2307.972168, 80.814934, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+108, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 190.770828, -2325.75, 82.825989, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+109, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 178.211807, -2334.939209, 83.808929, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+110, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 191.135422, -2354.399414, 83.453125, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+111, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 193.994797, -2340.28125, 82.472023, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+112, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 175.352432, -2323.730957, 84.618835, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
-(@CGUID+113, 169162, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 503.614594, -2369.415039, 158.865631, 2.821937, 120, 0, 0, 66709), -- Hunting Worg (phase: guess: most specific active phase)
-(@CGUID+114, 169162, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 512.213562, -2352.109375, 160.919403, 3.513272, 120, 0, 0, 66709), -- Hunting Worg (phase: guess: most specific active phase)
-(@CGUID+115, 169162, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 484.22049, -2363.001709, 159.884628, 0.587938, 120, 0, 0, 66709), -- Hunting Worg (phase: guess: most specific active phase)
-(@CGUID+116, 169162, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 478.991333, -2358.611084, 160.286987, 0.111182, 120, 0, 0, 66709), -- Hunting Worg (phase: guess: most specific active phase)
-(@CGUID+117, 174525, 2175, 10424, 10530, '0', 0, 0, 0, 0, 659.37677, -2195.032959, 80.814598, 3.454065, 120, 0, 0, 66709), -- Kee (phase: unknown)
-(@CGUID+118, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 292.234375, -2339.055664, 85.800659, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+119, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 307.241333, -2341.97583, 89.736336, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+120, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 300.956604, -2335.086914, 87.770477, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+121, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 322.489594, -2337.060791, 91.230614, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+122, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 307.486115, -2325.720459, 87.357567, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+123, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 315.642365, -2327.739502, 87.969177, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+124, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 325.041656, -2326.770752, 87.614647, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+125, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 307.53299, -2334.494873, 88.130432, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+126, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 324.93924, -2345.885498, 94.544113, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+127, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 327.670135, -2338.118164, 93.17672, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+128, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 334.043396, -2331.524414, 92.388733, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+129, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 338.713531, -2339.666748, 95.774994, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+130, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 334.190979, -2343.421875, 95.636909, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+131, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 345.381958, -2352.045166, 101.198853, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+132, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 338.28299, -2349.064209, 98.150467, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
-(@CGUID+133, 245594, 2175, 10424, 10503, '0', 0, 13776, 0, 0, 97.788193, -2417.003418, 90.796936, 5.390269, 120, 0, 0, 66709), -- Henry Garrick (phase: appeared when phase was added)
-(@CGUID+134, 156913, 2236, 10581, 10581, '150', 0, 0, 0, 0, 834.598938, -1774.520874, 248.677353, 0.417195, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+135, 156913, 2236, 10581, 10581, '150', 0, 0, 0, 0, 831.055542, -1780.482666, 248.684265, 4.287582, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+136, 156913, 2236, 10581, 10581, '150', 0, 0, 0, 0, 832.458313, -1785.973999, 248.680115, 1.122789, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+137, 156913, 2236, 10581, 10581, '150', 0, 0, 0, 0, 841.473938, -1772.5, 248.670654, 5.327932, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+138, 156913, 2236, 10581, 10581, '150', 0, 0, 0, 0, 836.8125, -1768.350708, 248.670547, 2.460044, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+139, 161504, 2236, 10581, 10581, '150', 0, 0, 0, 0, 886.184021, -1780.177124, 181.271423, 3.582858, 120, 0, 0, 66709), -- Henry Garrick (phase: unknown)
-(@CGUID+140, 245401, 2236, 10581, 10581, '150', 0, 0, 0, 0, 882.928833, -1783.675415, 181.340942, 3.641955, 120, 5, 1, 66709), -- Jaina Proudmoore (phase: unknown)
-(@CGUID+141, 253710, 2236, 10581, 10581, '150', 0, 0, 0, 0, 808.781189, -1766.78479, 277.338165, 0.944917, 120, 0, 0, 66709), -- Wrathion (phase: unknown)
-(@CGUID+142, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 893.428833, -1821.489624, 248.678223, 0, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+143, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 880.840271, -1785.725708, 248.671494, 2.267454, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+144, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 902.3125, -1782.6875, 248.745682, 5.280439, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+145, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 863.965271, -1809.411499, 248.671494, 0.339213, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+146, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 857.703125, -1758.652832, 248.652588, 5.489535, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+147, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 860.50177, -1792.071167, 248.669128, 3.291629, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+148, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 876.881958, -1810.345459, 248.6716, 0, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+149, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 871.586792, -1754.104126, 248.669754, 3.7117, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+150, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 805.241333, -1760.493042, 248.676025, 0.070431, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+151, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 809.6875, -1795.109375, 248.67215, 4.59426, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+152, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 820.397583, -1832.748291, 248.674637, 1.02635, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+153, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 794.161438, -1774.467041, 248.684647, 0.652741, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
-(@CGUID+154, 41200, 2261, 10424, 10639, '0', 0, 14349, 0, 0, 3.712251, -0.123171, 5.318224, 3.145645, 120, 0, 0, 66709), -- Generic Bunny - PRK (phase: appeared when phase was added)
-(@CGUID+155, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -0.332261, 330, -0.679202, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
-(@CGUID+156, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -27.186184, 405.065002, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
-(@CGUID+157, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -1.079112, -402.359985, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
-(@CGUID+158, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -47.888344, 340.175995, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
-(@CGUID+159, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -20.811056, -450.683014, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
-(@CGUID+160, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, 39.147503, -402.429993, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
-(@CGUID+161, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -39.580196, -353.385986, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
-(@CGUID+162, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, 33.497532, 402.743011, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
-(@CGUID+163, 160656, 2261, 10424, 10639, '0', 0, 0, 0, 0, -7.824997, -9.210344, 5.289811, 0.997226, 120, 0, 0, 66709), -- Invisible Stalker (phase: not found in parsed text)
-(@CGUID+164, 245371, 2261, 10424, 10639, '0', 0, 14353, 0, 0, 27.257532, 3.654527, 5.023798, 3.864473, 120, 0, 0, 66709); -- Captain Garrick (phase: appeared when phase was added)
+(@CGUID+44, 155192, 2175, 10424, 10528, '0', 0, 15356, 0, 0, 494.49762, -2355.44165, 160.320984, 1.792626, 120, 0, 0, 66709), -- Harpy Ambusher (phase: guess: most specific active phase)
+(@CGUID+45, 155192, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 493.594147, -2353.614258, 160.473328, 3.104482, 120, 0, 0, 66709), -- Harpy Ambusher (phase: guess: most specific active phase)
+(@CGUID+46, 155192, 2175, 10424, 10528, '0', 0, 0, 0, 0, 484.22049, -2363.001709, 158.884628, 0.587938, 120, 0, 0, 66709), -- Harpy Ambusher (phase: not found in parsed text)
+(@CGUID+47, 155192, 2175, 10424, 10528, '0', 0, 0, 0, 0, 511.309021, -2365.409668, 158.982025, 2.934264, 120, 0, 0, 66709), -- Harpy Ambusher (phase: not found in parsed text)
+(@CGUID+48, 155197, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 491.861115, -2376.862793, 157.718353, 1.400047, 120, 0, 0, 66709), -- Henry Garrick (phase: guess: most specific active phase)
+(@CGUID+49, 155199, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 494.871521, -2383.690918, 155.859055, 1.640949, 120, 0, 0, 66709), -- Kee-La (phase: guess: most specific active phase)
+(@CGUID+50, 155371, 2175, 10424, 10588, '0', 0, 0, 0, 0, 149.359375, -2411.121582, 88.239342, 5.588287, 120, 0, 0, 66709), -- InvisBunny (phase: not found in parsed text)
+(@CGUID+51, 155371, 2175, 10424, 10588, '0', 0, 0, 0, 0, 69.174377, -2429.181152, 94.34967, 1.767426, 120, 0, 0, 66709), -- InvisBunny (phase: not found in parsed text)
+(@CGUID+52, 155371, 2175, 10424, 10588, '0', 0, 0, 0, 0, 144.199844, -2480.831299, 101.702484, 5.938585, 120, 0, 0, 66709), -- InvisBunny (phase: not found in parsed text)
+(@CGUID+53, 155371, 2175, 10424, 10588, '0', 0, 0, 0, 0, 132.354172, -2428.291748, 90.789566, 4.670226, 120, 0, 0, 66709), -- InvisBunny (phase: not found in parsed text)
+(@CGUID+54, 156716, 2175, 10424, 10503, '0', 0, 13393, 0, 0, 87.854881, -2400.647217, 93.846123, 4.667687, 120, 0, 0, 66709), -- Wandering Boar (phase: disappeared when phase was removed)
+(@CGUID+55, 156716, 2175, 10424, 10588, '0', 0, 13783, 0, 0, 63.144798, -2409.758545, 96.213745, 0.832721, 120, 0, 0, 66709), -- Wandering Boar (phase: same as TDB spawns of this entry)
+(@CGUID+56, 156902, 2175, 10424, 10527, '0', 0, 14328, 0, 0, 73.550346, -2129.298584, -25.744324, 2.207988, 120, 0, 0, 66709), -- Ralia Dreamchaser (phase: guess: most specific active phase)
+(@CGUID+57, 156944, 2175, 10424, 10530, '0', 0, 15612, 0, 0, 704.616333, -1858.545166, 186.965622, 4.49201, 120, 0, 0, 66709), -- Ralia Dreamchaser (phase: guess: most specific active phase)
+(@CGUID+58, 156954, 2175, 10424, 10530, '0', 0, 13566, 0, 0, 708.779541, -1868.828125, 189.181076, 4.501599, 120, 0, 0, 66709), -- Captain Kelra (phase: unknown)
+(@CGUID+59, 156960, 2175, 10424, 10530, '0', 0, 15612, 0, 0, 718.904541, -1863.949707, 186.591187, 3.930045, 120, 0, 0, 66709), -- Wrathion (phase: guess: most specific active phase)
+(@CGUID+60, 160394, 2175, 10424, 10529, '0', 0, 0, 0, 0, 108.514435, -2215.567627, 31.498638, 2.75986, 120, 4, 1, 66709), -- Barrow Spider (phase: TDB spawns of this entry are unphased)
+(@CGUID+61, 160433, 2175, 10424, 10527, '0', 0, 15011, 0, 0, 93.359711, -2281.304932, -2.904523, 4.381563, 120, 2, 1, 66709), -- Barrow Spiderling (phase: appeared when phase was added)
+(@CGUID+62, 160451, 2175, 10424, 10527, '0', 0, 13816, 0, 0, 75.597221, -2118.472168, -27.330992, 5.623931, 120, 0, 0, 66709), -- Hrun the Exiled (phase: guess: most specific active phase)
+(@CGUID+63, 160451, 2175, 10424, 10527, '0', 0, 13816, 0, 0, 63.670139, -2124.836914, -27.254286, 5.623931, 120, 0, 0, 66709), -- Hrun the Exiled (phase: guess: most specific active phase)
+(@CGUID+64, 161306, 2175, 10424, 10530, '0', 0, 0, 0, 0, 713.199646, -1873.571167, 186.591187, 4.3882, 120, 0, 0, 66709), -- Invisible Stalker (phase: unknown)
+(@CGUID+65, 161306, 2175, 10424, 10530, '0', 0, 0, 0, 0, 701.967041, -1869.114624, 186.591187, 3.555722, 120, 0, 0, 66709), -- Invisible Stalker (phase: unknown)
+(@CGUID+66, 161306, 2175, 10424, 10530, '0', 0, 0, 0, 0, 710.935791, -1862.227417, 186.591187, 3.216429, 120, 0, 0, 66709), -- Invisible Stalker (phase: unknown)
+(@CGUID+67, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 353.847229, -2277.19458, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+68, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 357.065979, -2280.388916, 102.924103, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+69, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 358.836823, -2276.772705, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+70, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 360.888885, -2280.862793, 102.921509, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+71, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 362.852448, -2277.951416, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+72, 162954, 2175, 10424, 10529, '0', 0, 13831, 0, 0, 364.972229, -2275.314209, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+73, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 342.161469, -2234.229248, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+74, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 349.203125, -2237.897705, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+75, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 345.380219, -2237.423584, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+76, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 353.286469, -2232.348877, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+77, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 347.151031, -2233.807373, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+78, 162954, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 351.166656, -2234.986084, 102.924072, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+79, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 243.909729, -2187.574707, 95.874573, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+80, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 241.067703, -2184.222168, 95.082458, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+81, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 241.678818, -2179.81958, 94.890755, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+82, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 239.083328, -2177.432373, 94.771683, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+83, 163039, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 240.519104, -2173.784668, 95.444649, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+84, 163039, 2175, 10424, 10529, '0', 0, 14987, 0, 0, 305.947906, -2155.682373, 104.680435, 0, 120, 0, 0, 66709), -- InvisBunny (phase: appeared when phase was added)
+(@CGUID+85, 163040, 2175, 10424, 10529, '0', 0, 14987, 0, 0, 307.02951, -2161.790039, 104.680435, 0, 120, 0, 0, 66709), -- InvisBunny (phase: appeared when phase was added)
+(@CGUID+86, 163040, 2175, 10424, 10529, '0', 0, 14987, 0, 0, 306.496521, -2166.119873, 104.680435, 0, 120, 0, 0, 66709), -- InvisBunny (phase: appeared when phase was added)
+(@CGUID+87, 163040, 2175, 10424, 10529, '0', 0, 13328, 0, 0, 304.6875, -2159.045166, 105.061462, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+88, 163040, 2175, 10424, 10529, '0', 0, 14987, 0, 0, 309.338531, -2169.472168, 104.680435, 0, 120, 0, 0, 66709), -- InvisBunny (phase: appeared when phase was added)
+(@CGUID+89, 163069, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 253.385422, -2457.369873, 119.715973, 1.902208, 120, 0, 0, 66709), -- Yorah (phase: guess: most specific active phase)
+(@CGUID+90, 163533, 2175, 10424, 10529, '0', 0, 13832, 0, 0, 333.940979, -2223.335205, 102.462769, 2.262254, 120, 0, 0, 66709), -- Hjalmar the Undying (phase: guess: most specific active phase)
+(@CGUID+91, 164827, 2175, 10424, 10529, '0', 0, 0, 0, 0, 311.209473, -2352.768311, 103.629326, 2.762491, 120, 0, 0, 66709), -- Sharpbeak Hawk (phase: TDB spawns of this entry are unphased)
+(@CGUID+92, 164827, 2175, 10424, 10529, '0', 0, 0, 0, 0, 275.75119, -2097.98877, 123.641182, 4.605097, 120, 0, 0, 66709), -- Sharpbeak Hawk (phase: TDB spawns of this entry are unphased)
+(@CGUID+93, 164827, 2175, 10424, 11011, '0', 0, 0, 0, 0, 306.144867, -2088.452637, 131.389374, 2.623653, 120, 0, 0, 66709), -- Sharpbeak Hawk (phase: TDB spawns of this entry are unphased)
+(@CGUID+94, 164827, 2175, 10424, 10530, '0', 0, 0, 0, 0, 307.136749, -2143.634277, 126.231636, 1.769539, 120, 0, 0, 66709), -- Sharpbeak Hawk (phase: TDB spawns of this entry are unphased)
+(@CGUID+95, 164927, 2175, 10424, 10530, '0', 0, 13328, 0, 0, 324.270844, -2051.524414, 114.817085, 0, 120, 0, 0, 66709), -- InvisBunny (phase: guess: most specific active phase)
+(@CGUID+96, 165727, 2175, 10424, 11011, '0', 0, 13328, 0, 0, 304.957611, -2099.485596, 113.35038, 5.680316, 120, 0, 0, 66709), -- Plains Doe (phase: guess: most specific active phase)
+(@CGUID+97, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 214.975693, -2261.902832, 80.628586, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+98, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 225.713547, -2268.868164, 81.060486, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+99, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 226.300354, -2325.355957, 81.062317, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+100, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 217.019104, -2279.807373, 80.914627, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+101, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 230.380203, -2316.494873, 81.061913, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+102, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 204.442703, -2273.286377, 80.885872, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+103, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 217.946182, -2333.008789, 81.042397, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+104, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 213.40625, -2321.314209, 81.105652, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+105, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 210.190979, -2294.826416, 80.855194, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+106, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 210.947922, -2307.972168, 80.814934, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+107, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 190.770828, -2325.75, 82.825989, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+108, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 178.211807, -2334.939209, 83.808929, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+109, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 191.135422, -2354.399414, 83.453125, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+110, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 193.994797, -2340.28125, 82.472023, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+111, 168382, 2175, 10424, 10529, '0', 0, 13835, 0, 0, 175.352432, -2323.730957, 84.618835, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: guess: most specific active phase)
+(@CGUID+112, 169162, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 503.614594, -2369.415039, 158.865631, 2.821937, 120, 0, 0, 66709), -- Hunting Worg (phase: guess: most specific active phase)
+(@CGUID+113, 169162, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 512.213562, -2352.109375, 160.919403, 3.513272, 120, 0, 0, 66709), -- Hunting Worg (phase: guess: most specific active phase)
+(@CGUID+114, 169162, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 484.22049, -2363.001709, 159.884628, 0.587938, 120, 0, 0, 66709), -- Hunting Worg (phase: guess: most specific active phase)
+(@CGUID+115, 169162, 2175, 10424, 10528, '0', 0, 13811, 0, 0, 478.991333, -2358.611084, 160.286987, 0.111182, 120, 0, 0, 66709), -- Hunting Worg (phase: guess: most specific active phase)
+(@CGUID+116, 174525, 2175, 10424, 10530, '0', 0, 0, 0, 0, 659.37677, -2195.032959, 80.814598, 3.454065, 120, 0, 0, 66709), -- Kee (phase: unknown)
+(@CGUID+117, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 292.234375, -2339.055664, 85.800659, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+118, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 307.241333, -2341.97583, 89.736336, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+119, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 300.956604, -2335.086914, 87.770477, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+120, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 322.489594, -2337.060791, 91.230614, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+121, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 307.486115, -2325.720459, 87.357567, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+122, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 315.642365, -2327.739502, 87.969177, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+123, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 325.041656, -2326.770752, 87.614647, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+124, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 307.53299, -2334.494873, 88.130432, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+125, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 324.93924, -2345.885498, 94.544113, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+126, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 327.670135, -2338.118164, 93.17672, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+127, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 334.043396, -2331.524414, 92.388733, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+128, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 338.713531, -2339.666748, 95.774994, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+129, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 334.190979, -2343.421875, 95.636909, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+130, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 345.381958, -2352.045166, 101.198853, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+131, 174977, 2175, 10424, 10529, '0', 0, 0, 0, 0, 338.28299, -2349.064209, 98.150467, 0, 120, 0, 0, 66709), -- Spar Point Advertisement (phase: unknown)
+(@CGUID+132, 245594, 2175, 10424, 10503, '0', 0, 13776, 0, 0, 97.788193, -2417.003418, 90.796936, 5.390269, 120, 0, 0, 66709), -- Henry Garrick (phase: appeared when phase was added)
+(@CGUID+138, 161504, 2236, 10581, 10581, '150', 0, 0, 0, 0, 886.184021, -1780.177124, 181.271423, 3.582858, 120, 0, 0, 66709), -- Henry Garrick (phase: unknown)
+(@CGUID+139, 245401, 2236, 10581, 10581, '150', 0, 0, 0, 1, 882.928833, -1783.675415, 181.340942, 3.641955, 120, 0, 0, 66709), -- Jaina Proudmoore (phase: unknown)
+(@CGUID+140, 253710, 2236, 10581, 10581, '150', 0, 0, 0, 0, 854.72595, -1810.9386, 277.33813, 0.944917, 120, 0, 2, 66709), -- Wrathion (phase: unknown)
+(@CGUID+141, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 893.428833, -1821.489624, 248.678223, 0, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+142, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 880.840271, -1785.725708, 248.671494, 2.267454, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+143, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 902.3125, -1782.6875, 248.745682, 5.280439, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+144, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 863.965271, -1809.411499, 248.671494, 0.339213, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+145, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 857.703125, -1758.652832, 248.652588, 5.489535, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+146, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 860.50177, -1792.071167, 248.669128, 3.291629, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+147, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 876.881958, -1810.345459, 248.6716, 0, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+148, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 871.586792, -1754.104126, 248.669754, 3.7117, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+149, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 805.241333, -1760.493042, 248.676025, 0.070431, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+150, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 809.6875, -1795.109375, 248.67215, 4.59426, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+151, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 820.397583, -1832.748291, 248.674637, 1.02635, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+152, 253714, 2236, 10581, 10581, '150', 0, 0, 0, 0, 794.161438, -1774.467041, 248.684647, 0.652741, 120, 0, 0, 66709), -- Decaying Corpse (phase: unknown)
+(@CGUID+153, 41200, 2261, 10424, 10639, '0', 0, 14349, 0, 0, 3.712251, -0.123171, 5.318224, 3.145645, 120, 0, 0, 66709), -- Generic Bunny - PRK (phase: appeared when phase was added)
+(@CGUID+154, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -0.332261, 330, -0.679202, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
+(@CGUID+155, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -27.186184, 405.065002, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
+(@CGUID+156, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -1.079112, -402.359985, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
+(@CGUID+157, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -47.888344, 340.175995, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
+(@CGUID+158, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -20.811056, -450.683014, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
+(@CGUID+159, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, 39.147503, -402.429993, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
+(@CGUID+160, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, -39.580196, -353.385986, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
+(@CGUID+161, 157070, 2261, 10424, 10639, '0', 0, 14353, 0, 0, 33.497532, 402.743011, 0.083333, 0, 120, 0, 0, 66709), -- Invisible Stalker (phase: appeared when phase was added)
+(@CGUID+162, 160656, 2261, 10424, 10639, '0', 0, 0, 0, 0, -7.824997, -9.210344, 5.289811, 0.997226, 120, 0, 0, 66709), -- Invisible Stalker (phase: not found in parsed text)
+(@CGUID+163, 245371, 2261, 10424, 10639, '0', 0, 14353, 0, 0, 27.257532, 3.654527, 5.023798, 3.864473, 120, 0, 0, 66709); -- Captain Garrick (phase: appeared when phase was added)
 
 DELETE FROM `waypoint_path_node` WHERE `PathId` BETWEEN 217500000 AND 217500999;
 DELETE FROM `waypoint_path` WHERE `PathId` BETWEEN 217500000 AND 217500999;
 INSERT INTO `waypoint_path` (`PathId`, `MoveType`, `Flags`, `Velocity`, `Comment`) VALUES
 (217500012, 0, 0, NULL, 'Quilboar Geomancer - patrol from the retail sniff'),
-(217500013, 0, 0, NULL, 'Quilboar Geomancer - patrol from the retail sniff');
+(217500013, 0, 0, NULL, 'Quilboar Geomancer - patrol from the retail sniff'),
+(217500038, 0, 0, NULL, 'Bloodbeak - patrol from the retail sniff'),
+(217500140, 1, 0, 18, 'Wrathion - patrol from the retail sniff');
 INSERT INTO `waypoint_path_node` (`PathId`, `NodeId`, `PositionX`, `PositionY`, `PositionZ`, `Orientation`, `Delay`) VALUES
 (217500012, 1, 27.5625, -2606.8066, 63.946613, NULL, 0),
 (217500012, 2, 28.090279, -2597.8247, 63.724266, NULL, 0),
@@ -197,7 +193,33 @@ INSERT INTO `waypoint_path_node` (`PathId`, `NodeId`, `PositionX`, `PositionY`, 
 (217500013, 6, 79.27604, -2609.3403, 64.84447, NULL, 0),
 (217500013, 7, 70.40104, -2608.9167, 64.75519, NULL, 0),
 (217500013, 8, 61.088543, -2602.0696, 65.133224, NULL, 0),
-(217500013, 9, 59.65278, -2597.1008, 65.30145, NULL, 0);
+(217500013, 9, 59.65278, -2597.1008, 65.30145, NULL, 0),
+(217500038, 1, 494.18045, -2353.3406, 161.47388, NULL, 0),
+(217500038, 2, 482.90875, -2353.5103, 161.716, NULL, 0),
+(217500038, 3, 480.23404, -2359.1594, 161.12726, NULL, 0),
+(217500038, 4, 482.18292, -2367.4368, 161.14877, NULL, 0),
+(217500038, 5, 489.51343, -2363.2866, 160.67352, NULL, 0),
+(217500038, 6, 495.93372, -2364.3335, 160.45755, NULL, 0),
+(217500038, 7, 503.75064, -2360.344, 160.85477, NULL, 0),
+(217500038, 8, 507.8244, -2350.5518, 161.4963, NULL, 0),
+(217500038, 9, 502.92688, -2345.6755, 162.07726, NULL, 0),
+(217500140, 1, 854.72595, -1810.9386, 277.33813, NULL, 0),
+(217500140, 2, 843.11255, -1812.6107, 277.33813, NULL, 0),
+(217500140, 3, 831.49915, -1814.2828, 277.33813, NULL, 0),
+(217500140, 4, 820.15674, -1811.3903, 277.33813, NULL, 0),
+(217500140, 5, 810.78467, -1804.3773, 277.33813, NULL, 0),
+(217500140, 6, 804.8097, -1794.3118, 277.33813, NULL, 0),
+(217500140, 7, 803.14154, -1782.7258, 277.33813, NULL, 0),
+(217500140, 8, 806.03406, -1771.3834, 277.33813, NULL, 0),
+(217500140, 9, 813.047, -1762.0114, 277.33813, NULL, 0),
+(217500140, 10, 823.1126, -1756.0364, 277.33813, NULL, 0),
+(217500140, 11, 834.69855, -1754.3682, 277.33813, NULL, 0),
+(217500140, 12, 846.04095, -1757.2607, 277.33813, NULL, 0),
+(217500140, 13, 855.413, -1764.2737, 277.33813, NULL, 0),
+(217500140, 14, 861.38794, -1774.3392, 277.33813, NULL, 0),
+(217500140, 15, 863.05615, -1785.9252, 277.33813, NULL, 0),
+(217500140, 16, 860.16364, -1797.2676, 277.33813, NULL, 0),
+(217500140, 17, 853.1507, -1806.6396, 277.33813, NULL, 0);
 
 DELETE FROM `creature_addon` WHERE `guid` BETWEEN @CGUID+0 AND @CGUID+99999;
 INSERT INTO `creature_addon` (`guid`, `PathId`, `mount`, `MountCreatureID`, `StandState`, `AnimTier`, `VisFlags`, `SheathState`, `PvPFlags`, `emote`, `aiAnimKit`, `movementAnimKit`, `meleeAnimKit`, `visibilityDistanceType`, `auras`) VALUES
@@ -216,23 +238,23 @@ INSERT INTO `creature_addon` (`guid`, `PathId`, `mount`, `MountCreatureID`, `Sta
 (@CGUID+33, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, ''), -- Ogre Shadowcaster
 (@CGUID+34, 0, 0, 0, 0, 0, 0, 1, 0, 28, 0, 0, 0, 0, ''), -- Ogre Shadowcaster
 (@CGUID+36, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, ''), -- Ogre Shadowcaster
-(@CGUID+38, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, ''), -- Bloodbeak
+(@CGUID+38, 217500038, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, ''), -- Bloodbeak
 (@CGUID+39, 0, 0, 0, 8, 0, 0, 1, 0, 0, 0, 0, 0, 0, ''), -- Ogre Chef
 (@CGUID+43, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 3, ''), -- Hungry Vulture
-(@CGUID+44, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, '305513'), -- Lindie Springstock
-(@CGUID+49, 0, 0, 0, 0, 0, 0, 1, 0, 333, 0, 0, 0, 0, ''), -- Henry Garrick
-(@CGUID+50, 0, 0, 0, 0, 0, 0, 1, 0, 333, 0, 0, 0, 0, ''), -- Kee-La
-(@CGUID+59, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, '305513'), -- Captain Kelra
-(@CGUID+62, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, '316915'), -- Barrow Spiderling
-(@CGUID+64, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, '298902'), -- Hrun the Exiled
-(@CGUID+90, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '145363'), -- Yorah
-(@CGUID+91, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '145363'), -- Hjalmar the Undying
+(@CGUID+48, 0, 0, 0, 0, 0, 0, 1, 0, 333, 0, 0, 0, 0, ''), -- Henry Garrick
+(@CGUID+49, 0, 0, 0, 0, 0, 0, 1, 0, 333, 0, 0, 0, 0, ''), -- Kee-La
+(@CGUID+58, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, '305513'), -- Captain Kelra
+(@CGUID+61, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, '316915'), -- Barrow Spiderling
+(@CGUID+63, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, '298902'), -- Hrun the Exiled
+(@CGUID+89, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '145363'), -- Yorah
+(@CGUID+90, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '145363'), -- Hjalmar the Undying
+(@CGUID+91, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0, ''), -- Sharpbeak Hawk
 (@CGUID+92, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0, ''), -- Sharpbeak Hawk
 (@CGUID+93, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0, ''), -- Sharpbeak Hawk
 (@CGUID+94, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0, ''), -- Sharpbeak Hawk
-(@CGUID+95, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0, ''), -- Sharpbeak Hawk
-(@CGUID+139, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, ''), -- Henry Garrick
-(@CGUID+141, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, '1259806'), -- Wrathion
+(@CGUID+138, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, ''), -- Henry Garrick
+(@CGUID+140, 217500140, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 4, '1259806'), -- Wrathion
+(@CGUID+141, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '388470'), -- Decaying Corpse
 (@CGUID+142, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '388470'), -- Decaying Corpse
 (@CGUID+143, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '388470'), -- Decaying Corpse
 (@CGUID+144, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '388470'), -- Decaying Corpse
@@ -244,8 +266,7 @@ INSERT INTO `creature_addon` (`guid`, `PathId`, `mount`, `MountCreatureID`, `Sta
 (@CGUID+150, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '388470'), -- Decaying Corpse
 (@CGUID+151, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '388470'), -- Decaying Corpse
 (@CGUID+152, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '388470'), -- Decaying Corpse
-(@CGUID+153, 0, 0, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 0, '388470'), -- Decaying Corpse
-(@CGUID+154, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0, ''); -- Generic Bunny - PRK
+(@CGUID+153, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0, ''); -- Generic Bunny - PRK
 
 DELETE FROM `gameobject` WHERE `guid` BETWEEN @OGUID+0 AND @OGUID+99999;
 INSERT INTO `gameobject` (`guid`, `id`, `map`, `zoneId`, `areaId`, `spawnDifficulties`, `phaseUseFlags`, `PhaseId`, `PhaseGroup`, `position_x`, `position_y`, `position_z`, `orientation`, `rotation0`, `rotation1`, `rotation2`, `rotation3`, `spawntimesecs`, `animprogress`, `state`, `VerifiedBuild`) VALUES

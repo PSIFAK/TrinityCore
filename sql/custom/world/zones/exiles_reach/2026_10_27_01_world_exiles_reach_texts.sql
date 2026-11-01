@@ -11,7 +11,7 @@ INSERT INTO `creature_text` (`CreatureID`, `GroupID`, `ID`, `Text`, `Type`, `Lan
 (153582, 1, 0, 'Wug.... wug...', 12, 0, 100, 0, 0, 151446, 0, 176073, 0, 'Wug to Player'),
 (153583, 0, 0, 'Me... get... smash...', 12, 0, 100, 0, 0, 151451, 0, 176069, 0, 'Jugnug to Player'),
 (156626, 1, 0, '$n! The sea was kind to you today.', 12, 0, 100, 3, 0, 297962, 0, 291040, 0, 'Lady Jaina Proudmoore to Player'),
-(156626, 2, 0, 'Meet Captain Garrick up ahead. I\'m going to search the island for more survivors.', 12, 0, 100, 0, 0, 297965, 0, 291042, 0, 'Lady Jaina Proudmoore to Player'),
+(156626, 2, 0, 'Meet Captain Garrick up ahead. I\'m going to search the island for more survivors.', 12, 0, 100, 0, 0, 297965, 0, 291042, 5, 'Lady Jaina Proudmoore to Player'),
 (156799, 0, 0, 'Honestly, the indignity of it all...', 12, 0, 100, 0, 0, 297991, 0, 290995, 0, 'Wrathion to Player'),
 (156807, 0, 0, 'Let\'s move. We need to put a stop to that ritual before it\'s too late.', 12, 0, 100, 0, 0, 297976, 0, 291054, 0, 'Lady Jaina Proudmoore to Player'),
 (156833, 0, 0, 'Kee-La and I will scout ahead. We\'ll meet you to the north, just outside the harpy den.', 12, 0, 100, 0, 0, 153031, 0, 178840, 0, 'Henry Garrick to Player'),

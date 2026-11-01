@@ -1,0 +1,113 @@
+-- Exile's Reach (maps 2175/2236): creature data fixes from the retail sniff ExileReach_Hunter_12.1.5 (12.1.5.70688, Alliance night elf hunter).
+-- Report: build/exiles_reach/hunter/creature_report.md. Only values the sniff shows unambiguously (query responses or identical creates).
+
+-- ---------------------------------------------------------------------------------------------------------------------------
+-- 1. creature_template_difficulty: DifficultyID 0 rows with ContentTuningID 0 (VerifiedBuild 0 stubs). TC then sets level 1 and
+--    level-1 health (e.g. Captain Garrick 245394: TC L1 / 234 HP, retail L10 / 1131 HP). ContentTuningID from the sniff's
+--    UnitData.ContentTuningID; HealthModifier of these rows already equals retail HpMulti.
+UPDATE `creature_template_difficulty` SET `ContentTuningID` = 1421 WHERE `DifficultyID` = 0 AND `ContentTuningID` = 0 AND `Entry` IN
+(245394, 245397, 245667, 245686, 165360); -- Captain Garrick x2, Lady Jaina Proudmoore x2, Alliance Survivor: retail L10
+UPDATE `creature_template_difficulty` SET `ContentTuningID` = 741 WHERE `DifficultyID` = 0 AND `ContentTuningID` = 0 AND `Entry` IN
+(245399, 253758, 156526, 160964, 164868); -- Jaina (summon), Wrathion, Scout-o-Matic 5000 (vehicle), Freed Expedition Member, Pandaren Monk
+UPDATE `creature_template_difficulty` SET `ContentTuningID` = 957 WHERE `DifficultyID` = 0 AND `ContentTuningID` = 0 AND `Entry` IN
+(157051, 164577); -- Alliance Sparring Partner x2: retail L5
+UPDATE `creature_template_difficulty` SET `ContentTuningID` = 2588 WHERE `DifficultyID` = 0 AND `ContentTuningID` = 0 AND `Entry` = 244389; -- Kalecgos: retail L80, 2955200 HP
+
+-- Darkmaul Citadel runs in DifficultyID 150 (fallback 0); query response HealthScalingExpansion = 11 (no HP change at level 1)
+UPDATE `creature_template_difficulty` SET `HealthScalingExpansion` = 11 WHERE `DifficultyID` = 150 AND `Entry` IN (168738, 168740); -- Citadel Rat, Citadel Recluse (was 9)
+
+-- ---------------------------------------------------------------------------------------------------------------------------
+-- 2. creature_template: stub templates (faction 0, no UNIT_FLAG2_REGENERATE_POWER) and other template fields the sniff disagrees with.
+--    Flags keep only bits TC accepts from the DB (UNIT_FLAG*_ALLOWED); runtime bits (CAN_SWIM, IN_COMBAT, ...) are left out.
+--    Summons whose retail faction is the summoner's player faction (1/3/4) keep their template faction.
+--    Classification 1 (Elite) for the dragons comes from the query response.
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800 WHERE `entry` = 149917; -- Captain Garrick (was: faction 0, unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 1732, `unit_flags2` = 0x800 WHERE `entry` = 150245; -- Lindie Springstock (was: faction 0, unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800 WHERE `entry` = 151088; -- Kee-La (was: faction 0, unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800 WHERE `entry` = 151089; -- Bjorn Stouthands (was: faction 0, unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800 WHERE `entry` = 154170; -- Austin Huxworth (was: faction 0, unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags3` = 0x1000000 WHERE `entry` = 155125; -- InvisBunny (was: unit_flags3 0x0)
+UPDATE `creature_template` SET `unit_flags3` = 0x1000000 WHERE `entry` = 155572; -- InvisBunny (was: unit_flags3 0x0)
+UPDATE `creature_template` SET `unit_flags` = 0x100, `unit_flags2` = 0x800, `unit_flags3` = 0x1000000, `speed_run` = 1 WHERE `entry` = 155733; -- Hidden Treasure Chest (was: unit_flags 0x0, unit_flags2 0x0, unit_flags3 0x0, speed_run 1.14286)
+UPDATE `creature_template` SET `faction` = 7, `unit_flags` = 0x2000300, `unit_flags2` = 0x800, `unit_flags3` = 0x1000000 WHERE `entry` = 156403; -- aBoat (was: faction 0, unit_flags 0x0, unit_flags2 0x0, unit_flags3 0x0)
+UPDATE `creature_template` SET `faction` = 35, `speed_run` = 1 WHERE `entry` = 156518; -- Scout-o-Matic 5000 (was: faction 0, speed_run 1.14286)
+UPDATE `creature_template` SET `speed_run` = 1 WHERE `entry` = 156526; -- Scout-o-Matic 5000 (was: speed_run 1.14286)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800, `unit_flags3` = 0x10 WHERE `entry` = 156609; -- Bjorn Stouthands (was: faction 0, unit_flags2 0x0, unit_flags3 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800, `unit_flags3` = 0x10 WHERE `entry` = 156610; -- Austin Huxworth (was: faction 0, unit_flags2 0x0, unit_flags3 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800, `unit_flags3` = 0x10 WHERE `entry` = 156612; -- Kee-La (was: faction 0, unit_flags2 0x0, unit_flags3 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800 WHERE `entry` = 156622; -- Quartermaster Richter (was: faction 0, unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 1732 WHERE `entry` = 156626; -- Lady Jaina Proudmoore (was: faction 0)
+UPDATE `creature_template` SET `npcflag` = 0x1280, `unit_flags2` = 0x800 WHERE `entry` = 156800; -- Quartermaster Richter (was: npcflag 0x281, unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 35, `npcflag` = 0x2, `unit_flags2` = 0x800 WHERE `entry` = 156801; -- Private Cole (was: faction 0, npcflag 0x0, unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800 WHERE `entry` = 156808; -- Small Boar (was: faction 0, unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags` = 0x300, `unit_flags2` = 0x800 WHERE `entry` = 156882; -- Meredy Huntswell (was: unit_flags 0x0, unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 1732 WHERE `entry` = 156886; -- Meredy Huntswell (was: faction 35)
+UPDATE `creature_template` SET `unit_flags2` = 0x800 WHERE `entry` = 156929; -- Ralia Dreamchaser (was: unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags2` = 0x800 WHERE `entry` = 156961; -- Lady Jaina Proudmoore (was: unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags` = 0x300, `unit_flags2` = 0x800 WHERE `entry` = 156965; -- Captain Kelra (was: unit_flags 0x0, unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags` = 0x2000040 WHERE `entry` = 157051; -- Alliance Sparring Partner (was: unit_flags 0x40)
+UPDATE `creature_template` SET `unit_flags3` = 0x1000000 WHERE `entry` = 160451; -- Hrun the Exiled (was: unit_flags3 0x0)
+UPDATE `creature_template` SET `faction` = 1732, `unit_flags` = 0x300, `unit_flags2` = 0x800, `unit_flags3` = 0x80000 WHERE `entry` = 160964; -- Freed Expedition Member (was: faction 0, unit_flags 0x0, unit_flags2 0x0, unit_flags3 0x0)
+UPDATE `creature_template` SET `unit_flags2` = 0x800 WHERE `entry` = 161350; -- Captain Garrick (was: unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags3` = 0x1000000 WHERE `entry` = 162954; -- InvisBunny (was: unit_flags3 0x0)
+UPDATE `creature_template` SET `unit_flags3` = 0x1000000 WHERE `entry` = 164022; -- InvisBunny (was: unit_flags3 0x0)
+UPDATE `creature_template` SET `unit_flags3` = 0x1000000 WHERE `entry` = 164026; -- InvisBunny (was: unit_flags3 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800, `unit_flags3` = 0x80030 WHERE `entry` = 164577; -- Alliance Sparring Partner (was: faction 0, unit_flags2 0x0, unit_flags3 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800, `unit_flags3` = 0x80020 WHERE `entry` = 164868; -- Pandaren Monk (was: faction 0, unit_flags2 0x0, unit_flags3 0x0)
+UPDATE `creature_template` SET `unit_flags` = 0x2000200, `unit_flags2` = 0x800, `unit_flags3` = 0x1080000, `speed_run` = 1 WHERE `entry` = 164986; -- Freezing Trap (was: unit_flags 0x0, unit_flags2 0x0, unit_flags3 0x0, speed_run 1.14286)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800, `unit_flags3` = 0x80000 WHERE `entry` = 164990; -- Stalking Prowler (was: faction 0, unit_flags2 0x0, unit_flags3 0x0)
+UPDATE `creature_template` SET `unit_flags2` = 0x800 WHERE `entry` = 165360; -- Alliance Survivor (was: unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 35, `unit_flags2` = 0x800 WHERE `entry` = 167347; -- Tiger (was: faction 0, unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags3` = 0x1000000 WHERE `entry` = 168382; -- Spar Point Advertisement (was: unit_flags3 0x0)
+UPDATE `creature_template` SET `unit_flags3` = 0x1000000 WHERE `entry` = 174977; -- Spar Point Advertisement (was: unit_flags3 0x0)
+UPDATE `creature_template` SET `Classification` = 1, `faction` = 3323, `unit_flags` = 0x40, `unit_flags2` = 0x800 WHERE `entry` = 244389; -- Kalecgos (was: Classification 0, faction 35, unit_flags 0x0, unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags2` = 0x800 WHERE `entry` = 245394; -- Captain Garrick (was: unit_flags2 0x0)
+UPDATE `creature_template` SET `faction` = 1732, `unit_flags` = 0x40, `unit_flags2` = 0x800 WHERE `entry` = 245397; -- Lady Jaina Proudmoore (was: faction 35, unit_flags 0x0, unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags` = 0x300, `unit_flags2` = 0x800 WHERE `entry` = 245399; -- Lady Jaina Proudmoore (was: unit_flags 0x0, unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags2` = 0x800 WHERE `entry` = 245667; -- Captain Garrick (was: unit_flags2 0x0)
+UPDATE `creature_template` SET `unit_flags2` = 0x800 WHERE `entry` = 245686; -- Lady Jaina Proudmoore (was: unit_flags2 0x0)
+UPDATE `creature_template` SET `Classification` = 1 WHERE `entry` = 248563; -- Wrathion (was: Classification 0)
+UPDATE `creature_template` SET `Classification` = 1 WHERE `entry` = 248565; -- Kalecgos (was: Classification 0)
+UPDATE `creature_template` SET `Classification` = 1 WHERE `entry` = 253710; -- Wrathion (was: Classification 0)
+UPDATE `creature_template` SET `Classification` = 1, `faction` = 1665, `unit_flags` = 0x300, `unit_flags2` = 0x800 WHERE `entry` = 253758; -- Wrathion (was: Classification 0, faction 0, unit_flags 0x0, unit_flags2 0x0)
+
+-- ---------------------------------------------------------------------------------------------------------------------------
+-- 3. Equipment (VirtualItems of every sample)
+-- Lady Jaina Proudmoore carries a staff (153575) on retail, the DB gives her Garrick's sword and shield
+UPDATE `creature_equip_template` SET `ItemID1` = 153575, `AppearanceModID1` = 0, `ItemVisual1` = 0, `ItemID2` = 0, `AppearanceModID2` = 0, `ItemVisual2` = 0,
+`ItemID3` = 0, `AppearanceModID3` = 0, `ItemVisual3` = 0, `VerifiedBuild` = 70688 WHERE `CreatureID` IN (156626, 156807, 156961) AND `ID` = 1;
+UPDATE `creature_equip_template` SET `ItemID1` = 134066, `VerifiedBuild` = 70688 WHERE `CreatureID` = 156814 AND `ID` = 1; -- Gor'groth (Darkmaul Citadel), was 176578
+UPDATE `creature_equip_template` SET `ItemID1` = 163883, `VerifiedBuild` = 70688 WHERE `CreatureID` = 165360 AND `ID` = 1; -- Alliance Survivor, was 163887 (offhand 163891 unchanged)
+DELETE FROM `creature_equip_template` WHERE `CreatureID` IN (245394, 245397, 245667, 245686, 164577) AND `ID` = 1;
+INSERT INTO `creature_equip_template` (`CreatureID`, `ID`, `ItemID1`, `AppearanceModID1`, `ItemVisual1`, `ItemID2`, `AppearanceModID2`, `ItemVisual2`, `ItemID3`, `AppearanceModID3`, `ItemVisual3`, `VerifiedBuild`) VALUES
+(245394, 1, 163887, 0, 0, 163891, 0, 0, 0, 0, 0, 70688), -- Captain Garrick
+(245667, 1, 163887, 0, 0, 163891, 0, 0, 0, 0, 0, 70688), -- Captain Garrick
+(245397, 1, 153575, 0, 0, 0, 0, 0, 0, 0, 0, 70688), -- Lady Jaina Proudmoore
+(245686, 1, 153575, 0, 0, 0, 0, 0, 0, 0, 0, 70688), -- Lady Jaina Proudmoore
+(164577, 1, 108493, 0, 0, 0, 0, 0, 0, 0, 0, 70688); -- Alliance Sparring Partner (summon)
+-- spawns of these entries have equipment_id 0 (= no weapons) although retail shows them armed
+UPDATE `creature` SET `equipment_id` = 1 WHERE `guid` IN (8000044, 90010007, 90010000, 90010004, 90010006, 90010011) AND `equipment_id` = 0;
+-- 8000044 Jaina 156807, 90010007 Jaina 156961, 90010000 Garrick 245394, 90010004 Jaina 245397, 90010006 Garrick 245667, 90010011 Jaina 245686
+
+-- ---------------------------------------------------------------------------------------------------------------------------
+-- 4. Spawns / addons
+-- Austin Huxworth (hunter trainer / stable master at the camp below the Ogre Ruins): retail stands 6.2 yd from the DB spot
+-- (same orientation, 5 creates, all identical; his private copy 164989 for The Art of Taming appears at the same spot)
+UPDATE `creature` SET `position_x` = 183.23785, `position_y` = -2295.269, `position_z` = 82.24422, `orientation` = 0.230253174901008605, `VerifiedBuild` = 70688
+WHERE `guid` = 1051924 AND `id` = 161666;
+-- Ogre Shadowcaster: weapon drawn on 40 of 41 creates
+UPDATE `creature_template_addon` SET `SheathState` = 1 WHERE `entry` = 153242 AND `SheathState` = 0;
+
+-- Stalking Prowler (164990, quest 59356) is summoned with content tuning 482 (1-90): TC gave it level 90, retail level 10 / 377 HP
+UPDATE `creature_template_difficulty` SET `ContentTuningID` = 1421 WHERE `Entry` = 164990 AND `DifficultyID` IN (0, 1);
+
+-- Jaina on the ship (156280): retail only shows her staff. Equipment 1 still held Garrick's sword and shield, which her
+-- personal copies (summoned without an equipment id) took
+UPDATE `creature_equip_template` SET `ItemID1` = 153575, `AppearanceModID1` = 0, `ItemVisual1` = 0, `ItemID2` = 0, `AppearanceModID2` = 0, `ItemVisual2` = 0,
+`VerifiedBuild` = 70688 WHERE `CreatureID` = 156280 AND `ID` = 1;
+
+-- Two campfires share the spot of the Cooking Meat camp (600228 Campfire 339769, 600251 Campfire 349962). Retail never
+-- shows 349962 to the Alliance, and with both visible one of them popped in and out on phase changes
+DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 32 AND `SourceGroup` = 8 AND `SourceEntry` = 349962;
+INSERT INTO `conditions` (`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`) VALUES
+(32, 8, 349962, 0, 0, 6, 0, 67, 0, 0, 0, 0, 0, '', 'Campfire 349962 (second campfire of the Cooking Meat camp) is visible to the Horde only');
