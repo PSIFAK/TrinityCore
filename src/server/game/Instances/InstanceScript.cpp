@@ -17,6 +17,7 @@
 
 #include "InstanceScript.h"
 #include "AreaBoundary.h"
+#include "Config.h"
 #include "Creature.h"
 #include "CreatureAI.h"
 #include "CreatureAIImpl.h"
@@ -24,6 +25,7 @@
 #include "DB2Stores.h"
 #include "GameEventSender.h"
 #include "GameObject.h"
+#include "GameTime.h"
 #include "Group.h"
 #include "InstancePackets.h"
 #include "InstanceScenario.h"
@@ -407,6 +409,7 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
                     uint32 resInterval = GetCombatResurrectionChargeInterval();
                     InitializeCombatResurrections(1, resInterval);
                     SendEncounterStart(1, 9, resInterval, resInterval);
+                    SendDungeonEncounterStart(bossInfo->GetDungeonEncounterForDifficulty(instance->GetDifficultyID()));
 
                     instance->DoOnPlayers([](Player* player)
                     {
@@ -418,6 +421,7 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
                 {
                     ResetCombatResurrections();
                     SendEncounterEnd();
+                    SendDungeonEncounterEnd(bossInfo->GetDungeonEncounterForDifficulty(instance->GetDifficultyID()), false);
 
                     instance->DoOnPlayers([](Player* player)
                     {
@@ -430,6 +434,7 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
                     ResetCombatResurrections();
                     SendEncounterEnd();
                     dungeonEncounter = bossInfo->GetDungeonEncounterForDifficulty(instance->GetDifficultyID());
+                    SendDungeonEncounterEnd(dungeonEncounter, true);
                     if (dungeonEncounter)
                     {
                         instance->DoOnPlayers([&](Player* player)
@@ -452,6 +457,11 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
                     });
                     break;
                 }
+                case NOT_STARTED:
+                    // an evade that resets the boss without despawning it ends the pull as well
+                    if (bossInfo->state == IN_PROGRESS)
+                        SendDungeonEncounterEnd(bossInfo->GetDungeonEncounterForDifficulty(instance->GetDifficultyID()), false);
+                    break;
                 default:
                     break;
             }
@@ -891,6 +901,41 @@ void InstanceScript::SendEncounterEnd()
 {
     WorldPackets::Instance::InstanceEncounterEnd encounterEndMessage;
     instance->SendToPlayers(encounterEndMessage.Write());
+}
+
+void InstanceScript::SendDungeonEncounterStart(DungeonEncounterEntry const* dungeonEncounter)
+{
+    if (!sConfigMgr->GetBoolDefault("RetailSystems.EncounterPackets.Enabled", false))
+        return;
+
+    if (!dungeonEncounter || !_dungeonEncounterStartTimes.try_emplace(dungeonEncounter->ID, GameTime::Now()).second)
+        return;
+
+    WorldPackets::Instance::EncounterStart encounterStart;
+    encounterStart.DungeonEncounterID = dungeonEncounter->ID;
+    encounterStart.DifficultyID = int16(instance->GetDifficultyID());
+    encounterStart.GroupSize = instance->GetPlayersCountExceptGMs();
+    instance->SendToPlayers(encounterStart.Write());
+}
+
+void InstanceScript::SendDungeonEncounterEnd(DungeonEncounterEntry const* dungeonEncounter, bool success)
+{
+    if (!dungeonEncounter)
+        return;
+
+    auto itr = _dungeonEncounterStartTimes.find(dungeonEncounter->ID);
+    if (itr == _dungeonEncounterStartTimes.end())
+        return;
+
+    WorldPackets::Instance::EncounterEnd encounterEnd;
+    encounterEnd.DungeonEncounterID = dungeonEncounter->ID;
+    encounterEnd.DifficultyID = int16(instance->GetDifficultyID());
+    encounterEnd.GroupSize = instance->GetPlayersCountExceptGMs();
+    encounterEnd.Duration = uint32(std::chrono::duration_cast<Milliseconds>(GameTime::Now() - itr->second).count());
+    encounterEnd.Success = success;
+    instance->SendToPlayers(encounterEnd.Write());
+
+    _dungeonEncounterStartTimes.erase(itr);
 }
 
 void InstanceScript::SendBossKillCredit(uint32 encounterId)

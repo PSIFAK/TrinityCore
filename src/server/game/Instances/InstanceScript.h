@@ -26,6 +26,7 @@
 #include <map>
 #include <set>
 #include <span>
+#include <unordered_map>
 #include <variant>
 
 #ifdef TRINITY_API_USE_DYNAMIC_LINKING
@@ -305,6 +306,11 @@ class TC_GAME_API InstanceScript : public ZoneScript
 
         void SendBossKillCredit(uint32 encounterId);
 
+        // RetailSystems: SMSG_ENCOUNTER_START / SMSG_ENCOUNTER_END of a DungeonEncounter. SetBossState sends them for every boss;
+        // scripts call them directly when an encounter starts or ends on another creature than its boss. Sent once per pull.
+        void SendDungeonEncounterStart(DungeonEncounterEntry const* dungeonEncounter);
+        void SendDungeonEncounterEnd(DungeonEncounterEntry const* dungeonEncounter, bool success);
+
         // ReCheck PhaseTemplate related conditions
         void UpdatePhasing();
 
@@ -364,6 +370,7 @@ class TC_GAME_API InstanceScript : public ZoneScript
         ObjectGuidMap _objectGuids;
         std::vector<InstanceSpawnGroupInfo> const* const _instanceSpawnGroups;
         std::unordered_set<uint32> _activatedAreaTriggers;
+        std::unordered_map<uint32, TimePoint> _dungeonEncounterStartTimes; // RetailSystems: encounters in progress
         uint32 _entranceId;
         uint32 _temporaryEntranceId;
         uint32 _combatResurrectionTimer;

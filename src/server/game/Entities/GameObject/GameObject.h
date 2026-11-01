@@ -292,6 +292,9 @@ class TC_GAME_API GameObject : public WorldObject, public GridObject<GameObject>
         void SetGoState(GOState state);
         GOState GetGoStateFor(ObjectGuid const& viewer) const;
         void SetGoStateFor(GOState state, Player const* viewer);
+        // StateSpellVisualID shown to one player instead of the regular one (0 = none), for scripted visual sequences
+        uint32 GetStateSpellVisualFor(ObjectGuid const& viewer) const;
+        void SetStateSpellVisualFor(uint32 spellVisualId, Player const* viewer);
         uint32 GetGoArtKit() const { return m_gameObjectData->ArtKit; }
         void SetGoArtKit(uint32 artkit);
         uint8 GetGoAnimProgress() const { return m_gameObjectData->PercentHealth; }
@@ -536,6 +539,7 @@ class TC_GAME_API GameObject : public WorldObject, public GridObject<GameObject>
         };
 
         std::unique_ptr<std::unordered_map<ObjectGuid, PerPlayerState>> m_perPlayerState;
+        std::unique_ptr<std::unordered_map<ObjectGuid, uint32>> m_perPlayerStateSpellVisual;
 
         std::unordered_map<ObjectGuid, PerPlayerState>& GetOrCreatePerPlayerStates();
 };

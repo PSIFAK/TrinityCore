@@ -8,12 +8,15 @@
  */
 
 #include "ChallengeModeService.h"
+#include "AreaPoi.h"
 #include "BattlePayService.h"
 #include "ChromieTime.h"
 #include "Config.h"
+#include "FollowerDungeonService.h"
 #include "Player.h"
 #include "RetailGameTables.h"
 #include "ScriptMgr.h"
+#include "WarbandGroups.h"
 #include "WorldQuestService.h"
 #include "WorldSession.h"
 
@@ -33,6 +36,8 @@ public:
         RetailSystems::BattlePay::Initialize();
         RetailSystems::ChallengeMode::Initialize();
         RetailSystems::WorldQuests::Initialize();
+        RetailSystems::FollowerDungeons::Initialize();
+        RetailSystems::AreaPoi::Load();
     }
 
     void OnUpdate(uint32 diff) override
@@ -56,13 +61,16 @@ public:
 
     void OnMapChanged(Player* player) override
     {
+        RetailSystems::ChromieTime::RefreshConditionalFlags(player);
         RetailSystems::ChallengeMode::SendActiveRun(player);
+        RetailSystems::FollowerDungeons::OnPlayerMapChanged(player);
     }
 
     void OnLogout(Player* player) override
     {
         RetailSystems::BattlePay::ClearPending(player->GetSession()->GetAccountId());
         RetailSystems::WorldQuests::OnLogout(player);
+        RetailSystems::FollowerDungeons::OnPlayerLogout(player);
     }
 
     void OnQuestStatusChange(Player* player, uint32 questId) override
@@ -75,6 +83,18 @@ public:
         RetailSystems::ChromieTime::RemoveCharacterState(guid.GetCounter());
         RetailSystems::ChallengeMode::RemoveCharacterState(guid.GetCounter());
         RetailSystems::WorldQuests::RemoveCharacterState(guid.GetCounter());
+        RetailSystems::WarbandGroups::RemoveCharacter(guid);
+    }
+};
+
+class RetailSystemsGroupScript final : public GroupScript
+{
+public:
+    RetailSystemsGroupScript() : GroupScript("RetailSystemsGroupScript") { }
+
+    void OnDisband(Group* group) override
+    {
+        RetailSystems::FollowerDungeons::OnGroupDisband(group);
     }
 };
 
@@ -90,9 +110,13 @@ public:
 };
 }
 
+void AddSC_follower_dungeon_npcs();
+
 void AddRetailSystemsScripts()
 {
     new RetailSystemsWorldScript();
     new RetailSystemsPlayerScript();
+    new RetailSystemsGroupScript();
     new RetailSystemsUnitScript();
+    AddSC_follower_dungeon_npcs();
 }

@@ -202,4 +202,26 @@ WorldPacket const* BossKill::Write()
 
     return &_worldPacket;
 }
+
+WorldPacket const* EncounterStart::Write()
+{
+    _worldPacket << int32(DungeonEncounterID);
+    _worldPacket << int16(DifficultyID);
+    _worldPacket << int32(GroupSize);
+    _worldPacket << uint32(0); // EncounterStartPlayerInfo (challenge mode stats), not sent outside challenge modes
+
+    return &_worldPacket;
+}
+
+WorldPacket const* EncounterEnd::Write()
+{
+    _worldPacket << int32(DungeonEncounterID);
+    _worldPacket << int16(DifficultyID);
+    _worldPacket << int32(GroupSize);
+    _worldPacket << uint32(Duration);
+    _worldPacket << Bits<1>(Success);
+    _worldPacket.FlushBits();
+
+    return &_worldPacket;
+}
 }

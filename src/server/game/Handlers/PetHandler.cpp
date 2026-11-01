@@ -279,8 +279,13 @@ void WorldSession::HandlePetActionHelper(Unit* pet, ObjectGuid guid1, uint32 spe
                     [[fallthrough]];
                 case REACT_DEFENSIVE: // recovery
                 case REACT_AGGRESSIVE: // activete
+                case REACT_ASSIST: // RetailSystems: 12.x hunter pet bar
                     if (pet->GetTypeId() == TYPEID_UNIT)
                         pet->ToCreature()->SetReactState(ReactStates(spellid));
+                    break;
+                case REACT_DEFENSIVE_RETAIL: // RetailSystems: 12.x hunter pet bar
+                    if (pet->GetTypeId() == TYPEID_UNIT)
+                        pet->ToCreature()->SetReactState(REACT_DEFENSIVE);
                     break;
             }
             break;

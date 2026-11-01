@@ -17,12 +17,11 @@
 
 #include "LFGQueue.h"
 #include "Containers.h"
-#include "DB2Stores.h"
 #include "GameTime.h"
 #include "Group.h"
 #include "LFGMgr.h"
+#include "LfgDungeonRules.h"
 #include "Log.h"
-#include "World.h"
 #include <sstream>
 
 namespace lfg
@@ -30,26 +29,10 @@ namespace lfg
 
 namespace
 {
-uint8 GetRequiredPlayerCount(LfgDungeonSet const& dungeons)
-{
-    for (uint32 dungeonId : dungeons)
-    {
-        if (LFGDungeonsEntry const* dungeon = sLFGDungeonsStore.LookupEntry(dungeonId))
-        {
-            uint8 requiredPlayers = dungeon->CountTank + dungeon->CountHealer + dungeon->CountDamage;
-            if (requiredPlayers)
-                return requiredPlayers;
-        }
-    }
-
-    return MAX_GROUP_SIZE;
-}
-
-// DungeonFinder.SoloMode: groups smaller than the dungeon requires are matched as-is
-bool IsSoloMode()
-{
-    return sWorld->getBoolConfig(CONFIG_LFG_SOLO_MODE);
-}
+// RetailSystems: how many players a dungeon starts with (DungeonFinder.SoloMode, solo scenarios, follower dungeons)
+using RetailSystems::FollowerDungeons::LfgMatchMode;
+using RetailSystems::FollowerDungeons::LfgMatchRules;
+using RetailSystems::FollowerDungeons::GetMatchRules;
 }
 
 /**
@@ -446,23 +429,23 @@ LfgCompatibility LFGQueue::CheckCompatibility(GuidList check)
         }
     }
 
-    // A single queued party still needs more players unless it already matches
-    // the composition defined by LFGDungeons.db2 (some scenarios are solo).
+    // A single queued party still needs more players unless the dungeon starts with
+    // this many players (LFGDungeons.db2 counts, solo scenarios, follower dungeons).
     if (check.size() == 1)
     {
         LfgQueueDataContainer::iterator itQueue = QueueDataStore.find(check.front());
-        uint8 requiredPlayers = GetRequiredPlayerCount(itQueue->second.dungeons);
-        if (numPlayers == requiredPlayers || (IsSoloMode() && numPlayers < requiredPlayers))
+        LfgMatchRules rules = GetMatchRules(itQueue->second.dungeons);
+        if (numPlayers >= rules.MinPlayers && numPlayers <= rules.MaxPlayers)
         {
-            TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) single group already has the required {} players",
-                GetDetailedMatchRoles(check), requiredPlayers);
+            TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) single group already has enough players ({}, needed {}-{})",
+                GetDetailedMatchRoles(check), numPlayers, rules.MinPlayers, rules.MaxPlayers);
         }
         else
         {
-            if (numPlayers > requiredPlayers)
+            if (numPlayers > rules.MaxPlayers)
             {
-                TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Too many players ({}, required {})",
-                    GetDetailedMatchRoles(check), numPlayers, requiredPlayers);
+                TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Too many players ({}, allowed {})",
+                    GetDetailedMatchRoles(check), numPlayers, rules.MaxPlayers);
                 SetCompatibles(strGuids, LFG_INCOMPATIBLES_TOO_MUCH_PLAYERS);
                 return LFG_INCOMPATIBLES_TOO_MUCH_PLAYERS;
             }
@@ -477,6 +460,14 @@ LfgCompatibility LFGQueue::CheckCompatibility(GuidList check)
             SetCompatibilityData(strGuids, data);
             return LFG_COMPATIBLES_WITH_LESS_PLAYERS;
         }
+    }
+
+    // dungeons that start with fewer players never merge separate queues
+    if (check.size() > 1 && GetMatchRules(QueueDataStore[check.front()].dungeons).Mode != LfgMatchMode::Standard)
+    {
+        TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) each queue starts on its own", GetDetailedMatchRoles(check));
+        SetCompatibles(strGuids, LFG_INCOMPATIBLES_MULTIPLE_LFG_GROUPS);
+        return LFG_INCOMPATIBLES_MULTIPLE_LFG_GROUPS;
     }
 
     if (numLfgGroups > 1)
@@ -563,19 +554,19 @@ LfgCompatibility LFGQueue::CheckCompatibility(GuidList check)
     }
 
     // Enough players for the selected dungeon/scenario?
-    uint8 requiredPlayers = GetRequiredPlayerCount(proposalDungeons);
-    if (numPlayers != requiredPlayers && !(IsSoloMode() && numPlayers < requiredPlayers))
+    LfgMatchRules rules = GetMatchRules(proposalDungeons);
+    if (numPlayers < rules.MinPlayers || numPlayers > rules.MaxPlayers)
     {
-        if (numPlayers > requiredPlayers)
+        if (numPlayers > rules.MaxPlayers)
         {
-            TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Too many players ({}, required {})",
-                GetDetailedMatchRoles(check), numPlayers, requiredPlayers);
+            TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Too many players ({}, allowed {})",
+                GetDetailedMatchRoles(check), numPlayers, rules.MaxPlayers);
             SetCompatibles(strGuids, LFG_INCOMPATIBLES_TOO_MUCH_PLAYERS);
             return LFG_INCOMPATIBLES_TOO_MUCH_PLAYERS;
         }
 
-        TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Compatibles but not enough players ({}, required {})",
-            GetDetailedMatchRoles(check), numPlayers, requiredPlayers);
+        TC_LOG_DEBUG("lfg.queue.match.compatibility.check", "Guids: ({}) Compatibles but not enough players ({}, needed {})",
+            GetDetailedMatchRoles(check), numPlayers, rules.MinPlayers);
         LfgCompatibilityData data(LFG_COMPATIBLES_WITH_LESS_PLAYERS);
         data.roles = proposalRoles;
 

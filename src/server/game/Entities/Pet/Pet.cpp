@@ -763,6 +763,8 @@ void Pet::GivePetLevel(uint8 level)
 
     InitStatsForLevel(level);
     InitLevelupSpellsForLevel();
+    if (getPetType() == HUNTER_PET && level == 10)
+        LearnSpecializationSpells(); // RetailSystems: the abilities held back before level 10
 }
 
 bool Pet::CreateBaseAtCreature(Creature* creature)
@@ -1513,8 +1515,8 @@ void Pet::InitLevelupSpellsForLevel()
         // PetLevelupSpellSet ordered by levels, process in reversed order
         for (PetLevelupSpellSet::const_reverse_iterator itr = levelupSpells->rbegin(); itr != levelupSpells->rend(); ++itr)
         {
-            // will called first if level down
-            if (itr->first > level)
+            // will called first if level down; RetailSystems: hunter pets get no ability before level 10 (12.1.5 sniff)
+            if (itr->first > level || IsHunterPetAbilityLocked(itr->second))
                 unlearnSpell(itr->second, true);                 // will learn prev rank if any
             // will called if level up
             else
@@ -1869,6 +1871,17 @@ void Pet::ResetGroupUpdateFlag()
         GetOwner()->RemoveGroupUpdateFlag(GROUP_UPDATE_FLAG_PET);
 }
 
+// Retail (12.1.5 sniff): a hunter pet tamed on Exile's Reach has only its passives; Claw, Growl and Dash come with the
+// level up to 10, together
+bool Pet::IsHunterPetAbilityLocked(uint32 spellId) const
+{
+    if (getPetType() != HUNTER_PET || GetLevel() >= 10)
+        return false;
+
+    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId, DIFFICULTY_NONE);
+    return spellInfo && !spellInfo->IsPassive();
+}
+
 void Pet::LearnSpecializationSpells()
 {
     std::vector<uint32> learnedSpells;
@@ -1879,7 +1892,7 @@ void Pet::LearnSpecializationSpells()
         {
             SpecializationSpellsEntry const* specSpell = specSpells->at(j);
             SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(specSpell->SpellID, DIFFICULTY_NONE);
-            if (!spellInfo || spellInfo->SpellLevel > GetLevel())
+            if (!spellInfo || spellInfo->SpellLevel > GetLevel() || IsHunterPetAbilityLocked(specSpell->SpellID))
                 continue;
 
             learnedSpells.push_back(specSpell->SpellID);

@@ -296,6 +296,33 @@ namespace WorldPackets
             WorldPacket const* Write() override;
             uint32 DungeonEncounterID = 0;
         };
+
+        // RetailSystems: start and end of a DungeonEncounter (Lua ENCOUNTER_START / ENCOUNTER_END)
+        class EncounterStart final : public ServerPacket
+        {
+        public:
+            explicit EncounterStart() : ServerPacket(SMSG_ENCOUNTER_START, 4 + 2 + 4 + 4) { }
+
+            WorldPacket const* Write() override;
+
+            int32 DungeonEncounterID = 0;
+            int16 DifficultyID = 0;
+            int32 GroupSize = 0;
+        };
+
+        class EncounterEnd final : public ServerPacket
+        {
+        public:
+            explicit EncounterEnd() : ServerPacket(SMSG_ENCOUNTER_END, 4 + 2 + 4 + 4 + 1) { }
+
+            WorldPacket const* Write() override;
+
+            int32 DungeonEncounterID = 0;
+            int16 DifficultyID = 0;
+            int32 GroupSize = 0;
+            uint32 Duration = 0;    // milliseconds
+            bool Success = false;
+        };
     }
 }
 

@@ -21,6 +21,7 @@
 #include "CharacterCache.h"
 #include "DatabaseEnv.h"
 #include "DB2Stores.h"
+#include "FollowerDungeonService.h"
 #include "Formulas.h"
 #include "GameObject.h"
 #include "GameTime.h"
@@ -872,7 +873,10 @@ void Group::SendUpdateToPlayer(Player* player, MemberSlot const* slot /*= nullpt
         playerInfos.RolesAssigned = citr->roles;    // Lfg Roles
     }
 
-    if (GetMembersCount() > 1)
+    // RetailSystems: NPC members of a follower dungeon party
+    RetailSystems::FollowerDungeons::AppendPartyMembers(*this, partyUpdate);
+
+    if (partyUpdate.PlayerList.size() > 1)
     {
         // LootSettings
         partyUpdate.LootSettings.emplace();

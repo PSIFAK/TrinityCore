@@ -22,6 +22,7 @@
 #include "Group.h"
 #include "LFGMgr.h"
 #include "LFGPackets.h"
+#include "LfgDungeonRules.h"
 #include "Log.h"
 #include "ObjectAccessor.h"
 #include "ObjectMgr.h"
@@ -144,7 +145,11 @@ void WorldSession::SendLfgPlayerLockInfo()
     // Get Random dungeons that can be done at a certain level and expansion
     uint8 level = GetPlayer()->GetLevel();
     std::span<uint32 const> contentTuningReplacementConditionMask = GetPlayer()->m_playerData->CtrOptions->ConditionalFlags;
-    lfg::LfgDungeonSet const& randomDungeons = sLFGMgr->GetRandomAndSeasonalDungeons(level, GetExpansion(), contentTuningReplacementConditionMask);
+    lfg::LfgDungeonSet randomDungeons = sLFGMgr->GetRandomAndSeasonalDungeons(level, GetExpansion(), contentTuningReplacementConditionMask);
+
+    // RetailSystems: retail offers no random dungeon in the starting zone
+    if (RetailSystems::FollowerDungeons::IsInNewPlayerExperience(GetPlayer()))
+        randomDungeons.clear();
 
     WorldPackets::LFG::LfgPlayerInfo lfgPlayerInfo;
 
@@ -271,7 +276,8 @@ void WorldSession::SendLfgUpdateStatus(lfg::LfgUpdateData const& updateData, boo
     lfgUpdateStatus.IsParty = party;
     lfgUpdateStatus.NotifyUI = true;
     lfgUpdateStatus.Joined = join;
-    lfgUpdateStatus.LfgJoined = updateData.updateType != lfg::LFG_UPDATETYPE_REMOVED_FROM_QUEUE;
+    lfgUpdateStatus.LfgJoined = updateData.updateType != lfg::LFG_UPDATETYPE_REMOVED_FROM_QUEUE
+        && updateData.updateType != lfg::LFG_UPDATETYPE_DUNGEON_FINISHED; // RetailSystems: retail clears it once the dungeon is done
     lfgUpdateStatus.Queued = queued;
     lfgUpdateStatus.QueueMapID = sLFGMgr->GetDungeonMapId(_player->GetGUID());
 

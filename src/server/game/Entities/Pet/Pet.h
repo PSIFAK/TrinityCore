@@ -133,6 +133,7 @@ class TC_GAME_API Pet final : public Guardian
         uint16 GetSpecialization() const { return m_petSpecialization; }
         void SetSpecialization(uint16 spec);
         void LearnSpecializationSpells();
+        bool IsHunterPetAbilityLocked(uint32 spellId) const; // RetailSystems
         void RemoveSpecializationSpells(bool clearActionBar);
 
         uint32 GetGroupUpdateFlag() const { return m_groupUpdateMask; }

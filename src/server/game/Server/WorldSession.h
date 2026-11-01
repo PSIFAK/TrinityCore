@@ -284,6 +284,21 @@ namespace WorldPackets
         class SelectExpansion;
     }
 
+    namespace QuestItemUsability
+    {
+        class QueryQuestItemUsability;
+    }
+
+    namespace WarbandGroups
+    {
+        class SetupWarbandGroups;
+    }
+
+    namespace AreaPoi
+    {
+        class RequestAreaPoiUpdate;
+    }
+
     namespace RetailBattlePay
     {
         class AckFailedResponse;
@@ -1955,6 +1970,15 @@ class TC_GAME_API WorldSession
 
         // RetailSystems: Chromie Time
         void HandleChromieTimeSelectExpansion(WorldPackets::ChromieTime::SelectExpansion& packet);
+
+        // RetailSystems: quest item cursor
+        void HandleQueryQuestItemUsability(WorldPackets::QuestItemUsability::QueryQuestItemUsability& packet);
+
+        // RetailSystems: character groups of the character select screen
+        void HandleSetupWarbandGroups(WorldPackets::WarbandGroups::SetupWarbandGroups& packet);
+
+        // RetailSystems: timed area POIs of the world map
+        void HandleRequestAreaPoiUpdate(WorldPackets::AreaPoi::RequestAreaPoiUpdate& packet);
 
         // RetailSystems: BattlePay
         void HandleBattlePayGetProductList(WorldPackets::RetailBattlePay::GetProductList& packet);

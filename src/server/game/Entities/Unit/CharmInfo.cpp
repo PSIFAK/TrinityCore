@@ -18,6 +18,7 @@
 #include "CharmInfo.h"
 #include "Creature.h"
 #include "Map.h"
+#include "Pet.h"
 #include "SpellInfo.h"
 #include "SpellMgr.h"
 #include "StringConvert.h"
@@ -48,6 +49,20 @@ void CharmInfo::RestoreState()
 
 void CharmInfo::InitPetActionBar()
 {
+    // RetailSystems: the hunter pet bar of the retail sniff (12.1.5): attack, follow, move to; assist, 4, passive
+    if (Pet const* pet = _unit->ToPet(); pet && pet->getPetType() == HUNTER_PET)
+    {
+        SetActionBar(ACTION_BAR_INDEX_START + 0, COMMAND_ATTACK, ACT_COMMAND);
+        SetActionBar(ACTION_BAR_INDEX_START + 1, COMMAND_FOLLOW, ACT_COMMAND);
+        SetActionBar(ACTION_BAR_INDEX_START + 2, COMMAND_MOVE_TO, ACT_COMMAND);
+        for (uint32 i = ACTION_BAR_INDEX_PET_SPELL_START; i < ACTION_BAR_INDEX_PET_SPELL_END; ++i)
+            SetActionBar(i, 0, ACT_PASSIVE);
+        SetActionBar(ACTION_BAR_INDEX_PET_SPELL_END + 0, REACT_ASSIST, ACT_REACTION);
+        SetActionBar(ACTION_BAR_INDEX_PET_SPELL_END + 1, REACT_DEFENSIVE_RETAIL, ACT_REACTION);
+        SetActionBar(ACTION_BAR_INDEX_PET_SPELL_END + 2, REACT_PASSIVE, ACT_REACTION);
+        return;
+    }
+
     // the first 3 SpellOrActions are attack, follow and stay
     for (uint32 i = 0; i < ACTION_BAR_INDEX_PET_SPELL_START - ACTION_BAR_INDEX_START; ++i)
         SetActionBar(ACTION_BAR_INDEX_START + i, COMMAND_ATTACK - i, ACT_COMMAND);

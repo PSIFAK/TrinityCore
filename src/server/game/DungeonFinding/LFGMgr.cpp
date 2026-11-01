@@ -27,6 +27,7 @@
 #include "LFGGroupData.h"
 #include "LFGPlayerData.h"
 #include "LFGQueue.h"
+#include "LfgDungeonRules.h"
 #include "Log.h"
 #include "Map.h"
 #include "ObjectAccessor.h"
@@ -512,6 +513,15 @@ void LFGMgr::JoinLfg(Player* player, uint8 roles, LfgDungeonSet& dungeons)
                     joinData.result = LFG_JOIN_INVALID_SLOT;
                     break;
             }
+        }
+
+        // RetailSystems: follower dungeons fill the group with NPCs, they can't share a queue with other dungeons
+        if (joinData.result == LFG_JOIN_OK && dungeons.size() > 1)
+        {
+            bool isFollower = RetailSystems::FollowerDungeons::IsFollowerDungeon(*dungeons.begin());
+            for (uint32 dungeonId : dungeons)
+                if (RetailSystems::FollowerDungeons::IsFollowerDungeon(dungeonId) != isFollower)
+                    joinData.result = LFG_JOIN_MISMATCHED_SLOTS;
         }
 
         // it could be changed
@@ -1503,6 +1513,10 @@ void LFGMgr::FinishDungeon(ObjectGuid gguid, const uint32 dungeonId, Map const* 
 
         SetState(guid, LFG_STATE_FINISHED_DUNGEON);
 
+        // RetailSystems: retail tells every player the dungeon is done, rewarded or not
+        if (Player* player = ObjectAccessor::FindConnectedPlayer(guid))
+            player->GetSession()->SendLfgUpdateStatus(LfgUpdateData(LFG_UPDATETYPE_DUNGEON_FINISHED, dungeons), true);
+
         // Give rewards only if its a random dungeon
         LFGDungeonData const* dungeon = GetLFGDungeon(rDungeonId);
 
@@ -1576,6 +1590,10 @@ void LFGMgr::FinishDungeon(ObjectGuid gguid, const uint32 dungeonId, Map const* 
         LfgPlayerRewardData data = LfgPlayerRewardData(dungeon->Entry(), GetDungeon(gguid, false), done, quest);
         player->GetSession()->SendLfgPlayerReward(data);
     }
+
+    // RetailSystems: the party frame shows the dungeon as done
+    if (Group* group = sGroupMgr->GetGroupByGUID(gguid))
+        group->SendUpdate();
 }
 
 // --------------------------------------------------------------------------//
@@ -1799,6 +1817,9 @@ LfgLockMap LFGMgr::GetLockedDungeons(ObjectGuid guid)
         if (lockStatus)
             lock[dungeon->Entry()] = LfgLockInfoData(lockStatus, dungeon->requiredItemLevel, player->GetAverageItemLevel());
     }
+
+    // RetailSystems: a new player can only queue for the dungeon of the starting zone
+    RetailSystems::FollowerDungeons::AddNewPlayerExperienceLocks(player, lock);
 
     return lock;
 }

@@ -520,6 +520,9 @@ class TC_GAME_API Spell
         void TakeCastItem();
 
         SpellCastResult CheckCast(bool strict, int32* param1 = nullptr, int32* param2 = nullptr);
+        // RetailSystems: the cast checks without casting, for the quest item cursor (QuestItemUsability.cpp);
+        // scriptChecksTarget tells whether a spell script has its own CheckCast
+        SpellCastResult CheckCastWithoutCasting(SpellCastTargets const& targets, bool& scriptChecksTarget);
         SpellCastResult CheckPetCast(Unit* target);
 
         // handlers

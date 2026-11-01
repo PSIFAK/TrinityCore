@@ -354,7 +354,6 @@ void Player::UpdateMaxPower(Powers power)
 void Player::UpdateAttackPowerAndDamage(bool ranged)
 {
     float val2 = 0.0f;
-    float level = float(GetLevel());
 
     ChrClassesEntry const* entry = sChrClassesStore.AssertEntry(GetClass());
     AttackPowerModIndex unitMod = ranged ? AttackPowerModIndex::Ranged : AttackPowerModIndex::Melee;
@@ -374,7 +373,7 @@ void Player::UpdateAttackPowerAndDamage(bool ranged)
             val2 = strengthValue + agilityValue;
         }
         else
-            val2 = (level + std::max(GetStat(STAT_AGILITY), 0.0f)) * entry->RangedAttackPowerPerAgility;
+            val2 = std::max(GetStat(STAT_AGILITY), 0.0f) * entry->RangedAttackPowerPerAgility; // RetailSystems: retail 12.1.5 has no level term
     }
     else
     {

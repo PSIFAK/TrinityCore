@@ -536,6 +536,10 @@ public:
         if (SpawnTrackingStateData const* spawnTrackingStateData = gameObject->GetSpawnTrackingStateDataForPlayer(receiver))
             stateSpellVisual = spawnTrackingStateData->StateSpellVisualId.value_or(0);
 
+        if (receiver)
+            if (uint32 scriptedStateSpellVisual = gameObject->GetStateSpellVisualFor(receiver->GetGUID()))
+                stateSpellVisual = scriptedStateSpellVisual;
+
         return stateSpellVisual;
     }
 };

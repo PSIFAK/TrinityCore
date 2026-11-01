@@ -42,13 +42,17 @@
 #include "Guild.h"
 #include "GuildMgr.h"
 #include "Item.h"
+#include "ChromieTime.h"
 #include "Language.h"
+#include "LfgDungeonRules.h"
 #include "Log.h"
 #include "Map.h"
 #include "MapUtils.h"
 #include "Metric.h"
 #include "MiscPackets.h"
 #include "MotionMaster.h"
+#include "NewPlayerExperiencePackets.h"
+#include "WarbandGroups.h"
 #include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "Pet.h"
@@ -473,9 +477,40 @@ void WorldSession::HandleCharEnum(CharacterDatabaseQueryHolder const& holder)
                 sCharacterCache->AddCharacterCacheEntry(charInfo.Guid, GetAccountId(), charInfo.Name, charInfo.SexID, charInfo.RaceID, charInfo.ClassID, charInfo.ExperienceLevel, false);
 
             charEnum.MaxCharacterLevel = std::max<int32>(charEnum.MaxCharacterLevel, charInfo.ExperienceLevel);
+
+            // RetailSystems: restriction bit 23 = still in the new player experience; the client's tutorial looks at it
+            if (RetailSystems::FollowerDungeons::IsNewPlayerExperienceCharacter(charInfo.ExperienceLevel, charInfo.MapID))
+                charEnum.Characters.back().RestrictionsAndMails.RestrictionFlags |= 1u << 23;
         }
         while (result->NextRow() && charEnum.Characters.size() < MAX_CHARACTERS_PER_REALM);
     }
+
+    // RetailSystems: the character groups the client set up (CMSG_SETUP_WARBAND_GROUPS)
+    std::vector<RetailSystems::WarbandGroups::Group> warbandGroups;
+    if (!charEnum.IsDeletedCharacters)
+        warbandGroups = RetailSystems::WarbandGroups::Load(GetAccountId());
+
+    for (RetailSystems::WarbandGroups::Group const& group : warbandGroups)
+    {
+        WorldPackets::Character::WarbandGroup& packetGroup = charEnum.WarbandGroups.emplace_back();
+        packetGroup.GroupID = group.GroupID;
+        packetGroup.OrderIndex = group.OrderIndex;
+        packetGroup.WarbandSceneID = group.WarbandSceneID;
+        packetGroup.Flags = group.Flags;
+        packetGroup.ContentSetID = group.ContentSetID;
+        packetGroup.Name = group.Name;
+        for (RetailSystems::WarbandGroups::Member const& member : group.Members)
+        {
+            WorldPackets::Character::WarbandGroupMember& packetMember = packetGroup.Members.emplace_back();
+            packetMember.WarbandScenePlacementID = member.WarbandScenePlacementID;
+            packetMember.Type = member.Type;
+            packetMember.ContentSetID = member.ContentSetID;
+            packetMember.Guid = member.Guid;
+        }
+    }
+
+    // RetailSystems: the client shows its new player tutorial only to restricted accounts
+    charEnum.IsRestrictedNewPlayer = RetailSystems::FollowerDungeons::IsNewPlayerRestrictedAccount(charEnum.MaxCharacterLevel);
 
     for (RaceClassAvailability const& requirement : sObjectMgr->GetRaceClassRequirements())
     {
@@ -504,6 +539,17 @@ void WorldSession::HandleCharEnum(CharacterDatabaseQueryHolder const& holder)
     }
 
     SendPacket(charEnum.Write());
+
+    // RetailSystems: restriction bit 23 marks the characters the client shows its new player tutorial to
+    if (!charEnum.IsDeletedCharacters)
+    {
+        WorldPackets::NewPlayerExperience::RegionwideCharacterRestrictionsData restrictions;
+        for (WorldPackets::Character::EnumCharactersResult::CharacterInfo const& character : charEnum.Characters)
+            if (RetailSystems::FollowerDungeons::IsNewPlayerExperienceCharacter(character.Basic.ExperienceLevel, character.Basic.MapID))
+                restrictions.Characters.push_back({ .Guid = character.Basic.Guid, .RestrictionFlags = 1u << 23 });
+
+        SendPacket(restrictions.Write());
+    }
 
     if (!charEnum.IsDeletedCharacters)
         _collectionMgr->SendWarbandSceneCollectionData();
@@ -1263,6 +1309,7 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder const& holder)
 
     pCurrChar->GetSession()->GetBattlePetMgr()->SendJournalLockStatus();
 
+    RetailSystems::ChromieTime::RefreshConditionalFlags(pCurrChar); // RetailSystems: before the player is created on the client
     pCurrChar->SendInitialPacketsBeforeAddToMap();
 
     //Show cinematic at the first time that player login

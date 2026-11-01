@@ -19,6 +19,8 @@ namespace RetailSystems::ChromieTime
 TC_GAME_API bool Apply(Player* player, uint32 expansionId, bool persist);
 TC_GAME_API bool Select(Player* player, uint32 expansionId);
 TC_GAME_API void Restore(Player* player);
+// the content tuning redirect flags follow the map: Exile's Reach sets the new player experience flag
+TC_GAME_API void RefreshConditionalFlags(Player* player);
 TC_GAME_API void RemoveCharacterState(uint64 characterGuid);
 }
 

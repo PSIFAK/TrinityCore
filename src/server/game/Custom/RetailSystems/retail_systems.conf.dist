@@ -27,3 +27,14 @@ RetailSystems.BattlePay.WalletName = "Battle Coins"
 # World quests from `retail_world_quest` (captured retail set): world states, quest timers,
 # auto-added task quests inside their quest_poi areas and cycle resets.
 RetailSystems.WorldQuests.Enabled = 1
+
+# SMSG_ENCOUNTER_START / SMSG_ENCOUNTER_END at the pull and the end of every dungeon boss (Lua ENCOUNTER_START /
+# ENCOUNTER_END, boss segments of damage meters). The layout comes from a 12.0.1 sniff; a 12.1.5 client crashed on it,
+# so it stays off until it is checked against a sniff of the client in use.
+RetailSystems.EncounterPackets.Enabled = 0
+
+# "New player restricted" bit of the character list (account wide, set for new accounts on retail); it limits level
+# boosts and class trials on the character screen. The tutorial itself follows the per character restriction sent
+# with the list (below level 10 on Exile's Reach).
+# 0 - never, 1 - accounts whose characters are all below level 10 (default), 2 - always
+RetailSystems.NewPlayerExperience.RestrictedAccount = 1

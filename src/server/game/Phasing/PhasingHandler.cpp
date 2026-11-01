@@ -30,6 +30,7 @@
 #include "PartyPackets.h"
 #include "PhaseShift.h"
 #include "Player.h"
+#include "SmoothPhaseTransitions.h"
 #include "SpellAuraEffects.h"
 #include "TerrainMgr.h"
 #include "Vehicle.h"
@@ -717,8 +718,12 @@ void PhasingHandler::UpdateVisibilityIfNeeded(WorldObject* object, bool updateVi
 
         if (updateVisibility)
         {
+            Optional<RetailSystems::Phasing::SmoothPhaseTransition> smoothTransition; // RetailSystems
             if (Player* player = object->ToPlayer())
+            {
                 player->GetMap()->SendUpdateTransportVisibility(player);
+                smoothTransition.emplace(player);
+            }
 
             object->UpdateObjectVisibility();
         }

@@ -18,6 +18,7 @@
 #include "WorldSession.h"
 #include "Common.h"
 #include "DatabaseEnv.h"
+#include "FollowerDungeonService.h"
 #include "Group.h"
 #include "GroupMgr.h"
 #include "LFG.h"
@@ -578,6 +579,14 @@ void WorldSession::HandleRequestPartyMemberStatsOpcode(WorldPackets::Party::Requ
     for (ObjectGuid const& target : packet.Targets)
     {
         WorldPackets::Party::PartyMemberFullState partyMemberStats;
+
+        // RetailSystems: NPC members of a follower dungeon party
+        if (target.IsCreature() && RetailSystems::FollowerDungeons::FillMemberState(GetPlayer(), target, partyMemberStats))
+        {
+            SendPacket(partyMemberStats.Write());
+            continue;
+        }
+
         Player* player = ObjectAccessor::FindConnectedPlayer(target);
         if (!player || !GetPlayer()->IsInSameRaidWith(player))
         {

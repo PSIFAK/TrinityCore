@@ -23,6 +23,9 @@
 #include "BattlePayPackets.h"
 #include "ChallengeModePackets.h"
 #include "ChromieTimePackets.h"
+#include "AreaPoi.h"
+#include "QuestItemUsabilityPackets.h"
+#include "WarbandGroups.h"
 #include <charconv>
 
 namespace
@@ -907,7 +910,7 @@ void OpcodeTable::InitializeClientOpcodes()
     DEFINE_HANDLER(CMSG_QUERY_PLAYER_NAME_BY_COMMUNITY_ID,                  STATUS_UNHANDLED, PROCESS_THREADUNSAFE, &WorldSession::Handle_NULL);
     DEFINE_HANDLER(CMSG_QUERY_QUEST_COMPLETION_NPCS,                        STATUS_LOGGEDIN,  PROCESS_INPLACE,      &WorldSession::HandleQueryQuestCompletionNPCs);
     DEFINE_HANDLER(CMSG_QUERY_QUEST_INFO,                                   STATUS_LOGGEDIN,  PROCESS_INPLACE,      &WorldSession::HandleQuestQueryOpcode);
-    DEFINE_HANDLER(CMSG_QUERY_QUEST_ITEM_USABILITY,                         STATUS_UNHANDLED, PROCESS_INPLACE,      &WorldSession::Handle_NULL);
+    DEFINE_HANDLER(CMSG_QUERY_QUEST_ITEM_USABILITY,                         STATUS_LOGGEDIN,  PROCESS_THREADUNSAFE, &WorldSession::HandleQueryQuestItemUsability); // RetailSystems
     DEFINE_HANDLER(CMSG_QUERY_REALM_NAME,                                   STATUS_AUTHED,    PROCESS_INPLACE,      &WorldSession::HandleQueryRealmName);
     DEFINE_HANDLER(CMSG_QUERY_SCENARIO_POI,                                 STATUS_LOGGEDIN,  PROCESS_INPLACE,      &WorldSession::HandleQueryScenarioPOI);
     DEFINE_HANDLER(CMSG_QUERY_SELECTED_WOW_LABS_AREA,                       STATUS_UNHANDLED, PROCESS_INPLACE,      &WorldSession::Handle_NULL);
@@ -961,7 +964,7 @@ void OpcodeTable::InitializeClientOpcodes()
     DEFINE_HANDLER(CMSG_REPORT_SERVER_LAG,                                  STATUS_UNHANDLED, PROCESS_THREADUNSAFE, &WorldSession::Handle_NULL);
     DEFINE_HANDLER(CMSG_REPORT_STUCK_IN_COMBAT,                             STATUS_UNHANDLED, PROCESS_THREADUNSAFE, &WorldSession::Handle_NULL);
     DEFINE_HANDLER(CMSG_REQUEST_ACCOUNT_DATA,                               STATUS_AUTHED,    PROCESS_THREADUNSAFE, &WorldSession::HandleRequestAccountData);
-    DEFINE_HANDLER(CMSG_REQUEST_AREA_POI_UPDATE,                            STATUS_UNHANDLED, PROCESS_THREADUNSAFE, &WorldSession::Handle_NULL);
+    DEFINE_HANDLER(CMSG_REQUEST_AREA_POI_UPDATE,                            STATUS_LOGGEDIN,  PROCESS_THREADUNSAFE, &WorldSession::HandleRequestAreaPoiUpdate); // RetailSystems
     DEFINE_HANDLER(CMSG_REQUEST_BATTLEFIELD_STATUS,                         STATUS_LOGGEDIN,  PROCESS_THREADUNSAFE, &WorldSession::HandleRequestBattlefieldStatusOpcode);
     DEFINE_HANDLER(CMSG_REQUEST_CEMETERY_LIST,                              STATUS_LOGGEDIN,  PROCESS_INPLACE,      &WorldSession::HandleRequestCemeteryList);
     DEFINE_HANDLER(CMSG_REQUEST_CHARACTER_GUILD_FOLLOW_INFO,                STATUS_UNHANDLED, PROCESS_THREADUNSAFE, &WorldSession::Handle_NULL);
@@ -1027,7 +1030,7 @@ void OpcodeTable::InitializeClientOpcodes()
     DEFINE_HANDLER(CMSG_SEND_TEXT_EMOTE,                                    STATUS_LOGGEDIN,  PROCESS_INPLACE,      &WorldSession::HandleTextEmoteOpcode);
     DEFINE_HANDLER(CMSG_SERVER_TIME_OFFSET_REQUEST,                         STATUS_AUTHED,    PROCESS_INPLACE,      &WorldSession::HandleServerTimeOffsetRequest);
     DEFINE_HANDLER(CMSG_SERVER_VALIDATION_SIGNATURE_REQUEST,                STATUS_UNHANDLED, PROCESS_THREADUNSAFE, &WorldSession::Handle_NULL);
-    DEFINE_HANDLER(CMSG_SETUP_WARBAND_GROUPS,                               STATUS_UNHANDLED, PROCESS_THREADUNSAFE, &WorldSession::Handle_NULL);
+    DEFINE_HANDLER(CMSG_SETUP_WARBAND_GROUPS,                               STATUS_AUTHED,    PROCESS_THREADUNSAFE, &WorldSession::HandleSetupWarbandGroups); // RetailSystems
     DEFINE_HANDLER(CMSG_SET_ACTION_BAR_TOGGLES,                             STATUS_LOGGEDIN,  PROCESS_THREADUNSAFE, &WorldSession::HandleSetActionBarToggles);
     DEFINE_HANDLER(CMSG_SET_ACTION_BUTTON,                                  STATUS_LOGGEDIN,  PROCESS_THREADUNSAFE, &WorldSession::HandleSetActionButtonOpcode);
     DEFINE_HANDLER(CMSG_SET_ACTIVE_MOVER,                                   STATUS_LOGGEDIN,  PROCESS_THREADUNSAFE, &WorldSession::HandleSetActiveMoverOpcode);
@@ -1235,7 +1238,7 @@ void OpcodeTable::InitializeServerOpcodes()
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_ALL_GUILD_ACHIEVEMENTS,                                       STATUS_NEVER,       CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_APPLY_MOUNT_EQUIPMENT_RESULT,                                 STATUS_NEVER,       CONNECTION_TYPE_INSTANCE);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_ARCHAEOLOGY_SURVERY_CAST,                                     STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
-    DEFINE_SERVER_OPCODE_HANDLER(SMSG_AREA_POI_UPDATE_RESPONSE,                                     STATUS_UNHANDLED,   CONNECTION_TYPE_INSTANCE);
+    DEFINE_SERVER_OPCODE_HANDLER(SMSG_AREA_POI_UPDATE_RESPONSE,                                     STATUS_NEVER,       CONNECTION_TYPE_INSTANCE); // RetailSystems
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_AREA_SPIRIT_HEALER_TIME,                                      STATUS_NEVER,       CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_AREA_TRIGGER_DENIED,                                          STATUS_NEVER,       CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_AREA_TRIGGER_NO_CORPSE,                                       STATUS_NEVER,       CONNECTION_TYPE_REALM);
@@ -1541,8 +1544,8 @@ void OpcodeTable::InitializeServerOpcodes()
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_EMOTE,                                                        STATUS_NEVER,       CONNECTION_TYPE_INSTANCE);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENABLE_BARBER_SHOP,                                           STATUS_NEVER,       CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENCHANTMENT_LOG,                                              STATUS_NEVER,       CONNECTION_TYPE_INSTANCE);
-    DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENCOUNTER_END,                                                STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
-    DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENCOUNTER_START,                                              STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
+    DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENCOUNTER_END,                                                STATUS_NEVER,       CONNECTION_TYPE_INSTANCE);
+    DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENCOUNTER_START,                                              STATUS_NEVER,       CONNECTION_TYPE_INSTANCE);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_END_LIGHTNING_STORM,                                          STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENTER_ENCRYPTED_MODE,                                         STATUS_NEVER,       CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_ENUM_CHARACTERS_RESULT,                                       STATUS_NEVER,       CONNECTION_TYPE_REALM);
@@ -2280,7 +2283,7 @@ void OpcodeTable::InitializeServerOpcodes()
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_QUEST_GIVER_REQUEST_ITEMS,                                    STATUS_NEVER,       CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_QUEST_GIVER_STATUS,                                           STATUS_NEVER,       CONNECTION_TYPE_INSTANCE);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_QUEST_GIVER_STATUS_MULTIPLE,                                  STATUS_NEVER,       CONNECTION_TYPE_INSTANCE);
-    DEFINE_SERVER_OPCODE_HANDLER(SMSG_QUEST_ITEM_USABILITY_RESPONSE,                                STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
+    DEFINE_SERVER_OPCODE_HANDLER(SMSG_QUEST_ITEM_USABILITY_RESPONSE,                                STATUS_NEVER,       CONNECTION_TYPE_INSTANCE); // RetailSystems
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_QUEST_LOG_FULL,                                               STATUS_NEVER,       CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_QUEST_NON_LOG_UPDATE_COMPLETE,                                STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_QUEST_POI_QUERY_RESPONSE,                                     STATUS_NEVER,       CONNECTION_TYPE_REALM);
@@ -2324,7 +2327,7 @@ void OpcodeTable::InitializeServerOpcodes()
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_REFRESH_BLEEP_TOKENS_RESPONSE,                                STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_REFRESH_COMPONENT,                                            STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_REGIONWIDE_CHARACTER_MAIL_DATA,                               STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
-    DEFINE_SERVER_OPCODE_HANDLER(SMSG_REGIONWIDE_CHARACTER_RESTRICTIONS_DATA,                       STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
+    DEFINE_SERVER_OPCODE_HANDLER(SMSG_REGIONWIDE_CHARACTER_RESTRICTIONS_DATA,                       STATUS_NEVER,       CONNECTION_TYPE_REALM); // RetailSystems
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_REMOVE_ITEM_PASSIVE,                                          STATUS_NEVER,       CONNECTION_TYPE_INSTANCE);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_REMOVE_SPELL_FROM_ACTION_BAR,                                 STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);
     DEFINE_SERVER_OPCODE_HANDLER(SMSG_REPLACE_TROPHY_RESPONSE,                                      STATUS_UNHANDLED,   CONNECTION_TYPE_REALM);

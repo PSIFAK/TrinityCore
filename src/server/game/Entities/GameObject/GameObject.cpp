@@ -3958,6 +3958,14 @@ void GameObject::OnLootRelease(Player* looter)
         case GAMEOBJECT_TYPE_CHEST:
         {
             GameObjectTemplate const* goInfo = GetGOInfo();
+            // RetailSystems: with personal loot security off (Exile's Reach campfire) retail keeps the object for the
+            // looter and lets it be used again (12.1.5 sniff)
+            if (EnumFlag(static_cast<GameObjectChestFlags>(goInfo->chest.ChestFlags)).HasFlag(GameObjectChestFlags::TurnPersonalLootSecurityOff))
+            {
+                m_personalLoot.erase(looter->GetGUID());
+                break;
+            }
+
             if (!goInfo->IsDespawnAtAction() && goInfo->chest.chestPersonalLoot)
             {
                 DespawnForPlayer(looter, goInfo->chest.chestRestockTime
@@ -4031,6 +4039,42 @@ void GameObject::SetGoStateFor(GOState state, Player const* viewer)
     setStateLocal.ObjectGUID = GetGUID();
     setStateLocal.State = state;
     viewer->SendDirectMessage(setStateLocal.Write());
+}
+
+uint32 GameObject::GetStateSpellVisualFor(ObjectGuid const& viewer) const
+{
+    if (m_perPlayerStateSpellVisual)
+        if (uint32 const* spellVisualId = Trinity::Containers::MapGetValuePtr(*m_perPlayerStateSpellVisual, viewer))
+            return *spellVisualId;
+
+    return 0;
+}
+
+void GameObject::SetStateSpellVisualFor(uint32 spellVisualId, Player const* viewer)
+{
+    if (spellVisualId)
+    {
+        if (!m_perPlayerStateSpellVisual)
+            m_perPlayerStateSpellVisual = std::make_unique<std::unordered_map<ObjectGuid, uint32>>();
+
+        (*m_perPlayerStateSpellVisual)[viewer->GetGUID()] = spellVisualId;
+    }
+    else if (m_perPlayerStateSpellVisual)
+        m_perPlayerStateSpellVisual->erase(viewer->GetGUID());
+
+    if (!viewer->HaveAtClient(this))
+        return;
+
+    UF::ObjectData::Base objMask;
+    UF::GameObjectData::Base goMask;
+    goMask.MarkChanged(&UF::GameObjectData::StateSpellVisualID);
+
+    UpdateData udata(GetMapId());
+    BuildValuesUpdateForPlayerWithMask(&udata, objMask.GetChangesMask(), goMask.GetChangesMask(), viewer, false);
+
+    WorldPacket packet;
+    udata.BuildPacket(&packet);
+    viewer->SendDirectMessage(&packet);
 }
 
 void GameObject::SetDisplayId(uint32 displayid)

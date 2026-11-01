@@ -8,11 +8,13 @@
  */
 
 #include "ChromieTime.h"
+#include "LfgDungeonRules.h"
 #include "DatabaseEnv.h"
 #include "Log.h"
 #include "Player.h"
 #include "RetailDB2Stores.h"
 #include "Spell.h"
+#include <algorithm>
 
 namespace RetailSystems::ChromieTime
 {
@@ -89,6 +91,11 @@ void Restore(Player* player)
     }
 }
 
+void RefreshConditionalFlags(Player* player)
+{
+    player->SetChromieTimeExpansion(uint32(*player->m_activePlayerData->UiChromieTimeExpansionID), player->m_playerData->CtrOptions->ChromieTimeExpansionMask);
+}
+
 void RemoveCharacterState(uint64 characterGuid)
 {
     CharacterDatabase.PExecute("DELETE FROM `retail_character_chromie_time` WHERE `guid` = {}", characterGuid);
@@ -99,10 +106,30 @@ void Player::SetChromieTimeExpansion(uint32 expansionId, uint32 expansionLevelMa
 {
     SetUpdateFieldValue(m_values.ModifyValue(&Player::m_activePlayerData).ModifyValue(&UF::ActivePlayerData::UiChromieTimeExpansionID), int32(expansionId));
 
+    // redirect flag 1 is Chromie Time; retail (12.1.5 sniff) also sets 4 for every player on Exile's Reach and Darkmaul
+    // Citadel, the new player experience the client's tutorial is shown in
+    uint32 conditionalFlags = (expansionId ? 1u : 0u) | (RetailSystems::FollowerDungeons::IsInNewPlayerExperience(this) ? 4u : 0u);
     auto options = m_values.ModifyValue(&Player::m_playerData).ModifyValue(&UF::PlayerData::CtrOptions);
-    SetUpdateFieldValue(options.ModifyValue(&UF::CTROptions::ConditionalFlags), expansionId ? std::vector<uint32>{ 1u } : std::vector<uint32>{});
+    SetUpdateFieldValue(options.ModifyValue(&UF::CTROptions::ConditionalFlags), conditionalFlags ? std::vector<uint32>{ conditionalFlags } : std::vector<uint32>{});
     SetUpdateFieldValue(options.ModifyValue(&UF::CTROptions::FactionGroup), uint8(GetTeam() == ALLIANCE ? 3 : 5));
     SetUpdateFieldValue(options.ModifyValue(&UF::CTROptions::ChromieTimeExpansionMask), expansionLevelMask);
+
+    // retail (12.1.5 sniff) gives a character in the new player experience the character restriction
+    // { 130, 0, 0, type 23 }; the client's C_PlayerInfo.IsPlayerNPERestricted looks for type 23, and only then loads
+    // its new player tutorial
+    bool npeRestricted = RetailSystems::FollowerDungeons::IsNewPlayerExperienceCharacter(GetLevel(), GetMapId());
+    auto restrictions = m_values.ModifyValue(&Player::m_activePlayerData).ModifyValue(&UF::ActivePlayerData::CharacterRestrictions);
+    bool hasRestriction = std::ranges::any_of(m_activePlayerData->CharacterRestrictions, [](UF::CharacterRestriction const& restriction) { return restriction.Type == 23; });
+    if (npeRestricted != hasRestriction)
+    {
+        ClearDynamicUpdateFieldValues(restrictions);
+        if (npeRestricted)
+        {
+            UF::CharacterRestriction& restriction = AddDynamicUpdateFieldValue(restrictions);
+            restriction.Field_0 = 130;
+            restriction.Type = 23;
+        }
+    }
 }
 
 void Spell::EffectSetChromieTime()

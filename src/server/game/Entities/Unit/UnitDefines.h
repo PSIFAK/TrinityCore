@@ -446,6 +446,9 @@ enum ReactStates : uint8
     REACT_ASSIST     = 3
 };
 
+// RetailSystems: the "defensive" button of the 12.x hunter pet bar sends reaction 4
+constexpr uint32 REACT_DEFENSIVE_RETAIL = 4;
+
 inline char const* DescribeReactState(ReactStates state)
 {
     switch (state)
