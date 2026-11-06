@@ -102,3 +102,64 @@ INSERT INTO `conversation_line_template` (`Id`, `UiCameraID`, `ActorIdx`, `Flags
 (41001, 0, 0, 0, 0, 70688),
 (41003, 0, 0, 0, 0, 70688),
 (41005, 0, 0, 0, 0, 70688);
+
+-- The Harpy Problem (55196): retail (12.1.5 sniff) has Henry Garrick offer it as soon as Stocking Up on Supplies (55194)
+-- is turned in (quest giver status "journey quest" from that moment), not only after Repair Yourself (85678)
+UPDATE `quest_template_addon` SET `PrevQuestID` = 55194 WHERE `ID` = 55196;
+
+-- Who Lurks in the Pit (55639): the captive Ralia (156902) had phase 14328, which is not cosmetic in Phase.db2 and so
+-- hid every unphased spawn of the pit (spiders, the five cocoons) while the quest ran. She keeps her retail timing
+-- through spawn visibility conditions instead, without a phase.
+DELETE FROM `phase_area` WHERE `PhaseId` = 14328 AND `AreaId` = 10527;
+DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 26 AND `SourceGroup` = 14328 AND `SourceEntry` = 10527;
+UPDATE `creature` SET `PhaseId` = 0 WHERE `id` = 156902 AND `PhaseId` = 14328;
+DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 32 AND `SourceGroup` = 5 AND `SourceEntry` = 156902;
+INSERT INTO `conditions` (`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `Comment`) VALUES
+(32, 5, 156902, 0, 0, 47, 0, 55639, 8, 0, 0, 'Captive Ralia is visible while Who Lurks in the Pit is in progress'),
+(32, 5, 156902, 0, 0, 48, 0, 391940, 0, 1, 1, 'Captive Ralia is visible until Hrun the Exiled is defeated');
+
+-- Who Lurks in the Pit (55639): the expedition member freed from a Thick Cocoon appears where the cocoon was, says one
+-- of four lines and runs for the way out (zone_exiles_reach_human_mage.cpp). The retail sniff has no broadcast text for
+-- these lines: enUS is a translation of the ruRU text it showed.
+UPDATE `creature_template` SET `ScriptName` = 'npc_exiles_reach_freed_expedition_member' WHERE `entry` = 160964;
+DELETE FROM `spell_script_names` WHERE `spell_id` = 313324;
+INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
+(313324, 'spell_exiles_reach_freed_expedition_member');
+DELETE FROM `creature_text` WHERE `CreatureID` = 160964;
+INSERT INTO `creature_text` (`CreatureID`, `GroupID`, `ID`, `Text`, `Type`, `Language`, `Probability`, `Emote`, `Duration`, `Sound`, `SoundPlayType`, `BroadcastTextId`, `TextRange`, `comment`) VALUES
+(160964, 0, 0, 'Thank you! Ralia Dreamchaser tried to save us. She must be somewhere below.', 12, 0, 100, 0, 0, 0, 0, 0, 0, 'Freed Expedition Member'),
+(160964, 0, 1, 'I thought I was done for! Please, save Ralia Dreamchaser. She is down below.', 12, 0, 100, 0, 0, 0, 0, 0, 0, 'Freed Expedition Member'),
+(160964, 0, 2, 'I will be afraid of spiders for the rest of my life. Have you saved Ralia Dreamchaser yet?', 12, 0, 100, 0, 0, 0, 0, 0, 0, 'Freed Expedition Member'),
+(160964, 0, 3, 'Save Ralia Dreamchaser! She is somewhere deep in the cave.', 12, 0, 100, 0, 0, 0, 0, 0, 0, 'Freed Expedition Member');
+DELETE FROM `creature_text_locale` WHERE `CreatureID` = 160964;
+INSERT INTO `creature_text_locale` (`CreatureID`, `GroupID`, `ID`, `Locale`, `Text`) VALUES
+(160964, 0, 0, 'ruRU', 'Благодарю тебя! Ралия Мечтательница пыталась спасти нас. Должно быть, она где-то внизу.'),
+(160964, 0, 1, 'ruRU', 'Я думал, что мне конец! Пожалуйста, спаси Ралию Мечтательницу. Она внизу.'),
+(160964, 0, 2, 'ruRU', 'Всю жизнь теперь буду бояться пауков. Тебе уже удалось спасти Ралию Мечтательницу?'),
+(160964, 0, 3, 'ruRU', 'Спаси Ралию Мечтательницу! Она где-то в глубине пещеры.');
+
+-- Retail (12.1.5 sniff): the freed Ralia (156929) and the two defeated Hrun (160451) only appear once Hrun the Exiled
+-- is defeated, and leave when Ralia is rescued. Their phases (13834, 13816) are on for the whole quest, so spawn
+-- conditions narrow them down
+DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 32 AND `SourceGroup` = 5 AND `SourceEntry` IN (156929, 160451);
+INSERT INTO `conditions` (`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `Comment`) VALUES
+(32, 5, 156929, 0, 0, 47, 0, 55639, 8, 0, 0, 'Freed Ralia (pit) is visible while Who Lurks in the Pit is in progress'),
+(32, 5, 156929, 0, 0, 48, 0, 391940, 0, 1, 0, 'Freed Ralia (pit) is visible once Hrun the Exiled is defeated'),
+(32, 5, 156929, 0, 0, 48, 0, 393740, 0, 1, 1, 'Freed Ralia (pit) is visible until she is rescued'),
+(32, 5, 160451, 0, 0, 47, 0, 55639, 8, 0, 0, 'Defeated Hrun is visible while Who Lurks in the Pit is in progress'),
+(32, 5, 160451, 0, 0, 48, 0, 391940, 0, 1, 0, 'Defeated Hrun is visible once Hrun the Exiled is defeated'),
+(32, 5, 160451, 0, 0, 48, 0, 393740, 0, 1, 1, 'Defeated Hrun is visible until Ralia is rescued');
+
+-- Freeing the Light (54933): retail (12.1.5 sniff) has Lightspawn give it while The Harpy Problem (55196) is still in
+-- the log (taken 02:25:14, 54933 taken 02:25:53, 55196 turned in 02:27:02): it opens with Repair Yourself (85678)
+UPDATE `quest_template_addon` SET `PrevQuestID` = 85678 WHERE `ID` = 54933;
+
+-- the four ritual sources around Lightspawn are hostile invisible bunnies that must never fight the player
+UPDATE `creature_template` SET `flags_extra` = `flags_extra` | 0x2 WHERE `entry` IN (155572, 164022, 164025, 164026);
+
+-- Killclaw the Terrible (56839) is started by the Danger Sign gameobject (330627, retail 12.1.5 sniff: it appears with
+-- To Darkmaul Citadel taken and gives the quest); the starter was in creature_queststarter, where no creature has that entry
+DELETE FROM `creature_queststarter` WHERE `id` = 330627 AND `quest` = 56839;
+DELETE FROM `gameobject_queststarter` WHERE `id` = 330627 AND `quest` = 56839;
+INSERT INTO `gameobject_queststarter` (`id`, `quest`, `VerifiedBuild`) VALUES
+(330627, 56839, 70688);

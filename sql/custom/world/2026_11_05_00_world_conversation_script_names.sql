@@ -1,0 +1,50 @@
+-- upstream 2026_10_29_00_world.sql runs `UPDATE conversation_template SET ScriptName = 'conversation_quest_who_am_i'` without
+-- a WHERE: every conversation got the Hall of Awakening script, which calls Start() from OnCreate, before the scripts that create
+-- a conversation add their actors. The 12.x client crashes on a conversation line whose actor is missing (Darkmaul Citadel,
+-- conversation 12956 at the Gor'groth pull). The script names are restored from the SQL history.
+UPDATE `conversation_template` SET `ScriptName` = '' WHERE `ScriptName` = 'conversation_quest_who_am_i' AND `Id` <> 25327;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_amalgam_of_souls_outro' WHERE `Id` = 754;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_the_invasion_begins' WHERE `Id` = 922;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_on_summon_call_of_the_uncrowned' WHERE `Id` = 1100;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_rokmora_intro' WHERE `Id` = 1885;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_start_council_tides_of_war' WHERE `Id` = 4857;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_boralus_hub_tour_00' WHERE `Id` = 5360;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_boralus_hub_tour_ferry' WHERE `Id` = 5362;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_boralus_hub_tour_counting_house' WHERE `Id` = 5365;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_boralus_hub_tour_flight_master' WHERE `Id` = 5366;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_boralus_hub_tour_harbor_inn' WHERE `Id` = 5375;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_guards_intro_standing_accused' WHERE `Id` = 5665;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_burden_of_proof_speak_with_constable' WHERE `Id` = 5685;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_burden_of_proof_first_test_given' WHERE `Id` = 5694;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_burden_of_proof_second_test_given' WHERE `Id` = 5695;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_burden_of_proof_third_test_given' WHERE `Id` = 5696;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_high_elf_ranger_to_ghostlands' WHERE `Id` IN (6467, 6468, 6469, 6470, 6479, 6634, 6637);
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_dawnspair_spire_followup_to_ghostlands' WHERE `Id` = 6471;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_sanctum_of_the_moon_to_ghostlands' WHERE `Id` = 6478;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_andilien_estate_to_ghostlands' WHERE `Id` = 6635;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_dawnspair_spire_to_ghostlands' WHERE `Id` = 6636;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_waycrest_manor_waycrests_defeated' WHERE `Id` IN (7351, 7352);
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_boralus_enter_harbormaster_office' WHERE `Id` = 7605;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_cyrus_crestfall_shaking_hands' WHERE `Id` = 7653;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_kings_rest_intro' WHERE `Id` = 7690;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_boralus_cyrus_meets_genn' WHERE `Id` = 8062;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_lord_stormsong_brother_pike_intro_outro' WHERE `Id` IN (8750, 8766);
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_lord_stormsong_rexxar_intro' WHERE `Id` = 8751;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_lord_stormsong_rexxar_outro' WHERE `Id` = 8767;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_drustvar_really_big_problem_complete' WHERE `Id` = 8790;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_boralus_accept_old_knight' WHERE `Id` = 9556;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_allied_race_dk_defender_of_azeroth' WHERE `Id` = 13254;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_sylvanas_windrunner_introduction' WHERE `Id` = 17368;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_an_unlikely_informant' WHERE `Id` = 20342;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_the_new_classington_estate' WHERE `Id` = 20387;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_aberrus_sabellian_intro' WHERE `Id` = 20800;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_aberrus_kazzara_intro' WHERE `Id` = 20985;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_quest_ancient_curses_accept' WHERE `Id` = 22025;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_natalia_pearces_accept_precious_gems' WHERE `Id` = 25586;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_natalia_pearces_complete_precious_gems' WHERE `Id` = 25590;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_dawn_accept_the_expedition_awaits' WHERE `Id` = 27051;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_vereesas_tale' WHERE `Id` = 27493;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_after_vereesas_ceremony' WHERE `Id` = 28287;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_the_root_cause_open_portal' WHERE `Id` = 28444;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_to_harathir_follow_orweyna' WHERE `Id` = 29598;
+UPDATE `conversation_template` SET `ScriptName` = 'conversation_to_harathir_talk_to_kupaal' WHERE `Id` = 29720;

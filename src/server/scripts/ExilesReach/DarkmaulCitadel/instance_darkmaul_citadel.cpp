@@ -34,7 +34,8 @@ enum DarkmaulCitadelConversations
     CONVERSATION_TUNK_ENGAGE       = 12945,
     CONVERSATION_TUNK_DEFEATED     = 12946,
     CONVERSATION_GORGROTH_APPROACH = 12953,
-    CONVERSATION_GORGROTH_ENGAGE   = 12956
+    CONVERSATION_GORGROTH_ENGAGE   = 12956,
+    ACTOR_GORGROTH_ENGAGE          = 73447
 };
 
 enum DarkmaulCitadelMisc
@@ -69,6 +70,8 @@ static constexpr DoorData doorData[] =
 {
     { GO_TEMP_DOOR, DATA_TUNK, EncounterDoorBehavior::OpenWhenDone },
 };
+
+static constexpr int32 WORLD_STATE_ENCOUNTER_IN_PROGRESS = 18063;
 
 static constexpr DungeonEncounterData encounters[] =
 {
@@ -175,6 +178,10 @@ public:
         {
             if (!InstanceScript::SetBossState(id, state))
                 return false;
+
+            // retail (12.1.5 sniff): world state 18063 is 1 from the pull to the end of an encounter; Gor'groth and Ravnyr are one
+            if (state == IN_PROGRESS || state == FAIL || (state == DONE && id != DATA_GORGROTH))
+                DoUpdateWorldState(WORLD_STATE_ENCOUNTER_IN_PROGRESS, state == IN_PROGRESS ? 1 : 0);
 
             Creature* boss = GetCreature(id);
             if (!boss)
@@ -336,6 +343,10 @@ public:
             Conversation* conversation = Conversation::CreateConversation(conversationId, creator, *creator, ObjectGuid::Empty, nullptr, false);
             if (!conversation)
                 return;
+
+            // retail (12.1.5 sniff) sends the Gor'groth pull line with an actor that has no object
+            if (conversationId == CONVERSATION_GORGROTH_ENGAGE)
+                conversation->AddActor(ACTOR_GORGROTH_ENGAGE, 0, ObjectGuid::Empty);
 
             if (!conversation->Start())
                 delete conversation;

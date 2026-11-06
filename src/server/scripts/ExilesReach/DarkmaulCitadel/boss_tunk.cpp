@@ -54,8 +54,9 @@ struct boss_tunk : public BossAI
 
     void JustDied(Unit* /*killer*/) override
     {
-        instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
+        // retail (12.1.5 sniff): ENCOUNTER_END and BOSS_KILL come first, the boss frame is released after them
         _JustDied();
+        instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
     }
 
     void EnterEvadeMode(EvadeReason /*why*/) override

@@ -34,6 +34,7 @@
 #include "SpellInfo.h"
 #include "SpellScript.h"
 #include "TemporarySummon.h"
+#include "VendorRepair.h"
 #include "WorldSession.h"
 
 namespace ExilesReachHumanMage
@@ -66,6 +67,7 @@ enum Creatures
     NPC_MEREDY_HUNTSWELL             = 156886,
     NPC_MEREDY_TRANSFORMATION        = 156943,
     NPC_KALECGOS_EXILES_REACH        = 244389,
+    MAP_DRAGON_ISLES                 = 2444,
     NPC_HAPPY_HAL                    = 187412,
     NPC_POLYMORPH_TARGET_COLE        = 168372,
     NPC_POLYMORPH_TARGET_MEREDY      = 168373,
@@ -177,7 +179,8 @@ enum Spells
     SPELL_POLYMORPH                  = 118,
     SPELL_OGRE_TRANSFORMATION        = 313583,
     SPELL_LIGHTSPAWN_FREED           = 319171,
-    SPELL_DRAGON_ISLES_TELEPORT      = 1235041,
+    SPELL_DRAGON_ISLES_MOVIE         = 1235041,  // Play Movie, Load (DNT): movie 1038
+    SPELL_DRAGON_ISLES_TRAVEL        = 1238030,  // Play Movie, Load (DNT): kill credit 244389, teleport, bind
     SPELL_HAPPY_HAL_CONVERSATION     = 375316,
     SPELL_PIT_CONVERSATION           = 306109,
     SPELL_RALIA_RESCUE_TELEPORT      = 312548,
@@ -215,6 +218,72 @@ enum Items
     ITEM_HEARTHSTONE                 = 6948
 };
 
+// The Rescue of Meredy Huntswell (55763), from the retail sniff (12.1.5.70688, night elf hunter): talking to the captive starts
+// personal waves of harpies and worgs, Kee-La and Henry Garrick come to help and Bloodbeak flies in from the nest last
+enum MeredyAmbush
+{
+    GOSSIP_MENU_MEREDY_CAPTIVE        = 24887,
+    GOSSIP_OPTION_MEREDY_CAPTIVE      = 0,
+
+    NPC_HARPY_AMBUSHER                = 155192,
+    NPC_HUNTING_WORG                  = 169162,
+    NPC_HENRY_GARRICK_AMBUSH          = 155197,
+    NPC_KEE_LA_AMBUSH                 = 155199,
+    NPC_BLOODBEAK                     = 153964,
+
+    CONVERSATION_AMBUSH_ALLIES        = 11738,
+    CONVERSATION_AMBUSH_BLOODBEAK     = 11739,
+    ACTOR_HENRY_GARRICK_AMBUSH        = 70728,
+    ACTOR_KEE_LA_AMBUSH               = 70729,
+
+    SAY_MEREDY_BREAK_FREE             = 1,
+    SAY_HARPY_BITE                    = 0,
+    SAY_HARPY_DINNER                  = 1,
+
+    SPELL_SWOOPING_LUNGE              = 317559,
+    SPELL_HOLY_SMITE                  = 172673,
+    SPELL_HEAL_COVER                  = 222586,
+    SPELL_RITUAL_SCENE_OGRE_CITADEL   = 321693,
+    SPELL_RITUAL_SCENE_HARPY_BEAM     = 321691,
+    SPELL_RITUAL_SCENE_MAIN_BEAM      = 321690,
+
+    POINT_AMBUSH_ALLY_ARRIVED         = 3,
+    POINT_BLOODBEAK_LANDED            = 4
+};
+
+struct MeredyAmbushSpawn
+{
+    Milliseconds Delay;               // after the gossip option
+    uint32 Entry;
+    Position Pos;
+    Optional<uint8> TextGroup;        // said this long after the spawn
+    Milliseconds TextDelay = 0ms;
+};
+
+MeredyAmbushSpawn const MeredyAmbushWaves[] =
+{
+    { 160ms,   NPC_HARPY_AMBUSHER, { 478.99133f, -2358.611f, 160.28699f, 0.0f }, SAY_HARPY_BITE, 4500ms },
+    { 160ms,   NPC_HARPY_AMBUSHER, { 484.2205f, -2363.0017f, 159.88463f, 0.0f }, SAY_HARPY_BITE, 2950ms },
+    { 14370ms, NPC_HARPY_AMBUSHER, { 503.73856f, -2348.2097f, 161.77324f, 3.838f }, SAY_HARPY_DINNER, 2950ms },
+    { 14370ms, NPC_HUNTING_WORG,   { 503.77698f, -2367.946f, 158.9525f, 1.461f } },
+    { 29670ms, NPC_HUNTING_WORG,   { 508.35614f, -2364.045f, 159.81624f, 2.708f } },
+    { 29670ms, NPC_HUNTING_WORG,   { 512.1088f, -2353.629f, 160.55806f, 4.644f } },
+    { 29670ms, NPC_HUNTING_WORG,   { 504.9585f, -2368.7148f, 158.94443f, 0.481f } },
+    { 46180ms, NPC_HUNTING_WORG,   { 484.2205f, -2363.0017f, 159.88463f, 1.238f } },
+    { 46180ms, NPC_HARPY_AMBUSHER, { 494.88715f, -2370.54f, 158.73819f, 1.621f } },
+    { 46180ms, NPC_HUNTING_WORG,   { 491.93228f, -2340.7153f, 161.85861f, 4.790f } }
+};
+
+Milliseconds constexpr MeredyAmbushAlliesDelay = 17240ms;
+Milliseconds constexpr MeredyAmbushBloodbeakTalkDelay = 51660ms;
+Milliseconds constexpr MeredyAmbushBloodbeakDelay = 56660ms;
+Position const KeeLaAmbushPosition = { 494.87152f, -2383.691f, 155.85905f, 1.338f };
+Position const KeeLaAmbushDestination = { 498.42627f, -2355.3403f, 160.65552f };
+Position const HenryGarrickAmbushPosition = { 492.3885f, -2380.0f, 156.9f, 1.400f };
+Position const HenryGarrickAmbushDestination = { 495.146f, -2357.8f, 160.13092f };
+Position const BloodbeakNestPosition = { 490.625f, -2429.6182f, 174.1879f, 1.518376f };
+Position const BloodbeakLandingPosition = { 493.93402f, -2364.8784f, 161.7566f };
+
 // hunter class quests of the camp below the Ogre Ruins, from the retail sniff (12.1.5.70688, night elf hunter)
 enum ExilesReachHunter
 {
@@ -248,6 +317,9 @@ enum ExilesReachHunter
     GOSSIP_OPTION_AUSTIN_TAME_PET     = 2,
 
     QUEST_TAMING_THE_WILDS_ALLIANCE_HUNTER = 59342,
+    NPC_FREED_EXPEDITION_MEMBER       = 160964,
+    GO_THICK_COCOON                   = 339568,
+    SAY_FREED_EXPEDITION_MEMBER       = 0,
     QUEST_COOKING_MEAT                = 55174,
     NPC_ALARIA_STANDING               = 175031,
     ANIM_KIT_ALARIA_STAND_UP          = 14432,
@@ -262,6 +334,8 @@ enum ExilesReachHunter
 
 // Austin comes out to watch the trap and walks back; the stalker follows the path of the sniff to the trap and,
 // freed again, runs off fading
+// where the freed expedition members of Who Lurks in the Pit run off to
+Position const PitExitPosition = { 81.58753f, -2266.2449f, 67.227455f };
 Position const AustinTrapSpawnPosition = { 183.23785f, -2295.269f, 82.32755f, 0.2302532f };
 Position const AustinTrapWatchPosition = { 191.93803f, -2278.9788f, 81.93185f };
 Position const AustinTrapCheckPosition = { 195.70566f, -2263.5452f, 81.52985f };
@@ -487,6 +561,9 @@ public:
     {
         if (objective.ID == OBJECTIVE_RESCUE_EXPEDITION && oldAmount == 0 && newAmount > 0)
             StartPrivateConversation(player, CONVERSATION_EXPEDITION_RESCUED);
+
+        // the captive and the freed Ralia and the defeated Hrun are shown by spawn conditions on these objectives
+        player->UpdateObjectVisibility();
     }
 };
 
@@ -529,6 +606,13 @@ public:
             captive->SummonPersonalClone(captive->GetPosition(), TEMPSUMMON_TIMED_DESPAWN, 30s, 0, 0, player);
             break;
         }
+
+        // retail cancels the three ritual scenes and plays the two that remain without the harpy beam
+        player->RemoveAurasDueToSpell(SPELL_RITUAL_SCENE_OGRE_CITADEL);
+        player->RemoveAurasDueToSpell(SPELL_RITUAL_SCENE_HARPY_BEAM);
+        player->RemoveAurasDueToSpell(SPELL_RITUAL_SCENE_MAIN_BEAM);
+        player->CastSpell(player, SPELL_RITUAL_SCENE_OGRE_CITADEL, true);
+        player->CastSpell(player, SPELL_RITUAL_SCENE_MAIN_BEAM, true);
 
         PhasingHandler::OnConditionChange(player);
     }
@@ -627,6 +711,17 @@ struct npc_exiles_reach_quartermaster_richter : public ScriptedAI
 
         return false;
     }
+
+    // retail (12.1.5 sniff) credits Repair Yourself right after CMSG_REPAIR_ITEM; the vendor window skips the gossip
+    void SetGUID(ObjectGuid const& guid, int32 id) override
+    {
+        if (id != RetailSystems::NewPlayerExperience::DATA_PLAYER_REPAIRED_ITEMS)
+            return;
+
+        Player* player = ObjectAccessor::GetPlayer(*me, guid);
+        if (player && player->GetQuestStatus(QUEST_GEARED_FOR_REPAIR) == QUEST_STATUS_INCOMPLETE)
+            player->KilledMonsterCredit(NPC_QUARTERMASTER_RICHTER, me->GetGUID());
+    }
 };
 
 // 153211 - Meredy Huntswell (captive in the harpy nest; the personal clone summoned by q55763 is the freed one)
@@ -660,6 +755,52 @@ struct npc_exiles_reach_meredy_captive : public ScriptedAI
         });
     }
 
+    bool OnGossipSelect(Player* player, uint32 menuId, uint32 gossipListId) override
+    {
+        if (menuId != GOSSIP_MENU_MEREDY_CAPTIVE || gossipListId != GOSSIP_OPTION_MEREDY_CAPTIVE)
+            return false;
+
+        player->PlayerTalkClass->SendCloseGossip();
+        if (me->IsPrivateObject() || player->GetQuestStatus(QUEST_THE_RESCUE_OF_MEREDY) != QUEST_STATUS_INCOMPLETE ||
+            _ambushes.contains(player->GetGUID()))
+            return true;
+
+        StartAmbush(player);
+        return true;
+    }
+
+    void SummonedCreatureDies(Creature* summon, Unit* /*killer*/) override
+    {
+        if (summon->GetEntry() != NPC_BLOODBEAK)
+            return;
+
+        ObjectGuid playerGuid = summon->GetPrivateObjectOwner();
+        auto ambush = _ambushes.find(playerGuid);
+        if (ambush == _ambushes.end() || ambush->second.Finished)
+            return;
+
+        // the kill counts even when the allies land the last hit; the quest script then frees Meredy
+        ambush->second.Finished = true;
+        if (Player* player = ObjectAccessor::GetPlayer(*me, playerGuid))
+            player->KilledMonsterCredit(NPC_BLOODBEAK, summon->GetGUID());
+
+        // retail: the allies leave 12 s after the kill, the remaining harpies and worgs 18 s after it
+        uint32 ambushId = ambush->second.Id;
+        _scheduler.Schedule(12s, [this, playerGuid, ambushId](TaskContext const& /*context*/)
+        {
+            if (Ambush* current = GetAmbush(playerGuid, ambushId))
+                for (ObjectGuid const& guid : current->Summons)
+                    if (Creature* summon = ObjectAccessor::GetCreature(*me, guid))
+                        if (summon->GetEntry() == NPC_HENRY_GARRICK_AMBUSH || summon->GetEntry() == NPC_KEE_LA_AMBUSH)
+                            summon->DespawnOrUnsummon();
+        });
+        _scheduler.Schedule(18s, [this, playerGuid, ambushId](TaskContext const& /*context*/)
+        {
+            if (GetAmbush(playerGuid, ambushId))
+                EndAmbush(playerGuid);
+        });
+    }
+
     void MovementInform(uint32 type, uint32 id) override
     {
         if (type == POINT_MOTION_TYPE && id == POINT_MEREDY_ESCAPE)
@@ -668,6 +809,225 @@ struct npc_exiles_reach_meredy_captive : public ScriptedAI
 
     void UpdateAI(uint32 diff) override
     {
+        _scheduler.Update(diff);
+    }
+
+private:
+    struct Ambush
+    {
+        uint32 Id = 0;
+        bool Finished = false;
+        std::vector<ObjectGuid> Summons;
+    };
+
+    Ambush* GetAmbush(ObjectGuid const& playerGuid, uint32 ambushId)
+    {
+        auto itr = _ambushes.find(playerGuid);
+        return itr != _ambushes.end() && itr->second.Id == ambushId ? &itr->second : nullptr;
+    }
+
+    // every creature of the event belongs to the player alone, as on retail
+    Creature* SummonForAmbush(ObjectGuid const& playerGuid, uint32 entry, Position const& pos)
+    {
+        Creature* summon = me->SummonCreature(entry, pos, TEMPSUMMON_TIMED_DESPAWN, 3min, 0, 0, playerGuid);
+        if (summon)
+            _ambushes[playerGuid].Summons.push_back(summon->GetGUID());
+        return summon;
+    }
+
+    void StartAmbush(Player* player)
+    {
+        ObjectGuid playerGuid = player->GetGUID();
+        uint32 ambushId = ++_ambushCounter;
+        _ambushes[playerGuid].Id = ambushId;
+
+        Talk(SAY_MEREDY_BREAK_FREE, player);
+
+        for (MeredyAmbushSpawn const& spawn : MeredyAmbushWaves)
+        {
+            _scheduler.Schedule(spawn.Delay, [this, playerGuid, ambushId, &spawn](TaskContext const& /*context*/)
+            {
+                Player* target = ObjectAccessor::GetPlayer(*me, playerGuid);
+                if (!target || !GetAmbush(playerGuid, ambushId))
+                    return;
+
+                Creature* enemy = SummonForAmbush(playerGuid, spawn.Entry, spawn.Pos);
+                if (!enemy)
+                    return;
+
+                enemy->SetReactState(REACT_AGGRESSIVE);
+                enemy->AI()->AttackStart(target);
+                if (spawn.TextGroup)
+                {
+                    ObjectGuid enemyGuid = enemy->GetGUID();
+                    uint8 textGroup = *spawn.TextGroup;
+                    _scheduler.Schedule(spawn.TextDelay, [this, playerGuid, enemyGuid, textGroup](TaskContext const& /*context*/)
+                    {
+                        Creature* speaker = ObjectAccessor::GetCreature(*me, enemyGuid);
+                        Player* listener = ObjectAccessor::GetPlayer(*me, playerGuid);
+                        if (speaker && speaker->IsAlive() && listener)
+                            speaker->AI()->Talk(textGroup, listener);
+                    });
+                }
+            });
+        }
+
+        _scheduler.Schedule(MeredyAmbushAlliesDelay, [this, playerGuid, ambushId](TaskContext const& /*context*/)
+        {
+            Player* target = ObjectAccessor::GetPlayer(*me, playerGuid);
+            if (!target || !GetAmbush(playerGuid, ambushId))
+                return;
+
+            if (Creature* keeLa = SummonForAmbush(playerGuid, NPC_KEE_LA_AMBUSH, KeeLaAmbushPosition))
+                keeLa->GetMotionMaster()->MovePoint(POINT_AMBUSH_ALLY_ARRIVED, KeeLaAmbushDestination);
+            if (Creature* henry = SummonForAmbush(playerGuid, NPC_HENRY_GARRICK_AMBUSH, HenryGarrickAmbushPosition))
+                henry->GetMotionMaster()->MovePoint(POINT_AMBUSH_ALLY_ARRIVED, HenryGarrickAmbushDestination);
+
+            StartPrivateConversation(target, CONVERSATION_AMBUSH_ALLIES,
+            {
+                { ACTOR_KEE_LA_AMBUSH, 0, NPC_KEE_LA_AMBUSH },
+                { ACTOR_HENRY_GARRICK_AMBUSH, 1, NPC_HENRY_GARRICK_AMBUSH }
+            });
+        });
+
+        _scheduler.Schedule(MeredyAmbushBloodbeakTalkDelay, [this, playerGuid, ambushId](TaskContext const& /*context*/)
+        {
+            Player* target = ObjectAccessor::GetPlayer(*me, playerGuid);
+            if (target && GetAmbush(playerGuid, ambushId))
+                StartPrivateConversation(target, CONVERSATION_AMBUSH_BLOODBEAK,
+                {
+                    { ACTOR_KEE_LA_AMBUSH, 0, NPC_KEE_LA_AMBUSH },
+                    { ACTOR_HENRY_GARRICK_AMBUSH, 1, NPC_HENRY_GARRICK_AMBUSH }
+                });
+        });
+
+        // Bloodbeak glides down from the nest (retail spline: 4.2 s) and opens with Swooping Lunge on the allies
+        _scheduler.Schedule(MeredyAmbushBloodbeakDelay, [this, playerGuid, ambushId](TaskContext const& /*context*/)
+        {
+            if (!ObjectAccessor::GetPlayer(*me, playerGuid) || !GetAmbush(playerGuid, ambushId))
+                return;
+
+            Creature* bloodbeak = SummonForAmbush(playerGuid, NPC_BLOODBEAK, BloodbeakNestPosition);
+            if (!bloodbeak)
+                return;
+
+            bloodbeak->SetReactState(REACT_PASSIVE);
+            bloodbeak->SetDisableGravity(true);
+            bloodbeak->GetMotionMaster()->MovePoint(POINT_BLOODBEAK_LANDED, BloodbeakLandingPosition, false, {}, 15.5f);
+
+            ObjectGuid bloodbeakGuid = bloodbeak->GetGUID();
+            _scheduler.Schedule(4200ms, [this, playerGuid, bloodbeakGuid](TaskContext const& /*context*/)
+            {
+                Creature* landed = ObjectAccessor::GetCreature(*me, bloodbeakGuid);
+                Player* target = ObjectAccessor::GetPlayer(*me, playerGuid);
+                if (!landed || !landed->IsAlive() || !target)
+                    return;
+
+                landed->SetDisableGravity(false);
+                landed->SetReactState(REACT_AGGRESSIVE);
+                landed->CastSpell(landed, SPELL_SWOOPING_LUNGE);
+                landed->AI()->AttackStart(target);
+            });
+        });
+
+        // the event stops when the player dies, leaves the nest or drops the quest
+        _scheduler.Schedule(1s, [this, playerGuid, ambushId](TaskContext context)
+        {
+            Ambush* ambush = GetAmbush(playerGuid, ambushId);
+            if (!ambush || ambush->Finished)
+                return;
+
+            Player* target = ObjectAccessor::GetPlayer(*me, playerGuid);
+            if (!target || !target->IsAlive() || !target->IsWithinDist(me, 80.0f) ||
+                target->GetQuestStatus(QUEST_THE_RESCUE_OF_MEREDY) != QUEST_STATUS_INCOMPLETE)
+            {
+                EndAmbush(playerGuid);
+                return;
+            }
+
+            context.Repeat();
+        });
+    }
+
+    void EndAmbush(ObjectGuid const& playerGuid)
+    {
+        auto itr = _ambushes.find(playerGuid);
+        if (itr == _ambushes.end())
+            return;
+
+        for (ObjectGuid const& guid : itr->second.Summons)
+            if (Creature* summon = ObjectAccessor::GetCreature(*me, guid))
+                summon->DespawnOrUnsummon();
+
+        _ambushes.erase(itr);
+    }
+
+    TaskScheduler _scheduler;
+    std::unordered_map<ObjectGuid, Ambush> _ambushes;
+    uint32 _ambushCounter = 0;
+};
+
+// 155197 - Henry Garrick, 155199 - Kee-La (allies of the Meredy rescue; Henry heals and smites, Kee-La fights in melee)
+struct npc_exiles_reach_meredy_ambush_ally : public ScriptedAI
+{
+    npc_exiles_reach_meredy_ambush_ally(Creature* creature) : ScriptedAI(creature) { }
+
+    void Reset() override
+    {
+        _scheduler.CancelAll();
+        me->SetReactState(REACT_AGGRESSIVE);
+    }
+
+    void MovementInform(uint32 type, uint32 id) override
+    {
+        if (type != POINT_MOTION_TYPE || id != POINT_AMBUSH_ALLY_ARRIVED)
+            return;
+
+        // join the fight against whatever the player is facing
+        if (Player* player = ObjectAccessor::GetPlayer(*me, me->GetPrivateObjectOwner()))
+            if (Unit* enemy = player->GetVictim() ? player->GetVictim() : player->getAttackerForHelper())
+                AttackStart(enemy);
+    }
+
+    void JustEngagedWith(Unit* /*who*/) override
+    {
+        if (me->GetEntry() != NPC_HENRY_GARRICK_AMBUSH)
+            return;
+
+        _scheduler.Schedule(1s, [this](TaskContext context)
+        {
+            if (Unit* victim = me->GetVictim())
+                DoCast(victim, SPELL_HOLY_SMITE);
+            context.Repeat(2500ms);
+        });
+        _scheduler.Schedule(2s, [this](TaskContext context)
+        {
+            Player* player = ObjectAccessor::GetPlayer(*me, me->GetPrivateObjectOwner());
+            if (player && player->IsAlive() && player->HealthBelowPct(80))
+            {
+                DoCast(player, SPELL_HEAL_COVER);
+                context.Repeat(12s);
+                return;
+            }
+            context.Repeat(2s);
+        });
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        if (!UpdateVictim())
+        {
+            // help the player as soon as something attacks them
+            if (Player* player = ObjectAccessor::GetPlayer(*me, me->GetPrivateObjectOwner()))
+                if (Unit* enemy = player->getAttackerForHelper())
+                    if (!me->isMoving())
+                        AttackStart(enemy);
+            return;
+        }
+
+        if (me->HasUnitState(UNIT_STATE_CASTING))
+            return;
+
         _scheduler.Update(diff);
     }
 
@@ -1081,16 +1441,24 @@ struct npc_exiles_reach_kalecgos_travel : public ScriptedAI
             player->GetQuestStatus(QUEST_THE_END_OF_THE_BEGINNING) != QUEST_STATUS_INCOMPLETE)
             return false;
 
+        // retail (12.0.1 sniff): the gossip plays the movie (1235041); 14 s later Play Movie, Load (1238030) gives the kill
+        // credit, teleports to the Wild Coast behind a loading screen and binds the hearthstone there. Nothing changes on the
+        // island before that, so its people stay in view while the movie plays.
         player->PlayerTalkClass->SendCloseGossip();
-        player->KilledMonsterCredit(me->GetEntry(), me->GetGUID());
-        me->CastSpell(player, SPELL_DRAGON_ISLES_TELEPORT, true);
-        PhasingHandler::OnConditionChange(player);
+        me->CastSpell(player, SPELL_DRAGON_ISLES_MOVIE, true);
 
         ObjectGuid playerGuid = player->GetGUID();
-        _scheduler.Schedule(15s, [this, playerGuid](TaskContext const& /*context*/)
+        _scheduler.Schedule(14s, [this, playerGuid](TaskContext const& /*context*/)
         {
-            if (Player* target = ObjectAccessor::GetPlayer(*me, playerGuid))
-                target->TeleportTo(2444, 3713.47f, -1890.45f, 5.77f, 2.7612855f, TELE_TO_NONE, {}, SPELL_DRAGON_ISLES_TELEPORT);
+            Player* target = ObjectAccessor::GetPlayer(*me, playerGuid);
+            if (!target || target->GetQuestStatus(QUEST_THE_END_OF_THE_BEGINNING) != QUEST_STATUS_INCOMPLETE)
+                return;
+
+            target->CastSpell(target, SPELL_DRAGON_ISLES_TRAVEL, true);
+            if (target->GetQuestStatus(QUEST_THE_END_OF_THE_BEGINNING) == QUEST_STATUS_INCOMPLETE)
+                target->KilledMonsterCredit(NPC_KALECGOS_EXILES_REACH);
+            if (target->GetMapId() != MAP_DRAGON_ISLES && !target->IsBeingTeleportedFar())
+                target->TeleportTo(MAP_DRAGON_ISLES, 3713.47f, -1890.45f, 5.77f, 2.7612855f, TELE_TO_NONE, {}, SPELL_DRAGON_ISLES_TRAVEL);
         });
 
         return true;
@@ -1393,6 +1761,62 @@ private:
     TaskScheduler _scheduler;
 };
 
+// 160964 - Freed Expedition Member: thanks the player at the cocoon, then runs for the way out (retail 12.1.5 sniff)
+struct npc_exiles_reach_freed_expedition_member : public ScriptedAI
+{
+    npc_exiles_reach_freed_expedition_member(Creature* creature) : ScriptedAI(creature) { }
+
+    void IsSummonedBy(WorldObject* summoner) override
+    {
+        me->SetReactState(REACT_PASSIVE);
+        if (Player* player = summoner->ToPlayer())
+        {
+            me->SetFacingToObject(player);
+            Talk(SAY_FREED_EXPEDITION_MEMBER, player);
+        }
+
+        _scheduler.Schedule(4200ms, [this](TaskContext const& /*context*/)
+        {
+            me->GetMotionMaster()->MovePoint(0, PitExitPosition, true, {}, {}, MovementWalkRunSpeedSelectionMode::ForceRun);
+        });
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        _scheduler.Update(diff);
+    }
+
+private:
+    TaskScheduler _scheduler;
+};
+
+// 313324 - Freed Expedition Member (DNT): cast by opening a Thick Cocoon; the freed one stands where the cocoon was
+class spell_exiles_reach_freed_expedition_member : public SpellScript
+{
+    void PreventSummon(SpellEffIndex effIndex)
+    {
+        PreventHitDefaultEffect(effIndex);
+    }
+
+    void SummonAtCocoon()
+    {
+        Player* player = Object::ToPlayer(GetCaster());
+        if (!player)
+            return;
+
+        GameObject* cocoon = player->FindNearestGameObject(GO_THICK_COCOON, 8.0f);
+        Position position = cocoon ? cocoon->GetPosition() : player->GetPosition();
+        player->SummonCreature(NPC_FREED_EXPEDITION_MEMBER, position, TEMPSUMMON_TIMED_DESPAWN, 7s, 0, 0, player->GetGUID());
+    }
+
+    void Register() override
+    {
+        OnEffectLaunch += SpellEffectFn(spell_exiles_reach_freed_expedition_member::PreventSummon, EFFECT_0, SPELL_EFFECT_SUMMON);
+        OnEffectHit += SpellEffectFn(spell_exiles_reach_freed_expedition_member::PreventSummon, EFFECT_0, SPELL_EFFECT_SUMMON);
+        AfterCast += SpellCastFn(spell_exiles_reach_freed_expedition_member::SummonAtCocoon);
+    }
+};
+
 class player_exiles_reach_human_mage : public PlayerScript
 {
 public:
@@ -1520,12 +1944,15 @@ void AddSC_zone_exiles_reach_human_mage()
     RegisterGameObjectAI(go_exiles_reach_catapult);
     RegisterCreatureAI(npc_exiles_reach_quartermaster_richter);
     RegisterCreatureAI(npc_exiles_reach_meredy_captive);
+    RegisterCreatureAI(npc_exiles_reach_meredy_ambush_ally);
     RegisterCreatureAI(npc_exiles_reach_kelra_captive);
     RegisterCreatureAI(npc_exiles_reach_meredy_polymorph_training);
     RegisterSpellScript(spell_exiles_reach_polymorph_training);
     RegisterCreatureAI(npc_exiles_reach_meredy_ogre_transformation);
     RegisterCreatureAI(npc_exiles_reach_kalecgos_travel);
     RegisterCreatureAI(npc_exiles_reach_happy_hal);
+    RegisterCreatureAI(npc_exiles_reach_freed_expedition_member);
+    RegisterSpellScript(spell_exiles_reach_freed_expedition_member);
     new q59356_hunting_the_stalker();
     RegisterCreatureAI(npc_exiles_reach_freezing_trap);
     RegisterCreatureAI(npc_exiles_reach_austin_huxworth_trap);

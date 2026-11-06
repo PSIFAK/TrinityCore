@@ -51,6 +51,7 @@ constexpr uint32 NPC_DARKMAUL_EXIT_CREDIT = 161350;
 constexpr uint32 GOSSIP_MENU_KALECGOS_DARKMAUL = 39497;
 constexpr uint32 SPELL_DARKMAUL_EXIT_TELEPORT = 319030;
 constexpr uint32 LFG_DUNGEON_DARKMAUL_CITADEL = 2043;
+constexpr uint32 DISPLAY_KALECGOS = 75614;
 
 // 156501 - Ravnyr / Kalecgos
 struct boss_ravnyr : public BossAI
@@ -71,7 +72,7 @@ struct boss_ravnyr : public BossAI
             me->SetReactState(REACT_PASSIVE);
             me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_UNINTERACTIBLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_NON_ATTACKABLE));
             me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
-            DoCastSelf(SPELL_KALECGOS_RESTORED, true);
+            RestoreKalecgos();
             return;
         }
 
@@ -139,8 +140,9 @@ struct boss_ravnyr : public BossAI
         me->RemoveAllAuras();
         me->SetFaction(FACTION_FRIENDLY);
         me->SetUnitFlag(UnitFlags(UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC));
-        instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
+        // retail (12.1.5 sniff): ENCOUNTER_END and BOSS_KILL come first, the boss frame is released after them
         _JustDied();
+        instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
         DoCastSelf(SPELL_RAVNYR_DEFEATED, true);
 
         for (Map::PlayerList::const_iterator itr = me->GetMap()->GetPlayers().begin(); itr != me->GetMap()->GetPlayers().end(); ++itr)
@@ -159,7 +161,7 @@ struct boss_ravnyr : public BossAI
         {
             me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_UNINTERACTIBLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC | UNIT_FLAG_NON_ATTACKABLE));
             me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
-            DoCastSelf(SPELL_KALECGOS_RESTORED, true);
+            RestoreKalecgos();
         });
     }
 
@@ -226,6 +228,14 @@ struct boss_ravnyr : public BossAI
     }
 
 private:
+    // retail (12.1.5 sniff): Kalecgos Transform leaves him with his own display 75614 at scale 1. The transform aura names creature
+    // 17286 (Invisible Man), whose model would make him invisible here, so the display is set after the cast.
+    void RestoreKalecgos()
+    {
+        DoCastSelf(SPELL_KALECGOS_RESTORED, true);
+        me->SetDisplayId(DISPLAY_KALECGOS, true);
+    }
+
     bool _defeated;
 };
 

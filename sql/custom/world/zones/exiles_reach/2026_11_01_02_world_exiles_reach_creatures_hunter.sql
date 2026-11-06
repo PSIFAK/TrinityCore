@@ -111,3 +111,51 @@ UPDATE `creature_equip_template` SET `ItemID1` = 153575, `AppearanceModID1` = 0,
 DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 32 AND `SourceGroup` = 8 AND `SourceEntry` = 349962;
 INSERT INTO `conditions` (`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`) VALUES
 (32, 8, 349962, 0, 0, 6, 0, 67, 0, 0, 0, 0, 0, '', 'Campfire 349962 (second campfire of the Cooking Meat camp) is visible to the Horde only');
+
+-- Jaina at the camp below the Ogre Ruins (156807) works against the ritual: retail (12.1.5 sniff) has her cast
+-- Channeling (DNT) every 2 s from the end of the boar ride on
+DELETE FROM `smart_scripts` WHERE `entryorguid` = 156807 AND `source_type` = 0 AND `id` = 2;
+INSERT INTO `smart_scripts` (`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `action_type`, `action_param1`, `action_param2`, `target_type`, `comment`) VALUES
+(156807, 0, 2, 0, 1, 0, 100, 0, 1000, 1000, 2000, 2000, 11, 1239043, 0, 1, 'Lady Jaina Proudmoore - Out of Combat - Cast Channeling (DNT)');
+-- where the channel goes (retail's destination of every cast)
+DELETE FROM `spell_target_position` WHERE `ID` = 1239043;
+INSERT INTO `spell_target_position` (`ID`, `EffectIndex`, `OrderIndex`, `MapID`, `PositionX`, `PositionY`, `PositionZ`, `Orientation`, `VerifiedBuild`) VALUES
+(1239043, 0, 0, 2175, 846.48956, -1609.8959, 593.677, 0, 70688);
+
+-- Jaina's channel is the aura Channeling (DNT) 1239042 (periodic trigger of 1239043 every 2 s; every retail cast of
+-- 1239043 carries it as OriginalCastID). The aura brings the channel animation, a bare cast of 1239043 has none.
+DELETE FROM `smart_scripts` WHERE `entryorguid` = 156807 AND `source_type` = 0 AND `id` = 2;
+DELETE FROM `creature_addon` WHERE `guid` = 8000044;
+INSERT INTO `creature_addon` (`guid`, `auras`) VALUES
+(8000044, '1239042');
+UPDATE `creature` SET `position_x` = 188.85938, `position_y` = -2290.2275, `position_z` = 81.69565 WHERE `guid` = 8000044;
+
+-- The Rescue of Meredy Huntswell (55763), from the retail (12.1.5) sniff: talking to the captive Meredy (menu 24887) starts
+-- personal waves of Harpy Ambushers and Hunting Worgs, Kee-La and Henry Garrick come to help and Bloodbeak (153964) flies in
+-- from the nest last (npc_exiles_reach_meredy_captive). Bloodbeak has no world spawn on retail.
+DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 32 AND `SourceGroup` = 5 AND `SourceEntry` = 153964;
+DELETE FROM `waypoint_path_node` WHERE `PathId` = 217500038;
+DELETE FROM `waypoint_path` WHERE `PathId` = 217500038;
+DELETE FROM `creature_addon` WHERE `guid` = 217500000038;
+DELETE FROM `creature` WHERE `guid` = 217500000038;
+UPDATE `creature_template` SET `ScriptName` = 'npc_exiles_reach_meredy_ambush_ally' WHERE `entry` IN (155197, 155199);
+
+-- the sniff only carries the ruRU lines without broadcast text ids (and the local BroadcastText.db2 lacks them), so the enUS
+-- text is a translation
+DELETE FROM `creature_text` WHERE (`CreatureID` = 153211 AND `GroupID` = 1) OR `CreatureID` = 155192;
+INSERT INTO `creature_text` (`CreatureID`, `GroupID`, `ID`, `Text`, `Type`, `Language`, `Probability`, `Emote`, `Duration`, `Sound`, `SoundPlayType`, `BroadcastTextId`, `TextRange`, `comment`) VALUES
+(153211, 1, 0, 'I''ll break free with my magic. You just keep the harpies off me!', 12, 0, 100, 0, 0, 0, 0, 0, 0, 'Meredy Huntswell to Player - ambush start'),
+(155192, 0, 0, 'Just... one... bite...', 12, 0, 50, 0, 0, 0, 0, 0, 0, 'Harpy Ambusher to Player'),
+(155192, 0, 1, 'Just... a little... bite...', 12, 0, 50, 0, 0, 0, 0, 0, 0, 'Harpy Ambusher to Player'),
+(155192, 1, 0, 'Dinner is here!', 12, 0, 100, 0, 0, 0, 0, 0, 0, 'Harpy Ambusher to Player');
+DELETE FROM `creature_text_locale` WHERE ((`CreatureID` = 153211 AND `GroupID` = 1) OR `CreatureID` = 155192) AND `Locale` = 'ruRU';
+INSERT INTO `creature_text_locale` (`CreatureID`, `GroupID`, `ID`, `Locale`, `Text`) VALUES
+(153211, 1, 0, 'ruRU', 'Я освобожусь с помощью магии. Вы только гарпий отгоняйте!'),
+(155192, 0, 0, 'ruRU', 'Мне бы... только... кусочек...'),
+(155192, 0, 1, 'ruRU', 'Мне бы... хоть кусочек...'),
+(155192, 1, 0, 'ruRU', 'А вот и ужин!');
+
+-- the Harpy Ambushers, Hunting Worgs, Henry Garrick (155197) and Kee-La (155199) of the Meredy rescue were imported as world
+-- spawns at the exact points where retail summons them for the event; the event summons them now, so they were duplicates
+DELETE FROM `creature_addon` WHERE `guid` IN (SELECT `guid` FROM `creature` WHERE `id` IN (155192, 155197, 155199, 169162));
+DELETE FROM `creature` WHERE `id` IN (155192, 155197, 155199, 169162);
