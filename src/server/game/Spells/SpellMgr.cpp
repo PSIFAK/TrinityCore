@@ -1224,7 +1224,8 @@ void SpellMgr::LoadSpellTargetPositions()
 
         if (!hasTarget(TARGET_DEST_NEARBY_DB))
         {
-            if (!hasTarget(TARGET_DEST_DB) && !hasTarget(TARGET_DEST_NEARBY_ENTRY_OR_DB))
+            // RetailSystems: a nearby entry destination without conditions falls back to the DB position too (Spell.cpp)
+            if (!hasTarget(TARGET_DEST_DB) && !hasTarget(TARGET_DEST_NEARBY_ENTRY_OR_DB) && !hasTarget(TARGET_DEST_NEARBY_ENTRY))
             {
                 TC_LOG_ERROR("sql.sql", "Spell (Id: {}, effIndex: {}) listed in `spell_target_position` does not have a target TARGET_DEST_DB ({}) or TARGET_DEST_NEARBY_DB ({}) or TARGET_DEST_NEARBY_ENTRY_OR_DB ({}).",
                     spellId, uint32(effIndex), TARGET_DEST_DB, TARGET_DEST_NEARBY_DB, TARGET_DEST_NEARBY_ENTRY_OR_DB);

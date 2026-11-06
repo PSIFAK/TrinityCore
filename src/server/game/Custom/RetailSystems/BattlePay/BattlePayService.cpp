@@ -20,6 +20,7 @@
 #include "Player.h"
 #include "Random.h"
 #include "SpellMgr.h"
+#include "StringFormat.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
 #include <algorithm>
@@ -168,6 +169,44 @@ struct DelayedCapturedPacket
 
 std::atomic<bool> Enabled = false;
 std::atomic<uint32> CatalogShopLicenseID = 0x0011A691;
+std::atomic<bool> Shop2Enabled = true;
+
+// shop2 settings sent by retail 12.1.5.70688 (EU) in SMSG_MIRROR_VARS. Without them the client receives the SSO token
+// and never requests its catalog, leaving the shop on the loading spinner.
+constexpr std::pair<std::string_view, std::string_view> RetailShop2Vars[] =
+{
+    { "shop2PMTPerMilliseconds", "1000" },
+    { "shop2PMTMaxTries", "15" },
+    { "shop2SSOPerMilliseconds", "1000" },
+    { "shop2SSOMaxTries", "15" },
+    { "shop2SFMPerMilliseconds", "1000" },
+    { "shop2SFMMaxTries", "15" },
+    { "shop2VirtualCurrencyBalancePerMilliseconds", "1000" },
+    { "shop2VirtualCurrencyBalanceMaxTries", "3" },
+    { "shop2DefaultCurrencyPerMilliseconds", "1000" },
+    { "shop2DefaultCurrencyMaxTries", "5" },
+    { "shop2DynamicBundlePerMilliseconds", "1000" },
+    { "shop2DynamicBundleMaxTries", "10" },
+    { "shop2OrderStatusPerMilliseconds", "1000" },
+    { "shop2OrderStatusMaxTries", "3" },
+    { "shop2PendingOrderPollSeconds", "5" },
+    { "shop2PendingOrderPollCheckoutEnabled", "1" },
+    { "shop2PendingOrderPollFileEnabled", "1" },
+    { "shop2BlockedPlacements", "" },
+    { "shop2ClientErrorTelemetryAllowed", "1" },
+    { "shop2TelemetryAllowed", "1" },
+    { "shop2ClientRetriesEnabled", "1" },
+    { "shop2VCPlacementStr", "9aad42ec-a68c-487b-a300-b67518267a85" },
+    { "shop2POPStr", "b94aa31b-f910-4ec8-a180-3fb6bdac3215" },
+    { "shop2VCSegmentStr", "T2_WOW_EU" },
+    { "shop2ClientIdStr", "33dad602838b47bfa5ca03adaebac54c" },
+    { "shop2HostUrlRequests", "https://eu.api.blizzard.com" },
+    { "shop2HostUrlAuth", "https://oauth.battle.net" },
+    { "shop2UseConnectedRealmGameServiceRegionId", "0" },
+    { "shop2AdditionalScopesStr", "" },
+    { "bnetDelegationURL", "https://identity.battle.net/bridge/v1/delegation" },
+    { "browserEnabled", "1" },
+};
 uint32 CurrencyID = 1;
 std::string WalletName = "Battle Coins";
 std::vector<WorldPackets::RetailBattlePay::Group> Groups;
@@ -241,9 +280,10 @@ bool LoadCapturedCatalog(std::string const& fileName, CapturedCatalogData& captu
     uint32 formatVersion = 0;
     uint32 productPayloadSize = 0;
     if (!ReadCaptureUInt32(data, position, formatVersion) ||
-        (formatVersion != 5 && formatVersion != 6 && formatVersion != 7 && formatVersion != 8 && formatVersion != 9) ||
+        (formatVersion < 5 || formatVersion > 10) ||
         !ReadCaptureUInt32(data, position, capture.ClientBuild) ||
-        !ReadCaptureUInt32(data, position, capture.LicenseID) || !capture.LicenseID ||
+        // format 10 is the 12.1.x flow: the client gets no license packet, the configured license stays
+        !ReadCaptureUInt32(data, position, capture.LicenseID) || (!capture.LicenseID && formatVersion < 10) ||
         !ReadCaptureUInt64(data, position, capture.CatalogVersion) || !capture.CatalogVersion ||
         !ReadCaptureUInt32(data, position, productPayloadSize) ||
         !ReadCaptureBytes(data, position, productPayloadSize, capture.ProductListPayload))
@@ -255,7 +295,7 @@ bool LoadCapturedCatalog(std::string const& fileName, CapturedCatalogData& captu
         return false;
 
     uint32 bootstrapCount = 0;
-    if (!ReadCaptureUInt32(data, position, bootstrapCount) || !bootstrapCount || bootstrapCount > 16)
+    if (!ReadCaptureUInt32(data, position, bootstrapCount) || (!bootstrapCount && formatVersion < 10) || bootstrapCount > 16)
         return false;
 
     capture.PreProductPackets.reserve(bootstrapCount);
@@ -371,10 +411,11 @@ bool LoadCapturedCatalog(std::string const& fileName, CapturedCatalogData& captu
             capture.AvailableHotfixesPayload.size() < 8 ||
             !ReadCaptureUInt32(data, position, hotfixConnectPayloadSize) ||
             !ReadCaptureBytes(data, position, hotfixConnectPayloadSize, capture.HotfixConnectPayload) ||
-            capture.HotfixConnectPayload.size() < 8 ||
+            // a capture with a warm client cache (format 10) has no hotfix route
+            (capture.HotfixConnectPayload.size() < 8 && (formatVersion < 10 || !capture.HotfixConnectPayload.empty())) ||
             !ReadCaptureUInt32(data, position, capture.HotfixConnectDelayMs) ||
             capture.HotfixConnectDelayMs > 60 * 1000 ||
-            !ReadCaptureUInt32(data, position, rpcRouteCount) || !rpcRouteCount || rpcRouteCount > 32)
+            !ReadCaptureUInt32(data, position, rpcRouteCount) || (!rpcRouteCount && formatVersion < 10) || rpcRouteCount > 32)
             return false;
 
         uint32 availableHotfixCount = uint32(capture.AvailableHotfixesPayload[4]) |
@@ -384,35 +425,38 @@ bool LoadCapturedCatalog(std::string const& fileName, CapturedCatalogData& captu
         if (capture.AvailableHotfixesPayload.size() != 8 + std::size_t(availableHotfixCount) * 8)
             return false;
 
-        uint32 hotfixRecordCount = uint32(capture.HotfixConnectPayload[0]) |
-            (uint32(capture.HotfixConnectPayload[1]) << 8) |
-            (uint32(capture.HotfixConnectPayload[2]) << 16) |
-            (uint32(capture.HotfixConnectPayload[3]) << 24);
-        constexpr std::size_t HotfixRecordHeaderSize = 21;
-        if (hotfixRecordCount > (capture.HotfixConnectPayload.size() - 8) / HotfixRecordHeaderSize)
-            return false;
-
-        std::size_t hotfixContentSizePosition = 4 + std::size_t(hotfixRecordCount) * HotfixRecordHeaderSize;
-        uint32 hotfixContentSize = uint32(capture.HotfixConnectPayload[hotfixContentSizePosition]) |
-            (uint32(capture.HotfixConnectPayload[hotfixContentSizePosition + 1]) << 8) |
-            (uint32(capture.HotfixConnectPayload[hotfixContentSizePosition + 2]) << 16) |
-            (uint32(capture.HotfixConnectPayload[hotfixContentSizePosition + 3]) << 24);
-        if (hotfixContentSizePosition + 4 + hotfixContentSize != capture.HotfixConnectPayload.size())
-            return false;
-
-        capture.HotfixPushIDs.reserve(hotfixRecordCount);
-        for (uint32 recordIndex = 0; recordIndex < hotfixRecordCount; ++recordIndex)
+        if (!capture.HotfixConnectPayload.empty())
         {
-            std::size_t recordPosition = 4 + std::size_t(recordIndex) * HotfixRecordHeaderSize;
-            uint32 pushID = uint32(capture.HotfixConnectPayload[recordPosition]) |
-                (uint32(capture.HotfixConnectPayload[recordPosition + 1]) << 8) |
-                (uint32(capture.HotfixConnectPayload[recordPosition + 2]) << 16) |
-                (uint32(capture.HotfixConnectPayload[recordPosition + 3]) << 24);
-            capture.HotfixPushIDs.push_back(int32(pushID));
+            uint32 hotfixRecordCount = uint32(capture.HotfixConnectPayload[0]) |
+                (uint32(capture.HotfixConnectPayload[1]) << 8) |
+                (uint32(capture.HotfixConnectPayload[2]) << 16) |
+                (uint32(capture.HotfixConnectPayload[3]) << 24);
+            constexpr std::size_t HotfixRecordHeaderSize = 21;
+            if (hotfixRecordCount > (capture.HotfixConnectPayload.size() - 8) / HotfixRecordHeaderSize)
+                return false;
+
+            std::size_t hotfixContentSizePosition = 4 + std::size_t(hotfixRecordCount) * HotfixRecordHeaderSize;
+            uint32 hotfixContentSize = uint32(capture.HotfixConnectPayload[hotfixContentSizePosition]) |
+                (uint32(capture.HotfixConnectPayload[hotfixContentSizePosition + 1]) << 8) |
+                (uint32(capture.HotfixConnectPayload[hotfixContentSizePosition + 2]) << 16) |
+                (uint32(capture.HotfixConnectPayload[hotfixContentSizePosition + 3]) << 24);
+            if (hotfixContentSizePosition + 4 + hotfixContentSize != capture.HotfixConnectPayload.size())
+                return false;
+
+            capture.HotfixPushIDs.reserve(hotfixRecordCount);
+            for (uint32 recordIndex = 0; recordIndex < hotfixRecordCount; ++recordIndex)
+            {
+                std::size_t recordPosition = 4 + std::size_t(recordIndex) * HotfixRecordHeaderSize;
+                uint32 pushID = uint32(capture.HotfixConnectPayload[recordPosition]) |
+                    (uint32(capture.HotfixConnectPayload[recordPosition + 1]) << 8) |
+                    (uint32(capture.HotfixConnectPayload[recordPosition + 2]) << 16) |
+                    (uint32(capture.HotfixConnectPayload[recordPosition + 3]) << 24);
+                capture.HotfixPushIDs.push_back(int32(pushID));
+            }
+            std::ranges::sort(capture.HotfixPushIDs);
+            capture.HotfixPushIDs.erase(std::unique(capture.HotfixPushIDs.begin(), capture.HotfixPushIDs.end()),
+                capture.HotfixPushIDs.end());
         }
-        std::ranges::sort(capture.HotfixPushIDs);
-        capture.HotfixPushIDs.erase(std::unique(capture.HotfixPushIDs.begin(), capture.HotfixPushIDs.end()),
-            capture.HotfixPushIDs.end());
 
         for (uint32 routeIndex = 0; routeIndex < rpcRouteCount; ++routeIndex)
         {
@@ -429,7 +473,8 @@ bool LoadCapturedCatalog(std::string const& fileName, CapturedCatalogData& captu
         if (formatVersion >= 9)
         {
             uint32 loginBootstrapCount = 0;
-            if (!ReadCaptureUInt32(data, position, loginBootstrapCount) || loginBootstrapCount != 5)
+            if (!ReadCaptureUInt32(data, position, loginBootstrapCount) ||
+                (formatVersion < 10 ? loginBootstrapCount != 5 : (!loginBootstrapCount || loginBootstrapCount > 5)))
                 return false;
 
             capture.LoginBootstrapPackets.reserve(loginBootstrapCount);
@@ -447,11 +492,11 @@ bool LoadCapturedCatalog(std::string const& fileName, CapturedCatalogData& captu
                     return false;
             }
 
-            if (capture.LoginBootstrapPackets[0].Opcode != SMSG_BATTLE_PAY_GET_DISTRIBUTION_LIST_RESPONSE ||
+            if (formatVersion < 10 && (capture.LoginBootstrapPackets[0].Opcode != SMSG_BATTLE_PAY_GET_DISTRIBUTION_LIST_RESPONSE ||
                 capture.LoginBootstrapPackets[1].Opcode != SMSG_BATTLE_PAY_DELIVERABLE_DELIVERED ||
                 capture.LoginBootstrapPackets[2].Opcode != SMSG_BATTLE_PAY_DELIVERABLE_DELIVERED ||
                 capture.LoginBootstrapPackets[3].Opcode != SMSG_BATTLE_PAY_DELIVERABLE_DELIVERED ||
-                capture.LoginBootstrapPackets[4].Opcode != SMSG_CATALOG_SHOP_OBTAIN_LICENSE)
+                capture.LoginBootstrapPackets[4].Opcode != SMSG_CATALOG_SHOP_OBTAIN_LICENSE))
                 return false;
         }
     }
@@ -734,6 +779,7 @@ void Initialize()
         sConfigMgr->GetIntDefault("RetailSystems.BattlePay.CatalogShopLicenseID", 0x0011A691, true)));
     std::string walletName = sConfigMgr->GetStringDefault("RetailSystems.BattlePay.WalletName", "Battle Coins", true);
     std::string captureFile = sConfigMgr->GetStringDefault("RetailSystems.BattlePay.CaptureFile", "", true);
+    Shop2Enabled.store(sConfigMgr->GetBoolDefault("RetailSystems.BattlePay.Shop2", true, true), std::memory_order_release);
     if (walletName.empty())
         walletName = "Battle Coins";
 
@@ -742,7 +788,8 @@ void Initialize()
     {
         if (LoadCapturedCatalog(captureFile, capturedCatalog))
         {
-            catalogShopLicenseID = capturedCatalog.LicenseID;
+            if (capturedCatalog.LicenseID)
+                catalogShopLicenseID = capturedCatalog.LicenseID;
             TC_LOG_INFO("server.battlepay", "RetailSystems: loaded BattlePay capture {} for client build {} "
                 "(catalog version {}, {} product bytes, {} bootstrap packets, {} store gates, {} SSO bytes, "
                 "{} DB query routes, {} available-hotfix bytes, {} hotfix-connect bytes/{} pushes, {} RPC timings, "
@@ -975,6 +1022,26 @@ bool IsEnabled()
     return Enabled.load(std::memory_order_acquire);
 }
 
+std::vector<std::pair<std::string_view, std::string>> GetShopMirrorVars()
+{
+    bool enabled = IsEnabled();
+    bool shop2 = enabled && Shop2Enabled.load(std::memory_order_acquire);
+
+    std::vector<std::pair<std::string_view, std::string>> vars;
+    vars.emplace_back("shop2Enabled", shop2 ? "1" : "0");
+    vars.emplace_back("bpayStoreEnable", enabled ? "1" : "0");
+    vars.emplace_back("bpayStorePurchaseTimeout", "30");
+    if (!shop2)
+    {
+        vars.emplace_back("browserEnabled", "0");
+        return vars;
+    }
+
+    for (auto const& [name, value] : RetailShop2Vars)
+        vars.emplace_back(name, value);
+    return vars;
+}
+
 bool HasCapturedCatalog()
 {
     std::shared_lock lock(CatalogLock);
@@ -1090,7 +1157,8 @@ bool SendCapturedAvailableHotfixes(WorldSession* session)
     std::vector<uint8> responsePayload;
     {
         std::shared_lock lock(CatalogLock);
-        if (CapturedCatalog.AvailableHotfixesPayload.size() < 8)
+        // without the captured hotfix answers (format 10) the server's own hotfix list must stay consistent with them
+        if (CapturedCatalog.AvailableHotfixesPayload.size() < 8 || CapturedCatalog.HotfixConnectPayload.empty())
             return false;
         responsePayload = CapturedCatalog.AvailableHotfixesPayload;
     }
@@ -1249,7 +1317,8 @@ void SendProductList(WorldSession* session)
     }
 
     std::shared_lock lock(CatalogLock);
-    if (!CapturedCatalog.ProductListPayload.empty())
+    // the captured retail list only makes sense for shop2; the legacy store shows the world DB catalog
+    if (!CapturedCatalog.ProductListPayload.empty() && Shop2Enabled.load(std::memory_order_acquire))
     {
         for (CapturedBootstrapPacket const& bootstrap : CapturedCatalog.PreProductPackets)
         {
@@ -1380,6 +1449,18 @@ bool SendCapturedCatalogShopLicenseData(WorldSession* session, std::vector<uint3
             return candidate.SortedRequestIDs == sortedRequestIDs;
         });
     if (route == CapturedCatalog.CatalogShopRoutes.end())
+    {
+        // the client's request is not one of the capture: answer with the smallest captured reply covering it
+        for (auto candidate = CapturedCatalog.CatalogShopRoutes.begin(); candidate != CapturedCatalog.CatalogShopRoutes.end(); ++candidate)
+            if (std::ranges::includes(candidate->SortedRequestIDs, sortedRequestIDs) &&
+                (route == CapturedCatalog.CatalogShopRoutes.end() || candidate->SortedRequestIDs.size() < route->SortedRequestIDs.size()))
+                route = candidate;
+    }
+
+    TC_LOG_INFO("server.battlepay", "RetailSystems: CatalogShop request for {} game data ids (first {}) from account {}: {}",
+        gameDataIDs.size(), gameDataIDs.front(), session->GetAccountId(),
+        route == CapturedCatalog.CatalogShopRoutes.end() ? "no captured reply" : Trinity::StringFormat("captured reply of {} ids", route->RequestIDs.size()));
+    if (route == CapturedCatalog.CatalogShopRoutes.end())
         return false;
 
     WorldPacket capturedResponse(SMSG_CATALOG_SHOP_LICENSE_DATA, route->ResponsePayload.size());
@@ -1403,6 +1484,8 @@ bool SendCapturedStoreGateResponse(WorldSession* session, uint32 requestOpcode, 
             {
                 return candidate.RequestOpcode == requestOpcode;
             });
+        TC_LOG_INFO("server.battlepay", "RetailSystems: store gate 0x{:06X} from account {}: {}", requestOpcode, session->GetAccountId(),
+            route == CapturedCatalog.StoreGateRoutes.end() ? "no captured reply" : "captured reply");
         if (route == CapturedCatalog.StoreGateRoutes.end())
             return false;
 
@@ -1435,9 +1518,14 @@ void StartPurchase(WorldSession* session, uint32 clientToken, uint32 productID, 
         return;
     }
 
+    TC_LOG_INFO("server.battlepay", "RetailSystems: account {} starts purchase of product {} (client token {})",
+        session->GetAccountId(), productID, clientToken);
+
+    // the store is also open on the character screen; deliveries need a character in the world
     Player* player = session->GetPlayer();
     if (!player)
     {
+        TC_LOG_INFO("server.battlepay", "RetailSystems: purchase of product {} denied, no character in the world", productID);
         SendStartResult(session, clientToken, 0, Error::PurchaseDenied);
         return;
     }
@@ -1453,6 +1541,7 @@ void StartPurchase(WorldSession* session, uint32 clientToken, uint32 productID, 
     CatalogProduct product;
     if (!GetProduct(productID, product) || !CanDeliver(session, product))
     {
+        TC_LOG_INFO("server.battlepay", "RetailSystems: purchase of product {} denied, unknown product or it cannot be delivered", productID);
         SendStartResult(session, clientToken, 0, Error::PurchaseDenied);
         return;
     }
@@ -1460,6 +1549,8 @@ void StartPurchase(WorldSession* session, uint32 clientToken, uint32 productID, 
     uint64 balance = GetBalance(session->GetAccountId());
     if (balance < product.Packet.CurrentPriceFixedPoint)
     {
+        TC_LOG_INFO("server.battlepay", "RetailSystems: purchase of product {} denied, balance {} < price {}", productID, balance,
+            product.Packet.CurrentPriceFixedPoint);
         SendStartResult(session, clientToken, 0, Error::InsufficientBalance);
         return;
     }
@@ -1576,6 +1667,17 @@ void ConfirmPurchase(WorldSession* session, uint32 serverToken, uint64 clientCur
         uint32(PurchaseStatus::Finish), uint32(Error::Ok), deliveredAt, pending.PurchaseID);
 
     SendUpdate(session, pending, PurchaseStatus::Finish, Error::Ok);
+
+    // the legacy store keeps its "transaction in progress" overlay until the delivery ends and the purchase list is refreshed
+    WorldPackets::RetailBattlePay::DeliveryStarted deliveryStarted;
+    deliveryStarted.DistributionID = pending.PurchaseID;
+    session->SendPacket(deliveryStarted.Write());
+
+    WorldPackets::RetailBattlePay::DeliveryEnded deliveryEnded;
+    deliveryEnded.DistributionID = pending.PurchaseID;
+    session->SendPacket(deliveryEnded.Write());
+
+    SendPurchaseList(session);
     SendProductList(session);
     TC_LOG_INFO("server.battlepay", "RetailSystems: completed BattlePay purchase {} for account {}, product {}",
         pending.PurchaseID, pending.AccountID, pending.ProductID);

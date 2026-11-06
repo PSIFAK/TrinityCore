@@ -18679,7 +18679,9 @@ bool Player::LoadFromDB(ObjectGuid guid, CharacterDatabaseQueryHolder const& hol
     // update items with duration and realtime
     UpdateItemDuration(time_diff, true);
 
-    StartLoadingActionButtons();
+    // RetailSystems: loaded right away, retail's initial SMSG_UPDATE_ACTION_BUTTONS carries the buttons. An empty initial list
+    // restarts the new player tutorials, and the client ignores an initial list that comes after the login.
+    StartLoadingActionButtons(nullptr, true);
 
     // unread mails and next delivery time, actual mails not loaded
     _LoadMail(holder.GetPreparedResult(PLAYER_LOGIN_QUERY_LOAD_MAILS),
@@ -29025,7 +29027,7 @@ void Player::ActivateTalentGroup(ChrSpecializationEntry const* spec)
     }
 }
 
-void Player::StartLoadingActionButtons(std::function<void()>&& callback /*= nullptr*/)
+void Player::StartLoadingActionButtons(std::function<void()>&& callback /*= nullptr*/, bool loadNow /*= false*/)
 {
     int32 traitConfigId = [&]() -> int32
     {
@@ -29052,6 +29054,12 @@ void Player::StartLoadingActionButtons(std::function<void()>&& callback /*= null
     stmt->setUInt64(0, GetGUID().GetCounter());
     stmt->setUInt8(1, GetActiveTalentGroup());
     stmt->setInt32(2, traitConfigId);
+
+    if (loadNow)
+    {
+        _LoadActions(CharacterDatabase.Query(stmt));
+        return;
+    }
 
     WorldSession* mySess = GetSession();
     mySess->GetQueryProcessor().AddCallback(CharacterDatabase.AsyncQuery(stmt)

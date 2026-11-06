@@ -309,6 +309,7 @@ class TC_GAME_API InstanceScript : public ZoneScript
         // RetailSystems: SMSG_ENCOUNTER_START / SMSG_ENCOUNTER_END of a DungeonEncounter. SetBossState sends them for every boss;
         // scripts call them directly when an encounter starts or ends on another creature than its boss. Sent once per pull.
         void SendDungeonEncounterStart(DungeonEncounterEntry const* dungeonEncounter);
+        bool SendsInstanceEncounterPackets() const;
         void SendDungeonEncounterEnd(DungeonEncounterEntry const* dungeonEncounter, bool success);
 
         // ReCheck PhaseTemplate related conditions

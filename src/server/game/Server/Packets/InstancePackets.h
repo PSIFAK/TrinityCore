@@ -269,6 +269,16 @@ namespace WorldPackets
             WorldPacket const* Write() override { return &_worldPacket; }
         };
 
+        class InstanceEncounterUpdateAllowReleaseInProgress final : public ServerPacket
+        {
+        public:
+            explicit InstanceEncounterUpdateAllowReleaseInProgress() : ServerPacket(SMSG_INSTANCE_ENCOUNTER_UPDATE_ALLOW_RELEASE_IN_PROGRESS, 1) { }
+
+            WorldPacket const* Write() override;
+
+            bool ReleaseAllowed = false;
+        };
+
         class InstanceEncounterInCombatResurrection final : public ServerPacket
         {
         public:

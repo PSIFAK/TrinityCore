@@ -39,7 +39,8 @@ struct ContentHandleData
 // so it must be kept in sync with the packet capture rather than inferred from version.
 constexpr std::array ContentHandles =
 {
-    ContentHandleData{ 16974,   1634756212, ContentVersion, 1885762681, "NpylGlVtJhWP74LoAm4bjD5ZftgFWN4itZdCXdKamMY=" },
+    // 12.1.5.70688: the catalog shop configuration the client downloads (was NpylGlVtJhWP74LoAm4bjD5ZftgFWN4itZdCXdKamMY= on 12.0.7)
+    ContentHandleData{ 16974,   1634756212, ContentVersion, 1885762681, "FCdfQNg8h2b0WRCNoB0ecIlnEeaAzPdGySs6g/giqac=" },
     ContentHandleData{ 4288624, 1919971955, ContentVersion, 1634758771, "bp2PBmOWop9bAV3g5uthqQikN4l+8vvhxeiLGIJSxnU=" },
     ContentHandleData{ 5730135, 1380995667, ContentVersion, 2003793779, "MoOZh0SViWCJJz9VzSNKCQbILEPWiRvoaJ+LrULEVMg=" },
     ContentHandleData{ 5730135, 1098016097, ContentVersion, 2003793779, "2fhgEmcPWV59aH/RryxO279XftmPUFi3SqRQ+ml16Jc=" },

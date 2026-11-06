@@ -203,6 +203,14 @@ WorldPacket const* BossKill::Write()
     return &_worldPacket;
 }
 
+WorldPacket const* InstanceEncounterUpdateAllowReleaseInProgress::Write()
+{
+    _worldPacket << Bits<1>(ReleaseAllowed);
+    _worldPacket.FlushBits();
+
+    return &_worldPacket;
+}
+
 WorldPacket const* EncounterStart::Write()
 {
     _worldPacket << int32(DungeonEncounterID);

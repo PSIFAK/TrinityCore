@@ -47,6 +47,18 @@ python src/server/game/Custom/RetailSystems/BattlePay/tools/extract_capture_cata
   dump_12.0.7.68453.pkt battlepay_12.0.7.68453.tcbp
 ```
 
+Каталог товаров (группы, товары, наборы, выдаваемые предметы) можно перенести из любого дампа retail, где клиент
+получил `SMSG_BATTLE_PAY_GET_PRODUCT_LIST_RESPONSE` (приходит при входе, магазин открывать не нужно):
+
+```powershell
+python src/server/game/Custom/RetailSystems/BattlePay/tools/product_list_to_sql.py `
+  dump.pkt sql/custom/world/retail_systems/<дата>_retail_battlepay_retail_catalog.sql
+```
+
+Так получен `2026_11_02_00_retail_battlepay_retail_catalog.sql` (12.1.5.70688: 20 групп, 93 товара). Предметы, маунты и
+игрушки выдаются сервером; услуги (буст, игровое время, перенос, смена расы) показываются без выдачи. Опкоды оба
+инструмента берут из `Opcodes.h` сервера. Для storefront `CatalogShop` нужен дамп, где магазин открывали.
+
 Capture-каталог отвечает только за клиентское наполнение storefront. Выдача
 купленного товара по-прежнему разрешена исключительно для записей custom DB,
 прошедших серверную валидацию.

@@ -41,6 +41,21 @@ SMSG_BATTLENET_RESPONSE = 0x4202AD
 RESOURCES_SERVICE_HASH = 0xECBE75BA
 
 
+def _load_server_opcodes() -> None:
+    """Take the opcode values from the server's Opcodes.h, so a capture of the client the server is built for
+    is read with the right numbers (the constants above are the 12.0.7.68453 ones)."""
+    header = pathlib.Path(__file__).resolve().parents[4] / "Server" / "Protocol" / "Opcodes.h"
+    if not header.is_file():
+        return
+    import re
+    for name, value in re.findall(r"^\s+((?:CMSG|SMSG)_[A-Z0-9_]+)\s*=\s*(0x[0-9A-Fa-f]+)", header.read_text(encoding="latin-1"), re.M):
+        if name in globals():
+            globals()[name] = int(value, 16)
+
+
+_load_server_opcodes()
+
+
 def read_u32(data: bytes, offset: int) -> tuple[int, int]:
     if offset + 4 > len(data):
         raise ValueError("unexpected end of file")
@@ -229,9 +244,10 @@ def extract(path: pathlib.Path) -> tuple[int, int, int, bytes, int,
             routes.append((request_ids, payload, packet_delay(packet_ticks, request_index, packet_index)))
         elif direction == b"CMSG" and opcode in gate_responses:
             pending_gates.append((opcode, packet_index))
-        elif (direction == b"SMSG" and pending_gates and
-              opcode == gate_responses[pending_gates[0][0]]):
-            request_opcode, request_index = pending_gates.popleft()
+        elif direction == b"SMSG" and any(gate_responses[request] == opcode for request, _index in pending_gates):
+            # 12.1.x answers the gates out of order: pair each response with its own request
+            request_opcode, request_index = next(gate for gate in pending_gates if gate_responses[gate[0]] == opcode)
+            pending_gates.remove((request_opcode, request_index))
             gate_routes.append((request_opcode, opcode, payload,
                                 packet_delay(packet_ticks, request_index, packet_index)))
 
@@ -244,14 +260,19 @@ def extract(path: pathlib.Path) -> tuple[int, int, int, bytes, int,
     result, currency, products, deliverables, groups, shops = struct.unpack_from("<6I", product_payload)
     if result != 0 or not products or not shops:
         raise ValueError("capture does not contain a usable BattlePay catalog")
-    if not license_ids or len(set(license_ids)) != 1:
-        raise ValueError("capture has no single stable CatalogShop license ID")
+    # 12.1.x no longer sends SMSG_CATALOG_SHOP_OBTAIN_LICENSE: the server keeps its configured license then
+    if len(set(license_ids)) > 1:
+        raise ValueError("capture has more than one CatalogShop license ID")
+    legacy_flow = bool(license_ids)
     if not catalog_versions or len(set(catalog_versions)) != 1:
         raise ValueError("capture has no single stable catalog version")
     if pending_requests:
         raise ValueError("capture has CatalogShop requests without responses")
     if not routes:
         raise ValueError("capture has no CatalogShop request/response routes")
+    gate_order = [CMSG_COMMERCE_TOKEN_GET_MARKET_PRICE, CMSG_GET_DECOR_REFUND_LIST, CMSG_GET_ALL_LICENSED_DECOR_QUANTITIES,
+                  CMSG_CONSUMABLE_TOKEN_CAN_VETERAN_BUY]
+    gate_routes.sort(key=lambda route: gate_order.index(route[0]) if route[0] in gate_order else len(gate_order))
     if pending_gates or [request for request, _response, _payload, _delay in gate_routes] != [
         CMSG_COMMERCE_TOKEN_GET_MARKET_PRICE,
         CMSG_GET_DECOR_REFUND_LIST,
@@ -311,7 +332,7 @@ def extract(path: pathlib.Path) -> tuple[int, int, int, bytes, int,
             packets[product_request_index + 1:product_response_index], product_request_index + 1)
         if direction == b"SMSG" and opcode in pre_product_opcodes
     ]
-    if [opcode for opcode, _payload, _delay in pre_product_packets] != [
+    if legacy_flow and [opcode for opcode, _payload, _delay in pre_product_packets] != [
         SMSG_BATTLE_PAY_DELIVERABLE_DELIVERED,
         SMSG_BATTLE_PAY_DELIVERABLE_DELIVERED,
         SMSG_SYNC_WOW_ENTITLEMENTS,
@@ -345,10 +366,14 @@ def extract(path: pathlib.Path) -> tuple[int, int, int, bytes, int,
         (index for index, (direction, opcode, _payload) in enumerate(
             packets[hotfix_request_index + 1:first_catalog_request_index], hotfix_request_index + 1)
          if direction == b"SMSG" and opcode == SMSG_HOTFIX_CONNECT), -1)
-    if hotfix_request_index < 0 or hotfix_response_index < 0:
+    if hotfix_request_index >= 0 and hotfix_response_index >= 0:
+        hotfix_connect = packets[hotfix_response_index][2]
+        hotfix_delay = packet_delay(packet_ticks, hotfix_request_index, hotfix_response_index)
+    elif legacy_flow:
         raise ValueError("capture has no complete hotfix request/response route")
-    hotfix_connect = packets[hotfix_response_index][2]
-    hotfix_delay = packet_delay(packet_ticks, hotfix_request_index, hotfix_response_index)
+    else:
+        # a client with a warm cache asks for no hotfixes: the server answers hotfix requests itself
+        hotfix_connect, hotfix_delay = b"", 0
 
     rpc_delays: dict[tuple[int, int], list[int]] = collections.defaultdict(list)
     pending_rpc: dict[tuple[int, int, int], int] = {}
@@ -371,7 +396,7 @@ def extract(path: pathlib.Path) -> tuple[int, int, int, bytes, int,
         for (service_hash, method_id), delays in sorted(rpc_delays.items())
     ]
     if [method_id for service_hash, method_id, _delay in captured_rpc_delays
-            if service_hash == RESOURCES_SERVICE_HASH] != [1, 2]:
+            if service_hash == RESOURCES_SERVICE_HASH] != [1, 2] and legacy_flow:
         raise ValueError("capture has no complete ResourcesService timing routes")
 
     auth_response_index = max(
@@ -391,7 +416,7 @@ def extract(path: pathlib.Path) -> tuple[int, int, int, bytes, int,
             packets[auth_response_index + 1:product_request_index], auth_response_index + 1)
         if direction == b"SMSG" and opcode in login_bootstrap_opcodes
     ]
-    if [opcode for opcode, _payload, _delay in login_bootstrap_packets] != [
+    if legacy_flow and [opcode for opcode, _payload, _delay in login_bootstrap_packets] != [
         SMSG_BATTLE_PAY_GET_DISTRIBUTION_LIST_RESPONSE,
         SMSG_BATTLE_PAY_DELIVERABLE_DELIVERED,
         SMSG_BATTLE_PAY_DELIVERABLE_DELIVERED,
@@ -399,9 +424,11 @@ def extract(path: pathlib.Path) -> tuple[int, int, int, bytes, int,
         SMSG_CATALOG_SHOP_OBTAIN_LICENSE,
     ]:
         raise ValueError("capture does not contain the expected BattlePay login bootstrap")
+    if not login_bootstrap_packets or len(login_bootstrap_packets) > 5:
+        raise ValueError("capture has no BattlePay login bootstrap")
 
     print(
-        f"build={build} license={license_ids[-1]} catalog_version={catalog_versions[-1]} currency={currency} "
+        f"build={build} license={license_ids[-1] if license_ids else 'config'} catalog_version={catalog_versions[-1]} currency={currency} "
         f"products={products} deliverables={deliverables} groups={groups} shops={shops} "
         f"product_bytes={len(product_payload)} bootstrap_packets={len(pre_product_packets)} "
         f"gate_routes={len(gate_routes)} sso_bytes={len(open_checkout_response)} "
@@ -430,7 +457,7 @@ def extract(path: pathlib.Path) -> tuple[int, int, int, bytes, int,
     for index, (request_ids, response, delay) in enumerate(routes, 1):
         print(f"route[{index}]: request_ids={len(request_ids)} response_bytes={len(response)} delay={delay}ms")
 
-    return (build, license_ids[-1], catalog_versions[-1], product_payload, product_response_delay,
+    return (build, license_ids[-1] if license_ids else 0, catalog_versions[-1], product_payload, product_response_delay,
             pre_product_packets, gate_routes, open_checkout_response, open_checkout_delay,
             db_query_routes, last_catalog_delay, available_hotfixes, hotfix_connect, hotfix_delay,
             captured_rpc_delays, login_bootstrap_packets, routes)
@@ -447,7 +474,8 @@ def write_capture(output: pathlib.Path, build: int, license_id: int, catalog_ver
                   login_bootstrap_packets: list[tuple[int, bytes, int]],
                   routes: list[tuple[list[int], bytes, int]]) -> None:
     payload = bytearray(b"TCBP")
-    payload += struct.pack("<IIIQ", 9, build, license_id, catalog_version)
+    # format 10: the 12.1.x flow (no license packet, optional entitlement bootstrap, hotfix route and RPC timings)
+    payload += struct.pack("<IIIQ", 10 if not license_id else 9, build, license_id, catalog_version)
     payload += struct.pack("<I", len(product))
     payload += product
     payload += struct.pack("<I", product_response_delay)

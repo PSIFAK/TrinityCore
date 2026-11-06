@@ -1153,7 +1153,9 @@ void Spell::SelectImplicitNearbyTargets(SpellEffectInfo const& spellEffectInfo, 
                     }
                     return;
                 }
-                if (targetType.GetTarget() == TARGET_DEST_NEARBY_ENTRY_OR_DB)
+                // RetailSystems: a nearby entry destination without conditions also takes spell_target_position
+                // (Jaina's Channeling (DNT) 1239043 aims at a fixed point above the Ogre Ruins)
+                if (targetType.GetTarget() == TARGET_DEST_NEARBY_ENTRY_OR_DB || targetType.GetTarget() == TARGET_DEST_NEARBY_ENTRY)
                 {
                     if (SpellTargetPosition const* st = sSpellMgr->GetSpellTargetPosition(m_spellInfo->Id, spellEffectInfo.EffectIndex))
                     {

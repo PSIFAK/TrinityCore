@@ -2030,7 +2030,7 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         std::vector<uint32> const& GetGlyphs(uint8 spec) const { return _specializationInfo.Glyphs[spec]; }
         std::vector<uint32>& GetGlyphs(uint8 spec) { return _specializationInfo.Glyphs[spec]; }
         ActionButtonList const& GetActionButtons() const { return m_actionButtons; }
-        void StartLoadingActionButtons(std::function<void()>&& callback = nullptr);
+        void StartLoadingActionButtons(std::function<void()>&& callback = nullptr, bool loadNow = false);
         void LoadActions(PreparedQueryResult result);
 
         // Traits

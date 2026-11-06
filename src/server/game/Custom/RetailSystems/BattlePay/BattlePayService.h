@@ -12,6 +12,9 @@
 
 #include "Define.h"
 #include "ObjectGuid.h"
+#include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 class WorldSession;
@@ -22,6 +25,8 @@ namespace RetailSystems::BattlePay
 void Initialize();
 bool IsEnabled();
 bool HasCapturedCatalog();
+// shop2 client variables (SMSG_MIRROR_VARS) the 12.x shop needs to reach its catalog services
+std::vector<std::pair<std::string_view, std::string>> GetShopMirrorVars();
 bool GetCapturedDBReply(uint32 tableHash, uint32 recordID, uint8& status, std::vector<uint8>& data, uint32& delayMs);
 bool SendCapturedOpenCheckout(WorldSession* session, uint32 clientToken);
 bool SendCapturedAvailableHotfixes(WorldSession* session);

@@ -239,6 +239,12 @@ void Conversation::Create(ObjectGuid::LowType lowGuid, uint32 conversationEntry,
 bool Conversation::Start()
 {
     ConversationTemplate const* conversationTemplate = sConversationDataStore->GetConversationTemplate(GetEntry()); // never null, already checked in ::Create / ::CreateConversation
+    // RetailSystems: the 12.x client crashes on a line whose actor slot is missing; retail sends an empty actor for it instead
+    if (conversationTemplate->Flags.HasFlag(ConversationFlags::AllowWithoutSpawnedActor))
+        for (UF::ConversationLine const& line : *m_conversationData->Lines)
+            while (line.ActorIndex >= m_conversationData->Actors.size())
+                AddActor(0, m_conversationData->Actors.size(), ObjectGuid::Empty);
+
     if (!conversationTemplate->Flags.HasFlag(ConversationFlags::AllowWithoutSpawnedActor))
     {
         for (UF::ConversationLine const& line : *m_conversationData->Lines)

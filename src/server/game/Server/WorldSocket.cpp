@@ -19,6 +19,7 @@
 #include "AuthenticationPackets.h"
 #include "BattlenetRpcErrorCodes.h"
 #include "CharacterPackets.h"
+#include "Config.h"
 #include "CryptoHash.h"
 #include "CryptoRandom.h"
 #include "DatabaseEnv.h"
@@ -679,7 +680,11 @@ void WorldSocket::HandleAuthSessionCallback(WorldPackets::Auth::AuthSession cons
         .Type = ClientBuild::Type::Id(joinTicket->type())
     };
     auto clientBuildAuthKey = std::ranges::find(buildInfo->AuthKeys, buildVariant, &ClientBuild::AuthKey::Variant);
-    if (clientBuildAuthKey == buildInfo->AuthKeys.end())
+    // RetailSystems: a build whose auth keys are not known yet can be allowed without the digest check. The session key
+    // still comes from the battle.net login, so a client without it cannot get past encrypted mode.
+    bool skipDigestCheck = clientBuildAuthKey == buildInfo->AuthKeys.end() &&
+        sConfigMgr->GetBoolDefault("RetailSystems.Auth.SkipMissingBuildAuthKey", false);
+    if (clientBuildAuthKey == buildInfo->AuthKeys.end() && !skipDigestCheck)
     {
         SendAuthResponseError(ERROR_BAD_VERSION);
         TC_LOG_ERROR("network", "WorldSocket::HandleAuthSession: Missing client build auth key for build {} variant {}-{}-{} ({}).", account.Game.Build,
@@ -688,24 +693,30 @@ void WorldSocket::HandleAuthSessionCallback(WorldPackets::Auth::AuthSession cons
         return;
     }
 
-    Trinity::Crypto::SHA512 digestKeyHash;
-    digestKeyHash.UpdateData(account.Game.KeyData.data(), account.Game.KeyData.size());
-    digestKeyHash.UpdateData(clientBuildAuthKey->Key.data(), clientBuildAuthKey->Key.size());
-    digestKeyHash.Finalize();
-
-    Trinity::Crypto::HMAC_SHA512 hmac(digestKeyHash.GetDigest());
-    hmac.UpdateData(authSession->LocalChallenge);
-    hmac.UpdateData(_serverChallenge);
-    hmac.UpdateData(AuthCheckSeed);
-    hmac.Finalize();
-
-    // Check that Key and account name are the same on client and server
-    if (memcmp(hmac.GetDigest().data(), authSession->Digest.data(), authSession->Digest.size()) != 0)
+    if (skipDigestCheck)
+        TC_LOG_WARN("network", "WorldSocket::HandleAuthSession: No client build auth key for build {} variant {}-{}-{}, digest check skipped for account {} ({}).",
+            account.Game.Build, buildVariant.Platform, buildVariant.Arch, buildVariant.Type, account.Game.Id, address);
+    else
     {
-        SendAuthResponseError(ERROR_DENIED);
-        TC_LOG_ERROR("network", "WorldSocket::HandleAuthSession: Authentication failed for account: {} ('{}') address: {}", account.Game.Id, joinTicket->gameaccount(), address);
-        DelayedCloseSocket();
-        return;
+        Trinity::Crypto::SHA512 digestKeyHash;
+        digestKeyHash.UpdateData(account.Game.KeyData.data(), account.Game.KeyData.size());
+        digestKeyHash.UpdateData(clientBuildAuthKey->Key.data(), clientBuildAuthKey->Key.size());
+        digestKeyHash.Finalize();
+
+        Trinity::Crypto::HMAC_SHA512 hmac(digestKeyHash.GetDigest());
+        hmac.UpdateData(authSession->LocalChallenge);
+        hmac.UpdateData(_serverChallenge);
+        hmac.UpdateData(AuthCheckSeed);
+        hmac.Finalize();
+
+        // Check that Key and account name are the same on client and server
+        if (memcmp(hmac.GetDigest().data(), authSession->Digest.data(), authSession->Digest.size()) != 0)
+        {
+            SendAuthResponseError(ERROR_DENIED);
+            TC_LOG_ERROR("network", "WorldSocket::HandleAuthSession: Authentication failed for account: {} ('{}') address: {}", account.Game.Id, joinTicket->gameaccount(), address);
+            DelayedCloseSocket();
+            return;
+        }
     }
 
     Trinity::Crypto::SHA512 keyData;

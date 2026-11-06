@@ -18,6 +18,7 @@
 #include "Object.h"
 #include "BattlefieldMgr.h"
 #include "CellImpl.h"
+#include "Config.h"
 #include "CinematicMgr.h"
 #include "CombatLogPackets.h"
 #include "Corpse.h"
@@ -1128,7 +1129,10 @@ struct CombatLogSender
 
     void operator()(Player const* player) const
     {
-        if (player->IsAdvancedCombatLoggingEnabled())
+        // RetailSystems: retail 12.1.5 always sends the caster/target log data (no CMSG_SET_ADVANCED_COMBAT_LOGGING); the client
+        // crashes on combat log entries without it while a boss encounter is in progress
+        static bool const alwaysSendLogData = sConfigMgr->GetBoolDefault("RetailSystems.CombatLog.AlwaysSendLogData", true);
+        if (alwaysSendLogData || player->IsAdvancedCombatLoggingEnabled())
             player->SendDirectMessage(i_message->GetFullLogPacket());
         else
             player->SendDirectMessage(i_message->GetBasicLogPacket());

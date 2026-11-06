@@ -372,6 +372,25 @@ public:
     uint32 ServerToken = 0;
 };
 
+class DeliveryStarted final : public ServerPacket
+{
+public:
+    DeliveryStarted() : ServerPacket(SMSG_BATTLE_PAY_DELIVERY_STARTED, 8) { }
+    WorldPacket const* Write() override;
+
+    uint64 DistributionID = 0;
+};
+
+// item instances are not listed; the items themselves arrive through the normal item packets
+class DeliveryEnded final : public ServerPacket
+{
+public:
+    DeliveryEnded() : ServerPacket(SMSG_BATTLE_PAY_DELIVERY_ENDED, 12) { }
+    WorldPacket const* Write() override;
+
+    uint64 DistributionID = 0;
+};
+
 ByteBuffer& operator<<(ByteBuffer& data, DisplayCard const& displayCard);
 ByteBuffer& operator<<(ByteBuffer& data, DisplayInfo const& displayInfo);
 ByteBuffer& operator<<(ByteBuffer& data, DeliverableChoice const& choice);

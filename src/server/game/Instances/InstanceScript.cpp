@@ -408,7 +408,8 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
                 {
                     uint32 resInterval = GetCombatResurrectionChargeInterval();
                     InitializeCombatResurrections(1, resInterval);
-                    SendEncounterStart(1, 9, resInterval, resInterval);
+                    if (SendsInstanceEncounterPackets())
+                        SendEncounterStart(1, 9, resInterval, resInterval);
                     SendDungeonEncounterStart(bossInfo->GetDungeonEncounterForDifficulty(instance->GetDifficultyID()));
 
                     instance->DoOnPlayers([](Player* player)
@@ -420,7 +421,8 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
                 case FAIL:
                 {
                     ResetCombatResurrections();
-                    SendEncounterEnd();
+                    if (SendsInstanceEncounterPackets())
+                        SendEncounterEnd();
                     SendDungeonEncounterEnd(bossInfo->GetDungeonEncounterForDifficulty(instance->GetDifficultyID()), false);
 
                     instance->DoOnPlayers([](Player* player)
@@ -432,7 +434,8 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
                 case DONE:
                 {
                     ResetCombatResurrections();
-                    SendEncounterEnd();
+                    if (SendsInstanceEncounterPackets())
+                        SendEncounterEnd();
                     dungeonEncounter = bossInfo->GetDungeonEncounterForDifficulty(instance->GetDifficultyID());
                     SendDungeonEncounterEnd(dungeonEncounter, true);
                     if (dungeonEncounter)
@@ -903,6 +906,16 @@ void InstanceScript::SendEncounterEnd()
     instance->SendToPlayers(encounterEndMessage.Write());
 }
 
+// RetailSystems: a retail 12.1.5 five-player dungeon (Darkmaul Citadel) sends no SMSG_INSTANCE_ENCOUNTER_START/END
+// (combat resurrection charges) around its bosses, only SMSG_ENCOUNTER_START/END
+bool InstanceScript::SendsInstanceEncounterPackets() const
+{
+    if (!sConfigMgr->GetBoolDefault("RetailSystems.EncounterPackets.Enabled", false))
+        return true;
+
+    return instance->IsRaid() || instance->GetDifficultyID() == DIFFICULTY_MYTHIC_KEYSTONE;
+}
+
 void InstanceScript::SendDungeonEncounterStart(DungeonEncounterEntry const* dungeonEncounter)
 {
     if (!sConfigMgr->GetBoolDefault("RetailSystems.EncounterPackets.Enabled", false))
@@ -910,6 +923,11 @@ void InstanceScript::SendDungeonEncounterStart(DungeonEncounterEntry const* dung
 
     if (!dungeonEncounter || !_dungeonEncounterStartTimes.try_emplace(dungeonEncounter->ID, GameTime::Now()).second)
         return;
+
+    // retail (12.1.5) blocks the release button for the duration of the encounter right before ENCOUNTER_START
+    WorldPackets::Instance::InstanceEncounterUpdateAllowReleaseInProgress allowRelease;
+    allowRelease.ReleaseAllowed = false;
+    instance->SendToPlayers(allowRelease.Write());
 
     WorldPackets::Instance::EncounterStart encounterStart;
     encounterStart.DungeonEncounterID = dungeonEncounter->ID;

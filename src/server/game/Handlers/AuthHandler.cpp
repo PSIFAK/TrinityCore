@@ -144,16 +144,15 @@ void WorldSession::SendFeatureSystemStatusGlueScreen()
 
     SendPacket(features.Write());
 
-    WorldPackets::System::MirrorVarSingle vars[] =
+    std::vector<WorldPackets::System::MirrorVarSingle> vars =
     {
         { "raidLockoutExtendEnabled"sv, "1"sv },
         { "sellAllJunkEnabled"sv, "1"sv },
         { "bypassItemLevelScalingCode"sv, "0"sv },
-        { "shop2Enabled"sv, RetailSystems::BattlePay::IsEnabled() ? "1"sv : "0"sv },
-        { "bpayStoreEnable"sv, RetailSystems::BattlePay::IsEnabled() ? "1"sv : "0"sv },
-        { "bpayStorePurchaseTimeout"sv, "30"sv },
         { "recentAlliesEnabledClient"sv, "0"sv },
-        { "browserEnabled"sv, "0"sv },
+        // RetailSystems: retail 12.1.5 turns the built-in damage meter on; with SMSG_ENCOUNTER_START it builds boss segments
+        { "damageMeterProcessingEnabled"sv, "1"sv },
+        { "damageMeterCacheEnabled"sv, "1"sv },
         { "housingEnableCreateGuildNeighborhood"sv, "0"sv },
         { "housingEnableDeleteHouse"sv, "0"sv },
         { "housingServiceEnabled"sv, "0"sv },
@@ -162,6 +161,10 @@ void WorldSession::SendFeatureSystemStatusGlueScreen()
         { "housingEnableBuyHouse"sv, "0"sv },
         { "housingMarketEnabled"sv, "0"sv },
     };
+
+    // RetailSystems
+    for (auto const& [name, value] : RetailSystems::BattlePay::GetShopMirrorVars())
+        vars.emplace_back(name, value);
 
     WorldPackets::System::MirrorVars variables;
     variables.Variables = vars;

@@ -390,4 +390,17 @@ WorldPacket const* ConfirmPurchase::Write()
     _worldPacket << uint32(ServerToken);
     return &_worldPacket;
 }
+
+WorldPacket const* DeliveryStarted::Write()
+{
+    _worldPacket << uint64(DistributionID);
+    return &_worldPacket;
+}
+
+WorldPacket const* DeliveryEnded::Write()
+{
+    _worldPacket << uint64(DistributionID);
+    _worldPacket << uint32(0); // item count
+    return &_worldPacket;
+}
 }

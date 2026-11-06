@@ -37,6 +37,7 @@
 #include "ReputationMgr.h"
 #include "SpellInfo.h"
 #include "Trainer.h"
+#include "VendorRepair.h"
 #include "WorldPacket.h"
 
 enum class TabardVendorType : int32
@@ -418,4 +419,8 @@ void WorldSession::HandleRepairItemOpcode(WorldPackets::Item::RepairItem& packet
         TC_LOG_DEBUG("network", "ITEM: Repair all items at {}", packet.NpcGUID.ToString());
         _player->DurabilityRepairAll(true, discountMod, packet.UseGuildBank);
     }
+
+    // RetailSystems
+    if (CreatureAI* ai = unit->AI())
+        ai->SetGUID(_player->GetGUID(), RetailSystems::NewPlayerExperience::DATA_PLAYER_REPAIRED_ITEMS);
 }
